@@ -7,11 +7,14 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
+import { User, Mail, Lock, Phone, MapPin, Store } from 'lucide-react';
 
 const RegisterForm = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [userType, setUserType] = useState<'customer' | 'restaurant'>('customer');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -48,7 +51,8 @@ const RegisterForm = () => {
     setIsLoading(true);
 
     try {
-      // Simulating registration for demo purposes
+      // Qui implementeremmo la registrazione con Firebase
+      // Per ora simuliamo il successo
       setTimeout(() => {
         toast.success("Registrazione effettuata con successo");
         navigate('/login');
@@ -69,61 +73,97 @@ const RegisterForm = () => {
 
       <Tabs defaultValue="customer" className="w-full mb-6" onValueChange={(value) => setUserType(value as 'customer' | 'restaurant')}>
         <TabsList className="grid w-full grid-cols-2 mb-8">
-          <TabsTrigger value="customer">Cliente</TabsTrigger>
-          <TabsTrigger value="restaurant">Ristoratore</TabsTrigger>
+          <TabsTrigger value="customer" className="flex items-center justify-center gap-2">
+            <User size={16} />
+            <span>Cliente</span>
+          </TabsTrigger>
+          <TabsTrigger value="restaurant" className="flex items-center justify-center gap-2">
+            <Store size={16} />
+            <span>Ristoratore</span>
+          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="customer">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">Nome completo</Label>
-              <Input
-                id="name"
-                name="name"
-                placeholder="Mario Rossi"
-                required
-                value={formData.name}
-                onChange={handleChange}
-              />
+              <div className="relative">
+                <Input
+                  id="name"
+                  name="name"
+                  placeholder="Mario Rossi"
+                  required
+                  value={formData.name}
+                  onChange={handleChange}
+                  className="pl-10"
+                />
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={18} />
+              </div>
             </div>
             
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="nome@esempio.com"
-                required
-                value={formData.email}
-                onChange={handleChange}
-              />
+              <div className="relative">
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="nome@esempio.com"
+                  required
+                  value={formData.email}
+                  onChange={handleChange}
+                  className="pl-10"
+                />
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={18} />
+              </div>
             </div>
             
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                placeholder="••••••••"
-                required
-                value={formData.password}
-                onChange={handleChange}
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  required
+                  value={formData.password}
+                  onChange={handleChange}
+                  className="pl-10"
+                />
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={18} />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                >
+                  {showPassword ? <Lock size={18} /> : <Lock size={18} />}
+                </button>
+              </div>
             </div>
             
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">Conferma password</Label>
-              <Input
-                id="confirmPassword"
-                name="confirmPassword"
-                type="password"
-                placeholder="••••••••"
-                required
-                value={formData.confirmPassword}
-                onChange={handleChange}
-              />
+              <div className="relative">
+                <Input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type={showConfirmPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  required
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  className="pl-10"
+                />
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={18} />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                >
+                  {showConfirmPassword ? <Lock size={18} /> : <Lock size={18} />}
+                </button>
+              </div>
             </div>
             
             <div className="flex items-center space-x-2 my-4">
@@ -151,89 +191,131 @@ const RegisterForm = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">Nome proprietario</Label>
-              <Input
-                id="name"
-                name="name"
-                placeholder="Mario Rossi"
-                required
-                value={formData.name}
-                onChange={handleChange}
-              />
+              <div className="relative">
+                <Input
+                  id="name"
+                  name="name"
+                  placeholder="Mario Rossi"
+                  required
+                  value={formData.name}
+                  onChange={handleChange}
+                  className="pl-10"
+                />
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={18} />
+              </div>
             </div>
             
             <div className="space-y-2">
               <Label htmlFor="restaurantName">Nome ristorante</Label>
-              <Input
-                id="restaurantName"
-                name="restaurantName"
-                placeholder="Il Ristorante Senza Glutine"
-                required
-                value={formData.restaurantName}
-                onChange={handleChange}
-              />
+              <div className="relative">
+                <Input
+                  id="restaurantName"
+                  name="restaurantName"
+                  placeholder="Il Ristorante Senza Glutine"
+                  required
+                  value={formData.restaurantName}
+                  onChange={handleChange}
+                  className="pl-10"
+                />
+                <Store className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={18} />
+              </div>
             </div>
             
             <div className="space-y-2">
               <Label htmlFor="address">Indirizzo</Label>
-              <Input
-                id="address"
-                name="address"
-                placeholder="Via Roma 123, Milano"
-                required
-                value={formData.address}
-                onChange={handleChange}
-              />
+              <div className="relative">
+                <Input
+                  id="address"
+                  name="address"
+                  placeholder="Via Roma 123, Milano"
+                  required
+                  value={formData.address}
+                  onChange={handleChange}
+                  className="pl-10"
+                />
+                <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={18} />
+              </div>
             </div>
             
             <div className="space-y-2">
               <Label htmlFor="phone">Telefono</Label>
-              <Input
-                id="phone"
-                name="phone"
-                placeholder="+39 123 4567890"
-                required
-                value={formData.phone}
-                onChange={handleChange}
-              />
+              <div className="relative">
+                <Input
+                  id="phone"
+                  name="phone"
+                  placeholder="+39 123 4567890"
+                  required
+                  value={formData.phone}
+                  onChange={handleChange}
+                  className="pl-10"
+                />
+                <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={18} />
+              </div>
             </div>
             
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="ristorante@esempio.com"
-                required
-                value={formData.email}
-                onChange={handleChange}
-              />
+              <div className="relative">
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="ristorante@esempio.com"
+                  required
+                  value={formData.email}
+                  onChange={handleChange}
+                  className="pl-10"
+                />
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={18} />
+              </div>
             </div>
             
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                placeholder="••••••••"
-                required
-                value={formData.password}
-                onChange={handleChange}
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  required
+                  value={formData.password}
+                  onChange={handleChange}
+                  className="pl-10"
+                />
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={18} />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                >
+                  {showPassword ? <Lock size={18} /> : <Lock size={18} />}
+                </button>
+              </div>
             </div>
             
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">Conferma password</Label>
-              <Input
-                id="confirmPassword"
-                name="confirmPassword"
-                type="password"
-                placeholder="••••••••"
-                required
-                value={formData.confirmPassword}
-                onChange={handleChange}
-              />
+              <div className="relative">
+                <Input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type={showConfirmPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  required
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  className="pl-10"
+                />
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={18} />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                >
+                  {showConfirmPassword ? <Lock size={18} /> : <Lock size={18} />}
+                </button>
+              </div>
             </div>
             
             <div className="flex items-center space-x-2 my-4">
