@@ -58,7 +58,7 @@ const BookingsPage = () => {
   );
 
   const addReviewCode = (bookingId: string, reviewCode: string) => {
-    updateBooking(bookingId, { restaurantCode: reviewCode, reviewStatus: 'ready' });
+    updateBooking(bookingId, { reviewCode: reviewCode, hasReview: false });
     toast.success('Codice recensione salvato! Ora puoi lasciare una recensione');
   };
 
