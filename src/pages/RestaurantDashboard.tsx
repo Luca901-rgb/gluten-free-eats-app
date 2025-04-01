@@ -49,6 +49,7 @@ import { format, parseISO } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
