@@ -138,8 +138,8 @@ const reviews = [
     customerName: 'Marco Blu',
     rating: 3,
     date: '2023-11-10',
-    text: 'Il cibo era buono ma il servizio un po' lento. Abbiamo aspettato quasi un'ora per i primi piatti. Spero migliorerà in futuro perché la qualità del cibo è comunque alta.',
-    response: 'Ci scusiamo per l\'attesa. Stiamo lavorando per migliorare i tempi di servizio. Grazie per il feedback costruttivo!',
+    text: "Il cibo era buono ma il servizio un po' lento. Abbiamo aspettato quasi un'ora per i primi piatti. Spero migliorerà in futuro perché la qualità del cibo è comunque alta.",
+    response: "Ci scusiamo per l'attesa. Stiamo lavorando per migliorare i tempi di servizio. Grazie per il feedback costruttivo!",
     photos: [],
   },
 ];
