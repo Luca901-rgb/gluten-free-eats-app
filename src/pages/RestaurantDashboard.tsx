@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
@@ -25,8 +24,6 @@ import {
   Users,
   Star,
   MessageSquare,
-  ThumbsUp,
-  ThumbsDown,
   ChevronDown,
   Eye,
   Video,
@@ -42,12 +39,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { toast } from 'sonner';
 import { format, parseISO } from 'date-fns';
 import { it } from 'date-fns/locale';
-import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
@@ -57,8 +52,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useBookings } from '@/context/BookingContext';
 
-// Sample data
 const restaurant = {
   id: '1',
   name: 'La Trattoria Senza Glutine',
@@ -67,48 +62,6 @@ const restaurant = {
   email: 'info@trattoriasenzaglutine.it',
   logo: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80',
 };
-
-const bookings = [
-  {
-    id: 'b1',
-    customerName: 'Mario Rossi',
-    date: '2023-11-25T19:30:00',
-    people: 2,
-    notes: 'Tavolo vicino alla finestra se possibile',
-    status: 'confirmed',
-    bookingCode: 'TRA123',
-    reviewCode: 'RES456',
-  },
-  {
-    id: 'b2',
-    customerName: 'Laura Bianchi',
-    date: '2023-11-22T20:00:00',
-    people: 4,
-    notes: 'Compleanno',
-    status: 'pending',
-    bookingCode: 'TRA124',
-  },
-  {
-    id: 'b3',
-    customerName: 'Giovanni Verdi',
-    date: '2023-11-20T13:00:00',
-    people: 3,
-    notes: '',
-    status: 'completed',
-    bookingCode: 'TRA125',
-    reviewCode: 'RES457',
-    hasReview: true,
-  },
-  {
-    id: 'b4',
-    customerName: 'Francesca Neri',
-    date: '2023-11-18T19:30:00',
-    people: 2,
-    notes: '',
-    status: 'completed',
-    bookingCode: 'TRA126',
-  },
-];
 
 const reviews = [
   {
@@ -183,28 +136,16 @@ const formatDate = (dateString: string) => {
 
 const RestaurantDashboard = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [bookingsList, setBookingsList] = useState(bookings);
   const [reviewsList, setReviewsList] = useState(reviews);
-  const [selectedBooking, setSelectedBooking] = useState<typeof bookings[0] | null>(null);
-  const [selectedReview, setSelectedReview] = useState<typeof reviews[0] | null>(null);
+  const [selectedBooking, setSelectedBooking] = useState<any | null>(null);
+  const [selectedReview, setSelectedReview] = useState<any | null>(null);
   const [responseText, setResponseText] = useState('');
-
-  const generateReviewCode = (bookingId: string) => {
-    const booking = bookingsList.find(b => b.id === bookingId);
-    if (!booking) return;
-    
-    // Generate random code
-    const reviewCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-    
-    // Update booking with review code
-    setBookingsList(bookingsList.map(b => 
-      b.id === bookingId ? { ...b, reviewCode } : b
-    ));
-    
-    toast.success('Codice recensione generato con successo');
-    
-    return reviewCode;
-  };
+  
+  const { bookings, updateBooking, generateReviewCode } = useBookings();
+  
+  const restaurantBookings = bookings.filter(booking => 
+    booking.restaurantId === restaurant.id
+  );
 
   const handleCopyCode = (code: string) => {
     navigator.clipboard.writeText(code);
@@ -212,10 +153,14 @@ const RestaurantDashboard = () => {
   };
 
   const handleStatusChange = (bookingId: string, status: 'confirmed' | 'pending' | 'completed' | 'cancelled') => {
-    setBookingsList(bookingsList.map(booking => 
-      booking.id === bookingId ? { ...booking, status } : booking
-    ));
+    updateBooking(bookingId, { status });
     toast.success(`Stato della prenotazione aggiornato a: ${status}`);
+  };
+
+  const handleGenerateReviewCode = (bookingId: string) => {
+    const reviewCode = generateReviewCode(bookingId);
+    toast.success('Codice recensione generato con successo');
+    return reviewCode;
   };
 
   const submitReviewResponse = (reviewId: string) => {
@@ -264,7 +209,6 @@ const RestaurantDashboard = () => {
             <TabsTrigger value="content">Contenuti</TabsTrigger>
           </TabsList>
           
-          {/* Dashboard Tab */}
           <TabsContent value="dashboard" className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Card>
@@ -274,12 +218,12 @@ const RestaurantDashboard = () => {
                 <CardContent className="pt-0">
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <p className="text-2xl font-bold">{statistics.dailyBookings}</p>
-                      <p className="text-xs text-gray-500">Oggi</p>
+                      <p className="text-2xl font-bold">{restaurantBookings.length}</p>
+                      <p className="text-xs text-gray-500">Totali</p>
                     </div>
                     <div>
-                      <p className="text-2xl font-bold">{statistics.weeklyBookings}</p>
-                      <p className="text-xs text-gray-500">Questa settimana</p>
+                      <p className="text-2xl font-bold">{restaurantBookings.filter(b => b.status === 'pending').length}</p>
+                      <p className="text-xs text-gray-500">In attesa</p>
                     </div>
                   </div>
                 </CardContent>
@@ -333,7 +277,7 @@ const RestaurantDashboard = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {bookingsList.slice(0, 5).map(booking => (
+                      {restaurantBookings.slice(0, 5).map(booking => (
                         <TableRow key={booking.id}>
                           <TableCell>{booking.customerName}</TableCell>
                           <TableCell>{format(parseISO(booking.date), "dd/MM HH:mm")}</TableCell>
@@ -383,7 +327,6 @@ const RestaurantDashboard = () => {
             </div>
           </TabsContent>
           
-          {/* Bookings Tab */}
           <TabsContent value="bookings" className="space-y-6">
             <Card>
               <CardHeader>
@@ -403,7 +346,7 @@ const RestaurantDashboard = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {bookingsList.map(booking => (
+                    {restaurantBookings.map(booking => (
                       <TableRow key={booking.id}>
                         <TableCell>{booking.customerName}</TableCell>
                         <TableCell>{format(parseISO(booking.date), "dd/MM/yyyy HH:mm")}</TableCell>
@@ -459,7 +402,7 @@ const RestaurantDashboard = () => {
                                   </DropdownMenuItem>
                                 )}
                                 {booking.status === 'completed' && !booking.reviewCode && (
-                                  <DropdownMenuItem onClick={() => generateReviewCode(booking.id)}>
+                                  <DropdownMenuItem onClick={() => handleGenerateReviewCode(booking.id)}>
                                     Genera codice recensione
                                   </DropdownMenuItem>
                                 )}
@@ -479,7 +422,6 @@ const RestaurantDashboard = () => {
               </CardContent>
             </Card>
             
-            {/* Booking Details Dialog */}
             {selectedBooking && (
               <Dialog open={!!selectedBooking} onOpenChange={(open) => !open && setSelectedBooking(null)}>
                 <DialogContent>
@@ -552,7 +494,7 @@ const RestaurantDashboard = () => {
                             size="sm"
                             disabled={selectedBooking.status !== 'completed'}
                             onClick={() => {
-                              const code = generateReviewCode(selectedBooking.id);
+                              const code = handleGenerateReviewCode(selectedBooking.id);
                               if (code) {
                                 setSelectedBooking({...selectedBooking, reviewCode: code});
                               }
@@ -597,7 +539,6 @@ const RestaurantDashboard = () => {
             )}
           </TabsContent>
           
-          {/* Reviews Tab */}
           <TabsContent value="reviews" className="space-y-6">
             <Card>
               <CardHeader>
@@ -660,7 +601,6 @@ const RestaurantDashboard = () => {
               </CardContent>
             </Card>
             
-            {/* Review Response Dialog */}
             {selectedReview && (
               <Dialog open={!!selectedReview} onOpenChange={(open) => !open && setSelectedReview(null)}>
                 <DialogContent>
@@ -717,7 +657,6 @@ const RestaurantDashboard = () => {
             )}
           </TabsContent>
           
-          {/* Content Tab */}
           <TabsContent value="content" className="space-y-6">
             <Card>
               <CardHeader>

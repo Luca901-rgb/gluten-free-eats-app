@@ -132,7 +132,11 @@ const RestaurantDetails: React.FC<{ restaurant: RestaurantDetailProps }> = ({ re
           </TabsContent>
 
           <TabsContent value="booking" className="animate-fade-in">
-            <BookingForm restaurantId={restaurant.id} restaurantName={restaurant.name} />
+            <BookingForm 
+              restaurantId={restaurant.id} 
+              restaurantName={restaurant.name} 
+              restaurantImage={restaurant.coverImage}
+            />
           </TabsContent>
 
           <TabsContent value="reviews" className="animate-fade-in">

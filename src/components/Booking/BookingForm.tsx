@@ -22,10 +22,12 @@ import {
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { useBookings } from '@/context/BookingContext';
 
 interface BookingFormProps {
   restaurantId: string;
   restaurantName: string;
+  restaurantImage?: string;
 }
 
 const availableTimes = [
@@ -33,12 +35,14 @@ const availableTimes = [
   '19:00', '19:30', '20:00', '20:30', '21:00', '21:30'
 ];
 
-const BookingForm: React.FC<BookingFormProps> = ({ restaurantId, restaurantName }) => {
+const BookingForm: React.FC<BookingFormProps> = ({ restaurantId, restaurantName, restaurantImage }) => {
   const [date, setDate] = useState<Date | undefined>(undefined);
   const [time, setTime] = useState<string | undefined>(undefined);
   const [people, setPeople] = useState<string>('2');
   const [notes, setNotes] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
+  
+  const { addBooking } = useBookings();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,19 +54,45 @@ const BookingForm: React.FC<BookingFormProps> = ({ restaurantId, restaurantName 
 
     setIsLoading(true);
 
-    // Generate a random booking code for demo
-    const bookingCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-
     try {
-      // Simulate API call
-      setTimeout(() => {
-        toast.success('Prenotazione effettuata con successo!', {
-          description: `Codice prenotazione: ${bookingCode}`
-        });
-        setIsLoading(false);
-      }, 1500);
+      // Generate a booking date by combining the selected date and time
+      const dateTime = new Date(date);
+      const [hours, minutes] = time.split(':').map(Number);
+      dateTime.setHours(hours, minutes);
+      
+      // Generate a random booking code for demo
+      const bookingCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+      
+      // Create a new booking
+      const newBooking = {
+        id: `b${Date.now()}`,
+        restaurantId,
+        restaurantName,
+        restaurantImage,
+        date: dateTime.toISOString(),
+        people: Number(people),
+        notes,
+        status: 'pending' as const,
+        bookingCode,
+        customerName: 'Cliente Attuale', // In un'app reale, prenderebbe i dati dell'utente loggato
+      };
+      
+      // Add the booking to our context
+      addBooking(newBooking);
+      
+      // Show success message
+      toast.success('Prenotazione effettuata con successo!', {
+        description: `Codice prenotazione: ${bookingCode}`
+      });
+      
+      // Reset form
+      setDate(undefined);
+      setTime(undefined);
+      setPeople('2');
+      setNotes('');
     } catch (error) {
       toast.error('Errore durante la prenotazione. Riprova più tardi.');
+    } finally {
       setIsLoading(false);
     }
   };

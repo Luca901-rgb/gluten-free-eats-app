@@ -33,57 +33,7 @@ import { format, isBefore, isPast, parseISO } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-
-// Sample data - would come from API
-const sampleBookings = [
-  {
-    id: 'b1',
-    restaurantId: '1',
-    restaurantName: 'La Trattoria Senza Glutine',
-    date: '2023-11-25T19:30:00',
-    people: 2,
-    notes: 'Tavolo vicino alla finestra se possibile',
-    status: 'confirmed',
-    bookingCode: 'TRA123',
-    restaurantImage: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-  },
-  {
-    id: 'b2',
-    restaurantId: '2',
-    restaurantName: 'Pizzeria Gluten Free',
-    date: '2023-11-28T20:00:00',
-    people: 4,
-    notes: '',
-    status: 'pending',
-    bookingCode: 'PZA456',
-    restaurantImage: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-  },
-  {
-    id: 'b3',
-    restaurantId: '3',
-    restaurantName: 'Pasta & Risotti',
-    date: '2023-10-15T13:00:00',
-    people: 2,
-    notes: '',
-    status: 'completed',
-    bookingCode: 'PST789',
-    restaurantImage: 'https://images.unsplash.com/photo-1458644267420-66bc8a5f21e4?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-    reviewStatus: 'pending',
-  },
-  {
-    id: 'b4',
-    restaurantId: '4',
-    restaurantName: 'La Celiachia',
-    date: '2023-09-20T19:30:00',
-    people: 3,
-    notes: 'Compleanno',
-    status: 'completed',
-    bookingCode: 'CEL321',
-    restaurantImage: 'https://images.unsplash.com/photo-1515669097368-22e68427d265?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-    reviewStatus: 'completed',
-    restaurantCode: 'RES456',
-  },
-];
+import { useBookings } from '@/context/BookingContext';
 
 const formatDate = (dateString: string) => {
   try {
@@ -94,11 +44,9 @@ const formatDate = (dateString: string) => {
   }
 };
 
-type Booking = typeof sampleBookings[0];
-
 const BookingsPage = () => {
-  const [bookings, setBookings] = useState(sampleBookings);
   const [activeTab, setActiveTab] = useState('upcoming');
+  const { bookings, cancelBooking, updateBooking } = useBookings();
 
   const upcomingBookings = bookings.filter(booking => 
     !isPast(parseISO(booking.date)) && 
@@ -108,22 +56,13 @@ const BookingsPage = () => {
   const pastBookings = bookings.filter(booking => 
     isPast(parseISO(booking.date)) || booking.status === 'completed'
   );
-  
-  const cancelBooking = (bookingId: string) => {
-    setBookings(bookings.filter(booking => booking.id !== bookingId));
-    toast.success('Prenotazione cancellata con successo');
-  };
 
   const addReviewCode = (bookingId: string, reviewCode: string) => {
-    setBookings(bookings.map(booking => 
-      booking.id === bookingId 
-        ? { ...booking, restaurantCode: reviewCode, reviewStatus: 'ready' } 
-        : booking
-    ));
+    updateBooking(bookingId, { restaurantCode: reviewCode, reviewStatus: 'ready' });
     toast.success('Codice recensione salvato! Ora puoi lasciare una recensione');
   };
 
-  const BookingCard = ({ booking }: { booking: Booking }) => {
+  const BookingCard = ({ booking }: { booking: any }) => {
     const isPending = booking.status === 'pending';
     const isCompleted = booking.status === 'completed' || isPast(parseISO(booking.date));
     const isUpcoming = !isCompleted && !isPending;
