@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -55,7 +54,21 @@ const RegisterForm = () => {
       // Per ora simuliamo il successo
       setTimeout(() => {
         toast.success("Registrazione effettuata con successo");
-        navigate('/login');
+        
+        // Salviamo il tipo di utente nel localStorage
+        localStorage.setItem('userType', userType);
+        localStorage.setItem('isAuthenticated', 'true');
+        localStorage.setItem('userEmail', formData.email);
+        localStorage.setItem('userName', formData.name);
+        
+        if (userType === 'restaurant') {
+          localStorage.setItem('restaurantName', formData.restaurantName);
+          localStorage.setItem('restaurantAddress', formData.address);
+          localStorage.setItem('restaurantPhone', formData.phone);
+          navigate('/restaurant-dashboard');
+        } else {
+          navigate('/');
+        }
         setIsLoading(false);
       }, 1500);
     } catch (error) {

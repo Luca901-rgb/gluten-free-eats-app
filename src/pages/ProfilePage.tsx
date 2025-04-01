@@ -13,12 +13,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Layout from '@/components/Layout';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import ProfileTypeSwitch from '@/components/ProfileTypeSwitch';
 
 const ProfilePage = () => {
   const navigate = useNavigate();
 
   const handleLogout = () => {
     toast.success('Logout effettuato con successo');
+    localStorage.removeItem('isAuthenticated');
+    localStorage.removeItem('userEmail');
     navigate('/login');
   };
 
@@ -32,6 +35,8 @@ const ProfilePage = () => {
             Logout
           </Button>
         </div>
+
+        <ProfileTypeSwitch />
         
         <Card>
           <CardHeader className="pb-3">
@@ -40,8 +45,8 @@ const ProfilePage = () => {
                 <User size={32} />
               </div>
               <div>
-                <CardTitle>Mario Rossi</CardTitle>
-                <CardDescription>mario.rossi@example.com</CardDescription>
+                <CardTitle>{localStorage.getItem('userName') || 'Mario Rossi'}</CardTitle>
+                <CardDescription>{localStorage.getItem('userEmail') || 'mario.rossi@example.com'}</CardDescription>
               </div>
             </div>
           </CardHeader>

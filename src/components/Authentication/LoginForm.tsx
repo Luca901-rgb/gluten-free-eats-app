@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { Mail, Lock, Eye, EyeOff, LogIn, User } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, LogIn, User, Store } from 'lucide-react';
 
 const LoginForm = () => {
   const navigate = useNavigate();
@@ -34,13 +34,20 @@ const LoginForm = () => {
       // Per ora simuliamo un login di successo
       setTimeout(() => {
         toast.success("Accesso effettuato con successo");
-        navigate('/');
-        setIsLoading(false);
         
         // Simuliamo il salvataggio dei dati utente nel localStorage
         localStorage.setItem('userType', userType);
         localStorage.setItem('isAuthenticated', 'true');
         localStorage.setItem('userEmail', formData.email);
+
+        // Reindirizza in base al tipo di utente
+        if (userType === 'restaurant') {
+          navigate('/restaurant-dashboard');
+        } else {
+          navigate('/');
+        }
+        
+        setIsLoading(false);
       }, 1500);
     } catch (error) {
       toast.error("Errore durante il login. Riprova più tardi.");
@@ -66,7 +73,7 @@ const LoginForm = () => {
             <span>Cliente</span>
           </TabsTrigger>
           <TabsTrigger value="restaurant" className="flex items-center justify-center gap-2">
-            <User size={16} />
+            <Store size={16} />
             <span>Ristoratore</span>
           </TabsTrigger>
         </TabsList>
