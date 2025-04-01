@@ -11,6 +11,11 @@ import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import RestaurantPage from "./pages/RestaurantPage";
 import ProfilePage from "./pages/ProfilePage";
+import SearchPage from "./pages/SearchPage";
+import BookingsPage from "./pages/BookingsPage";
+import FavoritesPage from "./pages/FavoritesPage";
+import VideoRecipesPage from "./pages/VideoRecipesPage";
+import RestaurantDashboard from "./pages/RestaurantDashboard";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +32,11 @@ const App = () => (
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/restaurant/:id" element={<RestaurantPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/search" element={<SearchPage />} />
+          <Route path="/bookings" element={<BookingsPage />} />
+          <Route path="/favorites" element={<FavoritesPage />} />
+          <Route path="/videos" element={<VideoRecipesPage />} />
+          <Route path="/restaurant-dashboard" element={<RestaurantDashboard />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

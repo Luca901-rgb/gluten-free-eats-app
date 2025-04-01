@@ -6,6 +6,8 @@ import { Clock, MapPin, Phone, Calendar, Star, Award } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import StarRating from '@/components/common/StarRating';
 import BookingForm from '../Booking/BookingForm';
+import MenuViewer from './MenuViewer';
+import ReviewForm from './ReviewForm';
 
 export interface RestaurantDetailProps {
   id: string;
@@ -28,6 +30,12 @@ export interface RestaurantDetailProps {
 
 const RestaurantDetails: React.FC<{ restaurant: RestaurantDetailProps }> = ({ restaurant }) => {
   const [activeTab, setActiveTab] = useState('info');
+  
+  // Sample review data for demo
+  const sampleReview = {
+    bookingCode: 'TRA123',
+    restaurantCode: 'RES456',
+  };
   
   return (
     <div className="pb-20">
@@ -120,27 +128,7 @@ const RestaurantDetails: React.FC<{ restaurant: RestaurantDetailProps }> = ({ re
           </TabsContent>
 
           <TabsContent value="menu" className="animate-fade-in">
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <h2 className="font-poppins font-semibold text-lg">Menu del ristorante</h2>
-                {restaurant.menuUrl && (
-                  <Link 
-                    to={restaurant.menuUrl} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-sm text-accent hover:underline"
-                  >
-                    Scarica PDF
-                  </Link>
-                )}
-              </div>
-              
-              <div className="bg-secondary/20 rounded-lg p-8 text-center">
-                <p className="text-gray-700">
-                  Visualizzatore menu da implementare nella prossima versione.
-                </p>
-              </div>
-            </div>
+            <MenuViewer />
           </TabsContent>
 
           <TabsContent value="booking" className="animate-fade-in">
@@ -148,7 +136,7 @@ const RestaurantDetails: React.FC<{ restaurant: RestaurantDetailProps }> = ({ re
           </TabsContent>
 
           <TabsContent value="reviews" className="animate-fade-in">
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div className="flex justify-between items-center">
                 <h2 className="font-poppins font-semibold text-lg">Recensioni</h2>
                 <span className="text-sm bg-primary/10 text-primary py-1 px-3 rounded-full">
@@ -156,18 +144,13 @@ const RestaurantDetails: React.FC<{ restaurant: RestaurantDetailProps }> = ({ re
                 </span>
               </div>
               
-              <div className="bg-secondary/20 rounded-lg p-8 text-center">
-                <p className="text-gray-700 mb-4">
-                  Le recensioni verranno implementate nella prossima versione.
-                </p>
-                <div className="flex justify-center">
-                  <Star size={18} className="text-yellow-400 fill-yellow-400" />
-                  <Star size={18} className="text-yellow-400 fill-yellow-400" />
-                  <Star size={18} className="text-yellow-400 fill-yellow-400" />
-                  <Star size={18} className="text-yellow-400 fill-yellow-400" />
-                  <Star size={18} className="text-gray-300" />
-                </div>
-              </div>
+              {/* Sample review form for demo */}
+              <ReviewForm 
+                restaurantId={restaurant.id}
+                restaurantName={restaurant.name}
+                bookingCode={sampleReview.bookingCode}
+                restaurantCode={sampleReview.restaurantCode}
+              />
             </div>
           </TabsContent>
         </Tabs>
