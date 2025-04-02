@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { Mail, Lock, Eye, EyeOff, LogIn, User, Store } from 'lucide-react';
+import { loginUser } from '@/lib/firebase';
 
 const LoginForm = () => {
   const navigate = useNavigate();
@@ -30,27 +31,26 @@ const LoginForm = () => {
     setIsLoading(true);
 
     try {
-      // Qui implementeremmo la logica di autenticazione con Firebase
-      // Per ora simuliamo un login di successo
-      setTimeout(() => {
-        toast.success("Accesso effettuato con successo");
-        
-        // Simuliamo il salvataggio dei dati utente nel localStorage
-        localStorage.setItem('userType', userType);
-        localStorage.setItem('isAuthenticated', 'true');
-        localStorage.setItem('userEmail', formData.email);
-
-        // Reindirizza in base al tipo di utente
-        if (userType === 'restaurant') {
-          navigate('/restaurant-dashboard');
-        } else {
-          navigate('/');
-        }
-        
-        setIsLoading(false);
-      }, 1500);
-    } catch (error) {
-      toast.error("Errore durante il login. Riprova più tardi.");
+      // Login con Firebase
+      const user = await loginUser(formData.email, formData.password);
+      
+      // Salva i dati utente nel localStorage
+      localStorage.setItem('userType', userType);
+      localStorage.setItem('isAuthenticated', 'true');
+      localStorage.setItem('userEmail', formData.email);
+      localStorage.setItem('userId', user.uid);
+      
+      toast.success("Accesso effettuato con successo");
+      
+      // Reindirizza in base al tipo di utente
+      if (userType === 'restaurant') {
+        navigate('/restaurant-dashboard');
+      } else {
+        navigate('/');
+      }
+    } catch (error: any) {
+      toast.error(`Errore durante il login: ${error.message}`);
+    } finally {
       setIsLoading(false);
     }
   };

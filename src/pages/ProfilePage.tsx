@@ -14,15 +14,24 @@ import Layout from '@/components/Layout';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import ProfileTypeSwitch from '@/components/ProfileTypeSwitch';
+import { logoutUser } from '@/lib/firebase';
 
 const ProfilePage = () => {
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    toast.success('Logout effettuato con successo');
-    localStorage.removeItem('isAuthenticated');
-    localStorage.removeItem('userEmail');
-    navigate('/login');
+  const handleLogout = async () => {
+    try {
+      await logoutUser();
+      toast.success('Logout effettuato con successo');
+      localStorage.removeItem('isAuthenticated');
+      localStorage.removeItem('userEmail');
+      localStorage.removeItem('userId');
+      localStorage.removeItem('userName');
+      localStorage.removeItem('userType');
+      navigate('/login');
+    } catch (error: any) {
+      toast.error(`Errore durante il logout: ${error.message}`);
+    }
   };
 
   return (

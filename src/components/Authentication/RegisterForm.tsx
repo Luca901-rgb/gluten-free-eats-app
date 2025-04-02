@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -7,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { User, Mail, Lock, Phone, MapPin, Store } from 'lucide-react';
+import { registerUser } from '@/lib/firebase';
 
 const RegisterForm = () => {
   const navigate = useNavigate();
@@ -50,29 +52,29 @@ const RegisterForm = () => {
     setIsLoading(true);
 
     try {
-      // Qui implementeremmo la registrazione con Firebase
-      // Per ora simuliamo il successo
-      setTimeout(() => {
-        toast.success("Registrazione effettuata con successo");
-        
-        // Salviamo il tipo di utente nel localStorage
-        localStorage.setItem('userType', userType);
-        localStorage.setItem('isAuthenticated', 'true');
-        localStorage.setItem('userEmail', formData.email);
-        localStorage.setItem('userName', formData.name);
-        
-        if (userType === 'restaurant') {
-          localStorage.setItem('restaurantName', formData.restaurantName);
-          localStorage.setItem('restaurantAddress', formData.address);
-          localStorage.setItem('restaurantPhone', formData.phone);
-          navigate('/restaurant-dashboard');
-        } else {
-          navigate('/');
-        }
-        setIsLoading(false);
-      }, 1500);
-    } catch (error) {
-      toast.error("Errore durante la registrazione. Riprova più tardi.");
+      // Registrazione con Firebase
+      const user = await registerUser(formData.email, formData.password);
+      
+      // Salva i dati utente nel localStorage
+      localStorage.setItem('userType', userType);
+      localStorage.setItem('isAuthenticated', 'true');
+      localStorage.setItem('userEmail', formData.email);
+      localStorage.setItem('userName', formData.name);
+      localStorage.setItem('userId', user.uid);
+      
+      if (userType === 'restaurant') {
+        localStorage.setItem('restaurantName', formData.restaurantName);
+        localStorage.setItem('restaurantAddress', formData.address);
+        localStorage.setItem('restaurantPhone', formData.phone);
+        navigate('/restaurant-dashboard');
+      } else {
+        navigate('/');
+      }
+      
+      toast.success("Registrazione effettuata con successo");
+    } catch (error: any) {
+      toast.error(`Errore durante la registrazione: ${error.message}`);
+    } finally {
       setIsLoading(false);
     }
   };

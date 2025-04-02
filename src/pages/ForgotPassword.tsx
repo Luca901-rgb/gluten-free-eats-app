@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import Layout from '@/components/Layout';
 import { toast } from 'sonner';
 import { Mail } from 'lucide-react';
+import { resetPassword } from '@/lib/firebase';
 
 const ForgotPassword = () => {
   const navigate = useNavigate();
@@ -23,14 +24,13 @@ const ForgotPassword = () => {
     setIsLoading(true);
 
     try {
-      // Qui si implementerebbe la chiamata a Firebase per il reset password
-      // Per ora simuliamo il successo
-      setTimeout(() => {
-        toast.success('Email per il reset della password inviata con successo!');
-        setIsLoading(false);
-      }, 1500);
-    } catch (error) {
-      toast.error('Errore nell\'invio dell\'email. Riprova più tardi.');
+      // Utilizziamo Firebase per inviare l'email di reset
+      await resetPassword(email);
+      toast.success('Email per il reset della password inviata con successo!');
+      setTimeout(() => navigate('/login'), 3000);
+    } catch (error: any) {
+      toast.error(`Errore nell'invio dell'email: ${error.message}`);
+    } finally {
       setIsLoading(false);
     }
   };
