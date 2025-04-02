@@ -1,12 +1,12 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Image, Star, Upload, X, Check, AlertCircle } from 'lucide-react';
+import { Image, Star, Upload, X, Check, AlertCircle, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Form,
   FormControl,
@@ -28,7 +28,6 @@ interface ReviewFormProps {
   onSubmitSuccess?: () => void;
 }
 
-// Schema di validazione per la recensione
 const reviewSchema = z.object({
   customerCode: z
     .string()
@@ -100,7 +99,6 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
     }
   });
 
-  // Countdown timer
   useEffect(() => {
     const timer = setInterval(() => {
       setTimeLeft(prevTime => {
@@ -112,7 +110,6 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
     return () => clearInterval(timer);
   }, []);
 
-  // Formatta il tempo rimanente
   const formatTimeRemaining = () => {
     const hours = Math.floor(timeLeft / 60);
     const minutes = timeLeft % 60;
@@ -122,8 +119,6 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || images.length >= 3) return;
     
-    // In a real app, this would upload to a server
-    // For now we'll just simulate with local URLs
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
@@ -143,13 +138,11 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
   const verifyCode = () => {
     setIsVerifying(true);
     
-    // Simuliamo una verifica in tempo reale dei codici
     setTimeout(() => {
       const customerCode = form.getValues('customerCode');
       const restaurantCode = form.getValues('restaurantCode');
       
       if (customerCode && restaurantCode) {
-        // In un'app reale, qui ci sarebbe una chiamata API per verificare i codici
         const isValid = customerCode.length === 6 && /^\d{4}$/.test(restaurantCode);
         setIsVerified(isValid);
         
@@ -173,17 +166,14 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
     }
     
     if (isPreview) {
-      // Se siamo in modalità anteprima, inviamo effettivamente la recensione
       setIsSubmitting(true);
       
-      // Simuliamo un invio API
       setTimeout(() => {
         toast.success('Recensione inviata con successo!');
         setIsSubmitting(false);
         if (onSubmitSuccess) onSubmitSuccess();
       }, 1500);
     } else {
-      // Altrimenti, mostriamo l'anteprima
       setIsPreview(true);
     }
   };
