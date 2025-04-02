@@ -1,17 +1,15 @@
-
 import { initializeApp } from 'firebase/app';
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, sendPasswordResetEmail } from 'firebase/auth';
 
 // La tua configurazione Firebase
 // IMPORTANTE: Queste sono solo chiavi pubbliche che possono essere incluse nel client
-// Sostituisci con i tuoi valori da Firebase console
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY", // Sostituisci con il tuo API Key
-  authDomain: "YOUR_AUTH_DOMAIN", // es. myapp.firebaseapp.com
-  projectId: "YOUR_PROJECT_ID", // es. myapp
-  storageBucket: "YOUR_STORAGE_BUCKET", // es. myapp.appspot.com
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "INSERISCI_QUI_LA_TUA_API_KEY",
+  authDomain: "INSERISCI_QUI_IL_TUO_AUTH_DOMAIN",
+  projectId: "INSERISCI_QUI_IL_TUO_PROJECT_ID",
+  storageBucket: "INSERISCI_QUI_IL_TUO_STORAGE_BUCKET",
+  messagingSenderId: "INSERISCI_QUI_IL_TUO_MESSAGING_SENDER_ID",
+  appId: "INSERISCI_QUI_IL_TUO_APP_ID"
 };
 
 // Inizializza Firebase
