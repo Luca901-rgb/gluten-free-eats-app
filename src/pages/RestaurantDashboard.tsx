@@ -31,6 +31,12 @@ import {
   Camera,
   Copy,
   Check,
+  Home,
+  Image,
+  User,
+  Calendar,
+  Phone,
+  MapPin,
 } from 'lucide-react';
 import {
   Dialog,
@@ -72,7 +78,7 @@ const reviews = [
     text: 'Ottimo ristorante, cibo delizioso e personale gentilissimo. La pasta era davvero eccellente e il tiramisù fantastico. Torneremo sicuramente!',
     response: 'Grazie per la recensione positiva! Siamo felici che ti sia piaciuto il nostro ristorante e speriamo di rivederti presto.',
     photos: [
-      'https://images.unsplash.com/photo-1458644267420-66bc8a5f21e4?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80',
+      'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80',
     ],
   },
   {
@@ -135,7 +141,7 @@ const formatDate = (dateString: string) => {
 };
 
 const RestaurantDashboard = () => {
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState('home');
   const [reviewsList, setReviewsList] = useState(reviews);
   const [selectedBooking, setSelectedBooking] = useState<any | null>(null);
   const [selectedReview, setSelectedReview] = useState<any | null>(null);
@@ -201,15 +207,29 @@ const RestaurantDashboard = () => {
           </Button>
         </div>
 
-        <Tabs defaultValue="dashboard" value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-            <TabsTrigger value="bookings">Prenotazioni</TabsTrigger>
-            <TabsTrigger value="reviews">Recensioni</TabsTrigger>
-            <TabsTrigger value="content">Contenuti</TabsTrigger>
+        <Tabs defaultValue="home" value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid w-full grid-cols-6">
+            <TabsTrigger value="home">
+              <Home size={18} className="mr-1" /> Home
+            </TabsTrigger>
+            <TabsTrigger value="gallery">
+              <Image size={18} className="mr-1" /> Galleria
+            </TabsTrigger>
+            <TabsTrigger value="videos">
+              <Video size={18} className="mr-1" /> Videoricette
+            </TabsTrigger>
+            <TabsTrigger value="bookings">
+              <Calendar size={18} className="mr-1" /> Prenotazioni
+            </TabsTrigger>
+            <TabsTrigger value="reviews">
+              <Star size={18} className="mr-1" /> Recensioni
+            </TabsTrigger>
+            <TabsTrigger value="profile">
+              <User size={18} className="mr-1" /> Profilo
+            </TabsTrigger>
           </TabsList>
           
-          <TabsContent value="dashboard" className="space-y-6">
+          <TabsContent value="home" className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Card>
                 <CardHeader className="pb-2">
@@ -325,6 +345,126 @@ const RestaurantDashboard = () => {
                 </CardFooter>
               </Card>
             </div>
+          </TabsContent>
+          
+          <TabsContent value="gallery" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Galleria Immagini</CardTitle>
+                <CardDescription>Gestisci le foto del tuo ristorante e dei piatti</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-3 gap-3">
+                  <img
+                    src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80"
+                    alt="Restaurant"
+                    className="rounded-md aspect-square object-cover"
+                  />
+                  <img
+                    src="https://images.unsplash.com/photo-1458644267420-66bc8a5f21e4?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80"
+                    alt="Food"
+                    className="rounded-md aspect-square object-cover"
+                  />
+                  <img
+                    src="https://images.unsplash.com/photo-1513104890138-7c749659a591?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80"
+                    alt="Pizza"
+                    className="rounded-md aspect-square object-cover"
+                  />
+                  <img
+                    src="https://images.unsplash.com/photo-1515669097368-22e68427d265?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80"
+                    alt="Interior"
+                    className="rounded-md aspect-square object-cover"
+                  />
+                  <div className="rounded-md aspect-square border border-dashed flex items-center justify-center">
+                    <input
+                      type="file"
+                      id="photo-upload"
+                      className="hidden"
+                      accept="image/*"
+                      onChange={() => toast.info('Caricamento foto in arrivo')}
+                    />
+                    <label htmlFor="photo-upload" className="cursor-pointer flex flex-col items-center">
+                      <Camera size={24} className="text-gray-400 mb-1" />
+                      <span className="text-xs text-gray-500">Aggiungi foto</span>
+                    </label>
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter>
+                <Button variant="outline" size="sm" className="ml-auto">
+                  Gestisci galleria
+                </Button>
+              </CardFooter>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="videos" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Videoricette</CardTitle>
+                <CardDescription>Gestisci i video delle ricette del tuo ristorante</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {videos.map(video => (
+                  <div key={video.id} className="border rounded-lg p-3 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-16 h-12 rounded overflow-hidden">
+                        <img src={video.thumbnail} alt={video.title} className="w-full h-full object-cover" />
+                      </div>
+                      <div>
+                        <p className="font-medium line-clamp-1">{video.title}</p>
+                        <div className="flex items-center gap-4 text-xs text-gray-500">
+                          <span className="flex items-center gap-1">
+                            <Clock size={12} />
+                            {video.duration}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Eye size={12} />
+                            {video.views} visualizzazioni
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <ChevronDown size={16} />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => toast.info('Modifica video in arrivo')}>
+                          Modifica
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => toast.info('Anteprima video in arrivo')}>
+                          Anteprima
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => toast.info('Statistiche video in arrivo')}>
+                          Statistiche
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                ))}
+                
+                <div className="border border-dashed rounded-lg p-8 text-center">
+                  <input
+                    type="file"
+                    id="video-upload"
+                    className="hidden"
+                    accept="video/*"
+                    onChange={() => toast.info('Caricamento video in arrivo')}
+                  />
+                  <label htmlFor="video-upload" className="cursor-pointer">
+                    <Video size={32} className="mx-auto text-gray-400 mb-2" />
+                    <p className="font-medium text-gray-700">Carica nuova videoricetta</p>
+                    <p className="text-sm text-gray-500 mt-1">Massimo 500MB per video</p>
+                    <Button variant="outline" className="mt-4">
+                      Seleziona file
+                    </Button>
+                  </label>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
           
           <TabsContent value="bookings" className="space-y-6">
@@ -657,7 +797,78 @@ const RestaurantDashboard = () => {
             )}
           </TabsContent>
           
-          <TabsContent value="content" className="space-y-6">
+          <TabsContent value="profile" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Profilo Ristorante</CardTitle>
+                <CardDescription>Gestisci le informazioni del tuo ristorante</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
+                  <div className="w-16 h-16 rounded-full overflow-hidden">
+                    <img src={restaurant.logo} alt={restaurant.name} className="w-full h-full object-cover" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-lg">{restaurant.name}</h3>
+                    <p className="text-sm text-gray-600">{restaurant.address}</p>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <h3 className="font-medium mb-2">Informazioni di contatto</h3>
+                    <div className="space-y-2">
+                      <p className="flex items-center">
+                        <Phone size={16} className="mr-2 text-gray-500" />
+                        <span>{restaurant.phone}</span>
+                      </p>
+                      <p className="flex items-center">
+                        <MessageSquare size={16} className="mr-2 text-gray-500" />
+                        <span>{restaurant.email}</span>
+                      </p>
+                      <p className="flex items-center">
+                        <MapPin size={16} className="mr-2 text-gray-500" />
+                        <span>{restaurant.address}</span>
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-medium mb-2">Statistiche</h3>
+                    <div className="space-y-2">
+                      <p className="flex items-center justify-between">
+                        <span className="flex items-center">
+                          <Star size={16} className="mr-2 text-yellow-500" />
+                          Valutazione media
+                        </span>
+                        <span className="font-medium">{statistics.averageRating}/5</span>
+                      </p>
+                      <p className="flex items-center justify-between">
+                        <span className="flex items-center">
+                          <MessageSquare size={16} className="mr-2 text-gray-500" />
+                          Recensioni totali
+                        </span>
+                        <span className="font-medium">{statistics.totalReviews}</span>
+                      </p>
+                      <p className="flex items-center justify-between">
+                        <span className="flex items-center">
+                          <Eye size={16} className="mr-2 text-gray-500" />
+                          Visualizzazioni profilo
+                        </span>
+                        <span className="font-medium">{statistics.profileViews}</span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="pt-4 flex justify-end">
+                  <Button onClick={() => toast.info('Funzionalità di modifica profilo in arrivo')}>
+                    Modifica profilo
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+            
             <Card>
               <CardHeader>
                 <CardTitle>Gestione Menu</CardTitle>
@@ -700,122 +911,6 @@ const RestaurantDashboard = () => {
                   </label>
                 </div>
               </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Videoricette</CardTitle>
-                <CardDescription>Gestisci i video delle ricette del tuo ristorante</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {videos.map(video => (
-                  <div key={video.id} className="border rounded-lg p-3 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-16 h-12 rounded overflow-hidden">
-                        <img src={video.thumbnail} alt={video.title} className="w-full h-full object-cover" />
-                      </div>
-                      <div>
-                        <p className="font-medium line-clamp-1">{video.title}</p>
-                        <div className="flex items-center gap-4 text-xs text-gray-500">
-                          <span className="flex items-center gap-1">
-                            <Clock size={12} />
-                            {video.duration}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Eye size={12} />
-                            {video.views} visualizzazioni
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <ChevronDown size={16} />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => toast.info('Modifica video in arrivo')}>
-                          Modifica
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => toast.info('Anteprima video in arrivo')}>
-                          Anteprima
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => toast.info('Statistiche video in arrivo')}>
-                          Statistiche
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                ))}
-                
-                <div className="border border-dashed rounded-lg p-8 text-center">
-                  <input
-                    type="file"
-                    id="video-upload"
-                    className="hidden"
-                    accept="video/*"
-                    onChange={() => toast.info('Caricamento video in arrivo')}
-                  />
-                  <label htmlFor="video-upload" className="cursor-pointer">
-                    <Video size={32} className="mx-auto text-gray-400 mb-2" />
-                    <p className="font-medium text-gray-700">Carica nuova videoricetta</p>
-                    <p className="text-sm text-gray-500 mt-1">Massimo 500MB per video</p>
-                    <Button variant="outline" className="mt-4">
-                      Seleziona file
-                    </Button>
-                  </label>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Galleria foto</CardTitle>
-                <CardDescription>Gestisci le foto del tuo ristorante e dei piatti</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-3 gap-3">
-                  <img
-                    src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80"
-                    alt="Restaurant"
-                    className="rounded-md aspect-square object-cover"
-                  />
-                  <img
-                    src="https://images.unsplash.com/photo-1458644267420-66bc8a5f21e4?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80"
-                    alt="Food"
-                    className="rounded-md aspect-square object-cover"
-                  />
-                  <img
-                    src="https://images.unsplash.com/photo-1513104890138-7c749659a591?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80"
-                    alt="Pizza"
-                    className="rounded-md aspect-square object-cover"
-                  />
-                  <img
-                    src="https://images.unsplash.com/photo-1515669097368-22e68427d265?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80"
-                    alt="Interior"
-                    className="rounded-md aspect-square object-cover"
-                  />
-                  <div className="rounded-md aspect-square border border-dashed flex items-center justify-center">
-                    <input
-                      type="file"
-                      id="photo-upload"
-                      className="hidden"
-                      accept="image/*"
-                      onChange={() => toast.info('Caricamento foto in arrivo')}
-                    />
-                    <label htmlFor="photo-upload" className="cursor-pointer flex flex-col items-center">
-                      <Camera size={24} className="text-gray-400 mb-1" />
-                      <span className="text-xs text-gray-500">Aggiungi foto</span>
-                    </label>
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button variant="outline" size="sm" className="ml-auto">
-                  Gestisci galleria
-                </Button>
-              </CardFooter>
             </Card>
           </TabsContent>
         </Tabs>
