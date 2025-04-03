@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import { Icon } from 'leaflet';
+import { Icon, LatLngExpression } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { AlertCircle, MapPin } from 'lucide-react';
 
@@ -40,7 +40,7 @@ export const RestaurantMap: React.FC<RestaurantMapProps> = ({
 }) => {
   // Calculate center position - use user's location if available, otherwise use first restaurant
   // or default to a position in Italy
-  const centerPosition = userLocation 
+  const centerPosition: LatLngExpression = userLocation 
     ? [userLocation.lat, userLocation.lng] 
     : restaurants.length > 0 
       ? [restaurants[0].location.lat, restaurants[0].location.lng] 
@@ -87,7 +87,7 @@ export const RestaurantMap: React.FC<RestaurantMapProps> = ({
 
   return (
     <MapContainer 
-      center={[centerPosition[0] as number, centerPosition[1] as number]}
+      center={centerPosition}
       zoom={13} 
       style={{ height: '100%', width: '100%' }}
       zoomControl={true}
@@ -100,7 +100,7 @@ export const RestaurantMap: React.FC<RestaurantMapProps> = ({
       {/* Add user location marker if available */}
       {userLocation && (
         <Marker 
-          position={[userLocation.lat, userLocation.lng]} 
+          position={[userLocation.lat, userLocation.lng] as LatLngExpression}
           icon={userIcon}
         >
           <Popup>
@@ -113,7 +113,7 @@ export const RestaurantMap: React.FC<RestaurantMapProps> = ({
       {restaurants.map(restaurant => (
         <Marker 
           key={restaurant.id}
-          position={[restaurant.location.lat, restaurant.location.lng]} 
+          position={[restaurant.location.lat, restaurant.location.lng] as LatLngExpression}
           icon={restaurantIcon}
         >
           <Popup>
