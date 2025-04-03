@@ -1,10 +1,11 @@
 
 import React from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import { Icon, LatLngExpression } from 'leaflet';
+import { Icon } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { AlertCircle, MapPin } from 'lucide-react';
 
+// Define interfaces
 interface Restaurant {
   id: string;
   name: string;
@@ -38,13 +39,11 @@ export const RestaurantMap: React.FC<RestaurantMapProps> = ({
   userLocation, 
   restaurants 
 }) => {
-  // Calculate center position - use user's location if available, otherwise use first restaurant
-  // or default to a position in Italy
-  const centerPosition: LatLngExpression = userLocation 
-    ? [userLocation.lat, userLocation.lng] 
-    : restaurants.length > 0 
-      ? [restaurants[0].location.lat, restaurants[0].location.lng] 
-      : [41.9028, 12.4964]; // Default: Rome, Italy
+  // Calculate center position
+  const defaultCenter = [41.9028, 12.4964]; // Default: Rome, Italy
+  
+  const centerLat = userLocation?.lat || (restaurants[0]?.location.lat || defaultCenter[0]);
+  const centerLng = userLocation?.lng || (restaurants[0]?.location.lng || defaultCenter[1]);
   
   const [mapError, setMapError] = React.useState<string | null>(null);
 
@@ -87,21 +86,19 @@ export const RestaurantMap: React.FC<RestaurantMapProps> = ({
 
   return (
     <MapContainer 
-      center={centerPosition}
+      center={[centerLat, centerLng]}
       zoom={13} 
       style={{ height: '100%', width: '100%' }}
-      zoomControl={true}
     >
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       />
       
       {/* Add user location marker if available */}
       {userLocation && (
         <Marker 
-          position={[userLocation.lat, userLocation.lng] as LatLngExpression}
-          icon={userIcon}
+          position={[userLocation.lat, userLocation.lng]}
         >
           <Popup>
             <strong>La tua posizione</strong>
@@ -113,8 +110,7 @@ export const RestaurantMap: React.FC<RestaurantMapProps> = ({
       {restaurants.map(restaurant => (
         <Marker 
           key={restaurant.id}
-          position={[restaurant.location.lat, restaurant.location.lng] as LatLngExpression}
-          icon={restaurantIcon}
+          position={[restaurant.location.lat, restaurant.location.lng]}
         >
           <Popup>
             <div>
