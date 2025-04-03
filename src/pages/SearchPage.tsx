@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { Link } from 'react-router-dom';
@@ -129,38 +130,12 @@ const SearchPage = () => {
           )}
         </div>
         
-        {/* Map Component with OpenStreetMap */}
+        {/* Map Component replaced with list view */}
         <div className="h-[60vh] rounded-lg border overflow-hidden mb-4">
           <RestaurantMap 
             userLocation={userPosition}
             restaurants={restaurants}
           />
-        </div>
-        
-        {/* Restaurant List */}
-        <div className="mt-6">
-          <h2 className="text-xl font-semibold mb-3">Ristoranti nelle vicinanze</h2>
-          <div className="space-y-3">
-            {restaurants.map(restaurant => (
-              <div 
-                key={restaurant.id}
-                className="p-3 border rounded-lg flex items-center justify-between"
-              >
-                <div>
-                  <h3 className="font-medium">{restaurant.name}</h3>
-                  <div className="flex items-center text-sm text-gray-500 mt-1">
-                    <MapPin size={14} className="mr-1" />
-                    <span>{restaurant.address}</span>
-                  </div>
-                </div>
-                <div>
-                  <span className="text-sm bg-primary/10 text-primary py-1 px-2 rounded-full">
-                    {restaurant.distance}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
     </Layout>
