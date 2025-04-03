@@ -17,6 +17,11 @@ import FavoritesPage from "./pages/FavoritesPage";
 import VideoRecipesPage from "./pages/VideoRecipesPage";
 import RestaurantDashboard from "./pages/RestaurantDashboard";
 import { BookingProvider } from "./context/BookingContext";
+import { AdminProvider } from "./context/AdminContext";
+
+// Admin pages
+import AdminLogin from "./pages/AdminLogin";
+import AdminDashboard from "./pages/AdminDashboard";
 
 // Add routes for restaurant dashboard sections
 import RestaurantGallery from "./pages/restaurant/RestaurantGallery";
@@ -32,35 +37,41 @@ const App = () => (
   // Fix the order of providers - React Router must be outside QueryClient
   <BrowserRouter>
     <QueryClientProvider client={queryClient}>
-      <BookingProvider>
-        <TooltipProvider>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/restaurant/:id" element={<RestaurantPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/search" element={<SearchPage />} />
-            <Route path="/bookings" element={<BookingsPage />} />
-            <Route path="/favorites" element={<FavoritesPage />} />
-            <Route path="/videos" element={<VideoRecipesPage />} />
-            
-            {/* Restaurant Dashboard Routes */}
-            <Route path="/restaurant-dashboard" element={<RestaurantDashboard />} />
-            <Route path="/restaurant-dashboard/gallery" element={<RestaurantGallery />} />
-            <Route path="/restaurant-dashboard/videos" element={<RestaurantVideos />} />
-            <Route path="/restaurant-dashboard/bookings" element={<RestaurantBookings />} />
-            <Route path="/restaurant-dashboard/reviews" element={<RestaurantReviews />} />
-            <Route path="/restaurant-dashboard/profile" element={<RestaurantProfile />} />
-            
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-          <Toaster />
-          <Sonner />
-        </TooltipProvider>
-      </BookingProvider>
+      <AdminProvider>
+        <BookingProvider>
+          <TooltipProvider>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/restaurant/:id" element={<RestaurantPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/search" element={<SearchPage />} />
+              <Route path="/bookings" element={<BookingsPage />} />
+              <Route path="/favorites" element={<FavoritesPage />} />
+              <Route path="/videos" element={<VideoRecipesPage />} />
+              
+              {/* Restaurant Dashboard Routes */}
+              <Route path="/restaurant-dashboard" element={<RestaurantDashboard />} />
+              <Route path="/restaurant-dashboard/gallery" element={<RestaurantGallery />} />
+              <Route path="/restaurant-dashboard/videos" element={<RestaurantVideos />} />
+              <Route path="/restaurant-dashboard/bookings" element={<RestaurantBookings />} />
+              <Route path="/restaurant-dashboard/reviews" element={<RestaurantReviews />} />
+              <Route path="/restaurant-dashboard/profile" element={<RestaurantProfile />} />
+              
+              {/* Admin Routes */}
+              <Route path="/admin-login" element={<AdminLogin />} />
+              <Route path="/admin-dashboard" element={<AdminDashboard />} />
+              
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+            <Toaster />
+            <Sonner />
+          </TooltipProvider>
+        </BookingProvider>
+      </AdminProvider>
     </QueryClientProvider>
   </BrowserRouter>
 );
