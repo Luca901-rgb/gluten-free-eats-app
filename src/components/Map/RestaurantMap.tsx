@@ -15,13 +15,14 @@ interface Restaurant {
 }
 
 interface RestaurantMapProps {
-  accessToken: string;
   userLocation: { lat: number; lng: number } | null;
   restaurants: Restaurant[];
 }
 
+// Token Mapbox predefinito per l'applicazione
+const MAPBOX_TOKEN = 'pk.eyJ1IjoibG92YWJsZS1haS1kZW1vIiwiYSI6ImNscHJ6NnUyOTBxOHEycWxlZ3Q4ajYwcnEifQ.RRzh8g7xRyR9OzMVdWt4cA';
+
 export const RestaurantMap: React.FC<RestaurantMapProps> = ({ 
-  accessToken, 
   userLocation, 
   restaurants 
 }) => {
@@ -31,9 +32,9 @@ export const RestaurantMap: React.FC<RestaurantMapProps> = ({
   
   // Initialize map when component mounts
   useEffect(() => {
-    if (!mapContainer.current || !accessToken) return;
+    if (!mapContainer.current) return;
     
-    mapboxgl.accessToken = accessToken;
+    mapboxgl.accessToken = MAPBOX_TOKEN;
     
     const initialCenter = userLocation || 
       (restaurants.length > 0 ? 
@@ -59,11 +60,11 @@ export const RestaurantMap: React.FC<RestaurantMapProps> = ({
         map.current = null;
       }
     };
-  }, [accessToken]);
+  }, []);
 
   // Add markers when map is loaded and when restaurants or user location changes
   useEffect(() => {
-    if (!map.current || !accessToken) return;
+    if (!map.current) return;
 
     // Wait for map to load before adding markers
     const addMarkers = () => {
@@ -135,7 +136,7 @@ export const RestaurantMap: React.FC<RestaurantMapProps> = ({
     } else {
       map.current.on('load', addMarkers);
     }
-  }, [restaurants, userLocation, accessToken]);
+  }, [restaurants, userLocation]);
 
   return (
     <div ref={mapContainer} className="h-full w-full" />
