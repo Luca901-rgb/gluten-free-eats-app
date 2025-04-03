@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
@@ -99,11 +98,6 @@ const BookingForm: React.FC<BookingFormProps> = ({ restaurantId, restaurantName,
         limitedDate.getFullYear() === date.getFullYear()
     );
   };
-  
-  // Funzione per generare un QR code (simulata)
-  const generateQRCode = (bookingCode: string) => {
-    return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${bookingCode}`;
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -147,10 +141,7 @@ const BookingForm: React.FC<BookingFormProps> = ({ restaurantId, restaurantName,
       };
       
       // Prepara dati per la conferma
-      setBookingData({
-        ...newBooking,
-        qrCode: generateQRCode(bookingCode)
-      });
+      setBookingData(newBooking);
       
       // Aggiungi la prenotazione
       addBooking(newBooking);
@@ -193,17 +184,16 @@ const BookingForm: React.FC<BookingFormProps> = ({ restaurantId, restaurantName,
           <CardDescription>La tua prenotazione è stata ricevuta</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex justify-center mb-4">
-            <img src={bookingData.qrCode} alt="QR Code prenotazione" className="w-32 h-32" />
-          </div>
-          <div className="space-y-2 text-center">
-            <p className="font-semibold text-lg">{restaurantName}</p>
-            <p>{dateFormat(new Date(bookingData.date), 'EEEE d MMMM yyyy', { locale: it })}</p>
-            <p>Ore {dateFormat(new Date(bookingData.date), 'HH:mm')}</p>
-            <p>{bookingData.people} {bookingData.people === 1 ? 'persona' : 'persone'}</p>
-            <p className="text-sm font-mono mt-2 border border-dashed border-gray-300 py-1 rounded">
-              Codice prenotazione: <span className="font-bold">{bookingData.bookingCode}</span>
-            </p>
+          <div className="bg-secondary/20 p-4 rounded-lg">
+            <div className="space-y-2 text-center">
+              <p className="font-semibold text-lg">{restaurantName}</p>
+              <p>{dateFormat(new Date(bookingData.date), 'EEEE d MMMM yyyy', { locale: it })}</p>
+              <p>Ore {dateFormat(new Date(bookingData.date), 'HH:mm')}</p>
+              <p>{bookingData.people} {bookingData.people === 1 ? 'persona' : 'persone'}</p>
+              <p className="text-sm font-mono mt-2 border border-dashed border-gray-300 py-1 px-2 rounded inline-block">
+                Codice prenotazione: <span className="font-bold">{bookingData.bookingCode}</span>
+              </p>
+            </div>
           </div>
           
           {bookingData.additionalOptions.length > 0 && (
@@ -225,6 +215,15 @@ const BookingForm: React.FC<BookingFormProps> = ({ restaurantId, restaurantName,
               <p className="text-sm italic">"{bookingData.notes}"</p>
             </div>
           )}
+          
+          <div className="bg-blue-50 p-3 rounded-lg border border-blue-100 text-sm">
+            <div className="flex items-start">
+              <Info className="h-5 w-5 mr-2 text-blue-500 flex-shrink-0 mt-0.5" />
+              <p className="text-blue-800">
+                Presenta questo codice al ristorante all'arrivo oppure visualizza la prenotazione nella sezione "Le mie prenotazioni" dell'app.
+              </p>
+            </div>
+          </div>
         </CardContent>
         <CardFooter className="flex flex-col space-y-2">
           <Button 
