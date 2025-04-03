@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { toast } from 'sonner';
@@ -62,15 +62,19 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   const [appIssues, setAppIssues] = useState<{id: string, title: string, description: string, status: 'open' | 'resolved'}[]>([]);
 
   // Verificare se l'utente è admin al caricamento
-  React.useEffect(() => {
+  useEffect(() => {
     const checkAdminStatus = () => {
       onAuthStateChanged(auth, (user) => {
         if (user) {
-          // In un'app reale, questa verifica dovrebbe essere sul backend
-          // per motivi di sicurezza, qui simuliamo un admin hard-coded
-          if (user.email === 'admin@glutenfreeeats.com') {
+          // Verifica se l'email è nell'elenco degli admin o se è stato impostato come admin nel localStorage
+          const adminEmail = localStorage.getItem('adminEmail');
+          
+          if (user.email === 'admin@glutenfreeeats.com' || user.email === adminEmail) {
             setIsAdmin(true);
             localStorage.setItem('isAdmin', 'true');
+            if (!adminEmail && user.email) {
+              localStorage.setItem('adminEmail', user.email);
+            }
           } else {
             setIsAdmin(false);
             localStorage.removeItem('isAdmin');
