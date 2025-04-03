@@ -18,6 +18,13 @@ import VideoRecipesPage from "./pages/VideoRecipesPage";
 import RestaurantDashboard from "./pages/RestaurantDashboard";
 import { BookingProvider } from "./context/BookingContext";
 
+// Add routes for restaurant dashboard sections
+import RestaurantGallery from "./pages/restaurant/RestaurantGallery";
+import RestaurantVideos from "./pages/restaurant/RestaurantVideos";
+import RestaurantBookings from "./pages/restaurant/RestaurantBookings";
+import RestaurantReviews from "./pages/restaurant/RestaurantReviews";
+import RestaurantProfile from "./pages/restaurant/RestaurantProfile";
+
 // Create a new QueryClient instance
 const queryClient = new QueryClient();
 
@@ -38,7 +45,15 @@ const App = () => (
             <Route path="/bookings" element={<BookingsPage />} />
             <Route path="/favorites" element={<FavoritesPage />} />
             <Route path="/videos" element={<VideoRecipesPage />} />
+            
+            {/* Restaurant Dashboard Routes */}
             <Route path="/restaurant-dashboard" element={<RestaurantDashboard />} />
+            <Route path="/restaurant-dashboard/gallery" element={<RestaurantGallery />} />
+            <Route path="/restaurant-dashboard/videos" element={<RestaurantVideos />} />
+            <Route path="/restaurant-dashboard/bookings" element={<RestaurantBookings />} />
+            <Route path="/restaurant-dashboard/reviews" element={<RestaurantReviews />} />
+            <Route path="/restaurant-dashboard/profile" element={<RestaurantProfile />} />
+            
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

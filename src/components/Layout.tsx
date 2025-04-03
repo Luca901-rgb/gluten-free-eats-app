@@ -13,7 +13,7 @@ const Layout = ({ children, hideNavigation = false }: LayoutProps) => {
   const location = useLocation();
   
   // Automatically hide bottom navigation on restaurant dashboard
-  const isRestaurantDashboard = location.pathname === '/restaurant-dashboard';
+  const isRestaurantDashboard = location.pathname.startsWith('/restaurant-dashboard');
   const shouldHideNavigation = hideNavigation || isRestaurantDashboard;
 
   // Determine if we should show restaurant navigation instead
