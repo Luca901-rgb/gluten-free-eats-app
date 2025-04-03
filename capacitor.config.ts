@@ -3,7 +3,7 @@ import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'app.lovable.0406988df72c4fb89c66f80fcfc8a946',
-  appName: 'gluten-free-eats-app',
+  appName: 'Gluten Free Eats',
   webDir: 'dist',
   server: {
     url: 'https://0406988d-f72c-4fb8-9c66-f80fcfc8a946.lovableproject.com?forceHideBadge=true',
@@ -12,8 +12,43 @@ const config: CapacitorConfig = {
   plugins: {
     SplashScreen: {
       launchShowDuration: 2000,
-      backgroundColor: "#ffffffff"
+      backgroundColor: "#ffffffff",
+      androidScaleType: "CENTER_CROP",
+      launchAutoHide: true,
+      showSpinner: true,
+      spinnerColor: "#FF5733"
+    },
+    Keyboard: {
+      resize: "body",
+      style: "dark",
+      resizeOnFullScreen: true
+    },
+    LocalNotifications: {
+      smallIcon: "ic_stat_restaurant",
+      iconColor: "#FF5733"
+    },
+    Geolocation: {
+      permissions: {
+        android: {
+          highAccuracy: true
+        },
+        ios: {
+          alwaysPromptForPermission: false
+        }
+      }
     }
+  },
+  android: {
+    backgroundColor: "#FFFFFF",
+    allowMixedContent: true,
+    captureInput: true,
+    webContentsDebuggingEnabled: true,
+    minSdkVersion: 22
+  },
+  ios: {
+    preferredContentMode: "mobile",
+    cordovaSwiftVersion: "5.0",
+    contentInset: "always"
   }
 };
 

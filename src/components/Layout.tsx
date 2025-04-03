@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { Home, Search, Calendar, Star, User, Image, Video, MessageCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -18,6 +18,30 @@ const Layout = ({ children, hideNavigation = false }: LayoutProps) => {
 
   // Determine if we should show restaurant navigation instead
   const showRestaurantNavigation = isRestaurantDashboard;
+  
+  // Add body style for mobile app appearance
+  useEffect(() => {
+    // Set body styles for mobile app look and feel
+    document.body.style.overscrollBehavior = 'none';
+    document.body.style.WebkitOverflowScrolling = 'touch';
+    document.body.style.touchAction = 'manipulation';
+    
+    // Set meta viewport for better mobile experience
+    const viewportMeta = document.querySelector('meta[name="viewport"]');
+    if (viewportMeta) {
+      viewportMeta.setAttribute('content', 
+        'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover');
+    }
+    
+    // iOS specific
+    document.documentElement.style.setProperty('--sat', '100%');
+    
+    return () => {
+      document.body.style.overscrollBehavior = '';
+      document.body.style.WebkitOverflowScrolling = '';
+      document.body.style.touchAction = '';
+    };
+  }, []);
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
@@ -31,14 +55,14 @@ const Layout = ({ children, hideNavigation = false }: LayoutProps) => {
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="flex-1 overflow-auto pb-20">
+      {/* Main Content with safe area padding for notches and home indicators */}
+      <main className="flex-1 overflow-auto pb-20 pt-safe px-safe">
         {children}
       </main>
 
       {/* Regular User Bottom Navigation */}
       {!shouldHideNavigation && !showRestaurantNavigation && (
-        <nav className="fixed bottom-0 w-full bg-white shadow-[0_0_15px_rgba(0,0,0,0.1)] z-10">
+        <nav className="fixed bottom-0 w-full bg-white shadow-[0_0_15px_rgba(0,0,0,0.1)] z-10 pb-safe">
           <div className="flex justify-around items-center py-2">
             <NavLink 
               to="/" 
@@ -97,7 +121,7 @@ const Layout = ({ children, hideNavigation = false }: LayoutProps) => {
 
       {/* Restaurant Owner Bottom Navigation */}
       {showRestaurantNavigation && (
-        <nav className="fixed bottom-0 w-full bg-white shadow-[0_0_15px_rgba(0,0,0,0.1)] z-10">
+        <nav className="fixed bottom-0 w-full bg-white shadow-[0_0_15px_rgba(0,0,0,0.1)] z-10 pb-safe">
           <div className="flex justify-around items-center py-2">
             <NavLink 
               to="/restaurant-dashboard" 
