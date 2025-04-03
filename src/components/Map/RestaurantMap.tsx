@@ -40,7 +40,7 @@ export const RestaurantMap: React.FC<RestaurantMapProps> = ({
 }) => {
   // Calculate center position - use user's location if available, otherwise use first restaurant
   // or default to a position in Italy
-  const center = userLocation 
+  const centerPosition = userLocation 
     ? [userLocation.lat, userLocation.lng] 
     : restaurants.length > 0 
       ? [restaurants[0].location.lat, restaurants[0].location.lng] 
@@ -87,7 +87,7 @@ export const RestaurantMap: React.FC<RestaurantMapProps> = ({
 
   return (
     <MapContainer 
-      center={center as [number, number]} 
+      center={[centerPosition[0], centerPosition[1]]}
       zoom={13} 
       style={{ height: '100%', width: '100%' }}
       zoomControl={true}
