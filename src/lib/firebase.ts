@@ -108,5 +108,32 @@ export const isUserAdmin = async (email: string) => {
   }
 };
 
+// Nuova funzione per impostare l'email specificata come admin
+export const setSpecificUserAsAdmin = async () => {
+  const adminEmail = "lcammarota24@gmail.com";
+  try {
+    // Verifica se l'utente è già admin
+    const isAlreadyAdmin = await isUserAdmin(adminEmail);
+    
+    if (isAlreadyAdmin) {
+      console.log(`L'utente ${adminEmail} è già amministratore`);
+      return { success: true, message: "L'utente è già amministratore" };
+    }
+    
+    // Imposta l'utente come admin
+    await setDoc(doc(db, "admins", adminEmail), {
+      email: adminEmail,
+      role: "admin",
+      createdAt: new Date()
+    });
+    
+    console.log(`L'utente ${adminEmail} è stato impostato come amministratore`);
+    return { success: true, message: "Utente impostato come amministratore con successo" };
+  } catch (error: any) {
+    console.error("Errore nell'impostazione dell'amministratore:", error);
+    return { success: false, message: error.message };
+  }
+};
+
 export { auth, db };
 export default app;
