@@ -6,9 +6,13 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Clock, MapPin, Phone, Mail, Globe, Save } from 'lucide-react';
+import { Clock, MapPin, Phone, Mail, Globe, Save, LogOut } from 'lucide-react';
+import { toast } from 'sonner';
+import { logoutUser } from '@/lib/firebase';
+import { useNavigate } from 'react-router-dom';
 
 const RestaurantProfile = () => {
+  const navigate = useNavigate();
   const [restaurant, setRestaurant] = React.useState({
     name: 'Ristorante Senza Glutine',
     address: 'Via Roma 123, Milano',
@@ -24,15 +28,6 @@ const RestaurantProfile = () => {
       friday: { open: true, from: '12:00', to: '15:00', fromDinner: '19:00', toDinner: '23:00' },
       saturday: { open: true, from: '12:00', to: '15:00', fromDinner: '19:00', toDinner: '23:00' },
       sunday: { open: false, from: '12:00', to: '15:00', fromDinner: '19:00', toDinner: '23:00' },
-    },
-    features: {
-      takeaway: true,
-      delivery: false,
-      reservation: true,
-      outdoor: true,
-      wifi: true,
-      parking: false,
-      creditCard: true,
     }
   });
 
@@ -54,19 +49,24 @@ const RestaurantProfile = () => {
     });
   };
 
-  const handleFeatureChange = (feature: string, value: boolean) => {
-    setRestaurant({
-      ...restaurant,
-      features: {
-        ...restaurant.features,
-        [feature]: value
-      }
-    });
-  };
-
   const handleSave = () => {
     // In a real app, this would send data to the server
-    alert('Profilo aggiornato con successo!');
+    toast.success('Profilo aggiornato con successo!');
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logoutUser();
+      toast.success('Logout effettuato con successo');
+      localStorage.removeItem('isAuthenticated');
+      localStorage.removeItem('userEmail');
+      localStorage.removeItem('userId');
+      localStorage.removeItem('userName');
+      localStorage.removeItem('userType');
+      navigate('/login');
+    } catch (error: any) {
+      toast.error(`Errore durante il logout: ${error.message}`);
+    }
   };
 
   const days = [
@@ -77,16 +77,6 @@ const RestaurantProfile = () => {
     { id: 'friday', label: 'Venerdì' },
     { id: 'saturday', label: 'Sabato' },
     { id: 'sunday', label: 'Domenica' },
-  ];
-
-  const features = [
-    { id: 'takeaway', label: 'Asporto' },
-    { id: 'delivery', label: 'Consegna a domicilio' },
-    { id: 'reservation', label: 'Prenotazione online' },
-    { id: 'outdoor', label: 'Spazio all\'aperto' },
-    { id: 'wifi', label: 'Wi-Fi gratuito' },
-    { id: 'parking', label: 'Parcheggio' },
-    { id: 'creditCard', label: 'Pagamento con carta' },
   ];
 
   return (
@@ -259,22 +249,16 @@ const RestaurantProfile = () => {
           </div>
           
           <div className="p-6">
-            <h2 className="text-lg font-medium mb-4">Caratteristiche</h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {features.map((feature) => (
-                <div key={feature.id} className="flex items-center gap-2">
-                  <Switch
-                    id={`feature-${feature.id}`}
-                    checked={restaurant.features[feature.id as keyof typeof restaurant.features]}
-                    onCheckedChange={(checked) => handleFeatureChange(feature.id, checked)}
-                  />
-                  <Label htmlFor={`feature-${feature.id}`} className="cursor-pointer">
-                    {feature.label}
-                  </Label>
-                </div>
-              ))}
-            </div>
+            <h2 className="text-lg font-medium mb-4">Logout</h2>
+            <p className="text-gray-600 mb-4">Effettua il logout dal tuo account per uscire dall'area riservata.</p>
+            <Button 
+              variant="destructive" 
+              className="flex items-center gap-2"
+              onClick={handleLogout}
+            >
+              <LogOut size={16} />
+              <span>Esci dall'account</span>
+            </Button>
           </div>
           
           <div className="p-6 flex justify-end">
