@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ChefHat, MapPin, Navigation } from 'lucide-react';
 import { RestaurantMap } from '@/components/Map/RestaurantMap';
+import { toast } from 'sonner';
 
 // Sample restaurant location data (would come from API in production)
 const sampleRestaurantLocations = [
@@ -51,16 +52,39 @@ const SearchPage = () => {
           };
           setUserPosition(pos);
           setIsLocating(false);
+          toast.success("Posizione rilevata con successo!");
         },
         (error) => {
-          setLocationError("Impossibile determinare la tua posizione. Controlla le impostazioni di autorizzazione.");
-          setIsLocating(false);
           console.error('Error getting location:', error);
+          
+          let errorMessage = "Impossibile determinare la tua posizione.";
+          switch (error.code) {
+            case error.PERMISSION_DENIED:
+              errorMessage = "Accesso alla posizione negato. Verifica i permessi del browser.";
+              break;
+            case error.POSITION_UNAVAILABLE:
+              errorMessage = "Dati sulla posizione non disponibili.";
+              break;
+            case error.TIMEOUT:
+              errorMessage = "Timeout durante la richiesta della posizione.";
+              break;
+          }
+          
+          setLocationError(errorMessage);
+          setIsLocating(false);
+          toast.error(errorMessage);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
         }
       );
     } else {
-      setLocationError("Il tuo browser non supporta la geolocalizzazione.");
+      const errorMessage = "Il tuo browser non supporta la geolocalizzazione.";
+      setLocationError(errorMessage);
       setIsLocating(false);
+      toast.error(errorMessage);
     }
   };
   
@@ -89,7 +113,7 @@ const SearchPage = () => {
             disabled={isLocating} 
             className="mb-2 w-full flex items-center justify-center gap-2"
           >
-            <Navigation size={16} className="animate-pulse" />
+            <Navigation size={16} className={isLocating ? "animate-pulse" : ""} />
             {isLocating ? "Localizzazione in corso..." : "Trova ristoranti vicino a me"}
           </Button>
           
@@ -99,7 +123,7 @@ const SearchPage = () => {
             </div>
           )}
           
-          {userPosition && (
+          {userPosition && !locationError && (
             <div className="p-2 bg-green-50 border border-green-200 rounded-md text-green-600 text-sm mb-4">
               Posizione rilevata! Mostro i ristoranti vicini.
             </div>
