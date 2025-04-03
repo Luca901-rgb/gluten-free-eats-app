@@ -128,4 +128,3 @@ export const RestaurantMap: React.FC<RestaurantMapProps> = ({
     </MapContainer>
   );
 };
-
