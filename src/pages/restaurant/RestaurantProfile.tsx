@@ -84,10 +84,20 @@ const RestaurantProfile = () => {
       <div className="container mx-auto px-4 py-6">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-semibold">Profilo Ristorante</h1>
-          <Button onClick={handleSave} className="flex items-center gap-2">
-            <Save size={16} />
-            <span>Salva Modifiche</span>
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              variant="destructive" 
+              className="flex items-center gap-2"
+              onClick={handleLogout}
+            >
+              <LogOut size={16} />
+              <span>Esci</span>
+            </Button>
+            <Button onClick={handleSave} className="flex items-center gap-2">
+              <Save size={16} />
+              <span>Salva Modifiche</span>
+            </Button>
+          </div>
         </div>
         
         <div className="bg-white rounded-lg shadow divide-y divide-gray-200">
@@ -246,19 +256,6 @@ const RestaurantProfile = () => {
                 );
               })}
             </div>
-          </div>
-          
-          <div className="p-6">
-            <h2 className="text-lg font-medium mb-4">Logout</h2>
-            <p className="text-gray-600 mb-4">Effettua il logout dal tuo account per uscire dall'area riservata.</p>
-            <Button 
-              variant="destructive" 
-              className="flex items-center gap-2"
-              onClick={handleLogout}
-            >
-              <LogOut size={16} />
-              <span>Esci dall'account</span>
-            </Button>
           </div>
           
           <div className="p-6 flex justify-end">
