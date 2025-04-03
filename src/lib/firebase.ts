@@ -5,12 +5,12 @@ import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, si
 // La tua configurazione Firebase
 // IMPORTANTE: Queste sono solo chiavi pubbliche che possono essere incluse nel client
 const firebaseConfig = {
-  apiKey: "il-tuo-api-key", // Copia qui il tuo apiKey
-  authDomain: "il-tuo-project-id.firebaseapp.com", // Copia qui il tuo authDomain
-  projectId: "il-tuo-project-id", // Copia qui il tuo projectId
-  storageBucket: "il-tuo-project-id.appspot.com", // Copia qui il tuo storageBucket
-  messagingSenderId: "il-tuo-messaging-sender-id", // Copia qui il tuo messagingSenderId
-  appId: "il-tuo-app-id" // Copia qui il tuo appId
+  apiKey: "AIzaSyAeuKxnFOr4yKkCYGqS9xFkzMVnuX0DnXk",
+  authDomain: "glutenfreeeats-b912d.firebaseapp.com",
+  projectId: "glutenfreeeats-b912d",
+  storageBucket: "glutenfreeeats-b912d.firebasestorage.app",
+  messagingSenderId: "76969723997",
+  appId: "1:76969723997:web:a9d27f670533ec0d9925b4"
 };
 
 // Inizializza Firebase
