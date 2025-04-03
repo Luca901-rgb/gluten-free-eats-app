@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Navigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import RestaurantDetails, { RestaurantDetailProps } from '@/components/Restaurant/RestaurantDetails';
 
@@ -38,9 +38,17 @@ const sampleRestaurant: RestaurantDetailProps = {
 const RestaurantPage = () => {
   const { id } = useParams<{ id: string }>();
   
-  // In a real app, you would fetch the restaurant data based on the ID
-  // For now, we'll just use sample data
+  // Controlliamo se l'utente è loggato come proprietario del ristorante
+  // In una app reale, questo controllo sarebbe fatto con Firebase o altri sistemi di auth
+  const userType = localStorage.getItem('userType');
+  const isRestaurantOwner = userType === 'restaurant';
   
+  // Se l'utente è il proprietario del ristorante, lo reindirizziamo alla dashboard ristorante
+  if (isRestaurantOwner) {
+    return <Navigate to="/restaurant-dashboard" replace />;
+  }
+  
+  // Per i clienti normali, mostriamo la vista standard del ristorante
   return (
     <Layout>
       <RestaurantDetails restaurant={sampleRestaurant} />
