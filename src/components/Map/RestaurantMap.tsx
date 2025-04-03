@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import { Icon } from 'leaflet';
+import { Icon, LatLngExpression } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { AlertCircle, MapPin } from 'lucide-react';
 
@@ -45,6 +45,9 @@ export const RestaurantMap: React.FC<RestaurantMapProps> = ({
   const centerLat = userLocation?.lat || (restaurants[0]?.location.lat || defaultCenter[0]);
   const centerLng = userLocation?.lng || (restaurants[0]?.location.lng || defaultCenter[1]);
   
+  // Create properly typed center coordinates
+  const center: LatLngExpression = [centerLat, centerLng];
+  
   const [mapError, setMapError] = React.useState<string | null>(null);
 
   // Handle map load errors
@@ -86,19 +89,20 @@ export const RestaurantMap: React.FC<RestaurantMapProps> = ({
 
   return (
     <MapContainer 
-      center={[centerLat, centerLng]}
+      center={center}
       zoom={13} 
       style={{ height: '100%', width: '100%' }}
     >
       <TileLayer
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       
       {/* Add user location marker if available */}
       {userLocation && (
         <Marker 
-          position={[userLocation.lat, userLocation.lng]}
+          position={[userLocation.lat, userLocation.lng] as LatLngExpression}
+          icon={userIcon}
         >
           <Popup>
             <strong>La tua posizione</strong>
@@ -110,7 +114,8 @@ export const RestaurantMap: React.FC<RestaurantMapProps> = ({
       {restaurants.map(restaurant => (
         <Marker 
           key={restaurant.id}
-          position={[restaurant.location.lat, restaurant.location.lng]}
+          position={[restaurant.location.lat, restaurant.location.lng] as LatLngExpression}
+          icon={restaurantIcon}
         >
           <Popup>
             <div>
