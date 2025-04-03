@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { Link } from 'react-router-dom';
@@ -130,7 +129,7 @@ const SearchPage = () => {
           )}
         </div>
         
-        {/* Map Component */}
+        {/* Map Component with OpenStreetMap */}
         <div className="h-[60vh] rounded-lg border overflow-hidden mb-4">
           <RestaurantMap 
             userLocation={userPosition}
