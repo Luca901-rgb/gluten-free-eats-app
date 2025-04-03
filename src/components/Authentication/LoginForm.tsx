@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { Mail, Lock, Eye, EyeOff, LogIn, User, Store } from 'lucide-react';
-import { loginUser } from '@/lib/firebase';
+import { loginUser, signInWithGoogle } from '@/lib/firebase';
 
 const LoginForm = () => {
   const navigate = useNavigate();
@@ -50,6 +50,34 @@ const LoginForm = () => {
       }
     } catch (error: any) {
       toast.error(`Errore durante il login: ${error.message}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setIsLoading(true);
+    
+    try {
+      const user = await signInWithGoogle();
+      
+      // Salva i dati utente nel localStorage
+      localStorage.setItem('userType', userType);
+      localStorage.setItem('isAuthenticated', 'true');
+      localStorage.setItem('userEmail', user.email || '');
+      localStorage.setItem('userName', user.displayName || '');
+      localStorage.setItem('userId', user.uid);
+      
+      toast.success("Accesso con Google effettuato con successo");
+      
+      // Reindirizza in base al tipo di utente
+      if (userType === 'restaurant') {
+        navigate('/restaurant-dashboard');
+      } else {
+        navigate('/');
+      }
+    } catch (error: any) {
+      toast.error(`Errore durante l'accesso con Google: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
@@ -127,6 +155,25 @@ const LoginForm = () => {
         <Button type="submit" className="w-full bg-primary hover:bg-primary/90 flex items-center gap-2" disabled={isLoading}>
           <LogIn size={18} />
           {isLoading ? 'Accesso in corso...' : 'Accedi'}
+        </Button>
+        
+        <div className="relative flex items-center my-4">
+          <div className="flex-grow border-t border-gray-300"></div>
+          <span className="flex-shrink mx-4 text-gray-600 text-sm">oppure</span>
+          <div className="flex-grow border-t border-gray-300"></div>
+        </div>
+        
+        <Button 
+          type="button" 
+          variant="outline" 
+          className="w-full flex items-center justify-center gap-2"
+          onClick={handleGoogleSignIn}
+          disabled={isLoading}
+        >
+          <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
+            <path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z" />
+          </svg>
+          Accedi con Google
         </Button>
       </form>
 

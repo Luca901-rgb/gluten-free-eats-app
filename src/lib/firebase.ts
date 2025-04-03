@@ -1,6 +1,14 @@
 
 import { initializeApp } from 'firebase/app';
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, sendPasswordResetEmail } from 'firebase/auth';
+import { 
+  getAuth, 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword, 
+  signOut, 
+  sendPasswordResetEmail,
+  GoogleAuthProvider,
+  signInWithPopup
+} from 'firebase/auth';
 
 // La tua configurazione Firebase
 // IMPORTANTE: Queste sono solo chiavi pubbliche che possono essere incluse nel client
@@ -16,6 +24,7 @@ const firebaseConfig = {
 // Inizializza Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const googleProvider = new GoogleAuthProvider();
 
 // Funzioni helper per l'autenticazione
 export const registerUser = async (email: string, password: string) => {
@@ -47,6 +56,17 @@ export const logoutUser = async () => {
 export const resetPassword = async (email: string) => {
   try {
     await sendPasswordResetEmail(auth, email);
+  } catch (error: any) {
+    throw new Error(error.message);
+  }
+};
+
+// Nuova funzione per autenticazione Google
+export const signInWithGoogle = async () => {
+  try {
+    const result = await signInWithPopup(auth, googleProvider);
+    const user = result.user;
+    return user;
   } catch (error: any) {
     throw new Error(error.message);
   }
