@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Clock, MapPin, Phone, Calendar, Star, Award } from 'lucide-react';
+import { Clock, MapPin, Phone, Calendar, Star, Award, Image, Video, Home, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import StarRating from '@/components/common/StarRating';
 import BookingForm from '../Booking/BookingForm';
@@ -29,13 +29,22 @@ export interface RestaurantDetailProps {
 }
 
 const RestaurantDetails: React.FC<{ restaurant: RestaurantDetailProps }> = ({ restaurant }) => {
-  const [activeTab, setActiveTab] = useState('info');
+  const [activeTab, setActiveTab] = useState('home');
   
   // Sample review data for demo
   const sampleReview = {
     bookingCode: 'TRA123',
     restaurantCode: 'RES456',
   };
+  
+  const navigationButtons = [
+    { id: 'home', label: 'Home', icon: <Home size={18} /> },
+    { id: 'gallery', label: 'Galleria', icon: <Image size={18} /> },
+    { id: 'videos', label: 'Videoricette', icon: <Video size={18} /> },
+    { id: 'booking', label: 'Prenotazioni', icon: <Calendar size={18} /> },
+    { id: 'reviews', label: 'Recensioni', icon: <Star size={18} /> },
+    { id: 'profile', label: 'Profilo', icon: <User size={18} /> },
+  ];
   
   return (
     <div className="pb-20">
@@ -61,103 +70,170 @@ const RestaurantDetails: React.FC<{ restaurant: RestaurantDetailProps }> = ({ re
         </div>
       </div>
 
-      {/* Restaurant Tabs */}
-      <div className="px-4 mt-4">
-        <Tabs defaultValue="info" value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-4">
-            <TabsTrigger value="info">Info</TabsTrigger>
-            <TabsTrigger value="menu">Menu</TabsTrigger>
-            <TabsTrigger value="booking">Prenota</TabsTrigger>
-            <TabsTrigger value="reviews">Recensioni</TabsTrigger>
-          </TabsList>
+      {/* Restaurant Navigation Buttons */}
+      <div className="px-4 mt-4 overflow-x-auto">
+        <div className="flex space-x-2 pb-2">
+          {navigationButtons.map((button) => (
+            <Button
+              key={button.id}
+              variant={activeTab === button.id ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setActiveTab(button.id)}
+              className="flex items-center gap-1 whitespace-nowrap"
+            >
+              {button.icon}
+              <span>{button.label}</span>
+            </Button>
+          ))}
+        </div>
+      </div>
 
-          <TabsContent value="info" className="animate-fade-in">
-            <div className="space-y-6">
-              <div>
-                <h2 className="font-poppins font-semibold text-lg mb-2">Informazioni</h2>
-                <p className="text-gray-700">{restaurant.description}</p>
+      {/* Content based on active tab */}
+      <div className="px-4 mt-4">
+        {activeTab === 'home' && (
+          <div className="space-y-6 animate-fade-in">
+            <div>
+              <h2 className="font-poppins font-semibold text-lg mb-2">Informazioni</h2>
+              <p className="text-gray-700">{restaurant.description}</p>
+            </div>
+            
+            <div>
+              <h2 className="font-poppins font-semibold text-lg mb-2">Orari di apertura</h2>
+              <div className="space-y-2">
+                {restaurant.openingHours.map((time, index) => (
+                  <div key={index} className="flex items-center">
+                    <Clock size={16} className="mr-2 text-gray-500" />
+                    <span className="text-gray-700 mr-2 w-24">{time.days}:</span>
+                    <span className="text-gray-700">{time.hours}</span>
+                  </div>
+                ))}
               </div>
-              
+            </div>
+            
+            <div>
+              <h2 className="font-poppins font-semibold text-lg mb-2">Contatti</h2>
+              <div className="space-y-2">
+                <div className="flex items-center">
+                  <MapPin size={16} className="mr-2 text-gray-500" />
+                  <span className="text-gray-700">{restaurant.address}</span>
+                </div>
+                <div className="flex items-center">
+                  <Phone size={16} className="mr-2 text-gray-500" />
+                  <a href={`tel:${restaurant.phone}`} className="text-accent">{restaurant.phone}</a>
+                </div>
+              </div>
+            </div>
+
+            {restaurant.awards && restaurant.awards.length > 0 && (
               <div>
-                <h2 className="font-poppins font-semibold text-lg mb-2">Orari di apertura</h2>
+                <h2 className="font-poppins font-semibold text-lg mb-2">Riconoscimenti</h2>
                 <div className="space-y-2">
-                  {restaurant.openingHours.map((time, index) => (
+                  {restaurant.awards.map((award, index) => (
                     <div key={index} className="flex items-center">
-                      <Clock size={16} className="mr-2 text-gray-500" />
-                      <span className="text-gray-700 mr-2 w-24">{time.days}:</span>
-                      <span className="text-gray-700">{time.hours}</span>
+                      <Award size={16} className="mr-2 text-yellow-500" />
+                      <span className="text-gray-700">{award}</span>
                     </div>
                   ))}
                 </div>
               </div>
-              
-              <div>
-                <h2 className="font-poppins font-semibold text-lg mb-2">Contatti</h2>
-                <div className="space-y-2">
-                  <div className="flex items-center">
-                    <MapPin size={16} className="mr-2 text-gray-500" />
-                    <span className="text-gray-700">{restaurant.address}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <Phone size={16} className="mr-2 text-gray-500" />
-                    <a href={`tel:${restaurant.phone}`} className="text-accent">{restaurant.phone}</a>
-                  </div>
-                </div>
-              </div>
-
-              {restaurant.awards && restaurant.awards.length > 0 && (
-                <div>
-                  <h2 className="font-poppins font-semibold text-lg mb-2">Riconoscimenti</h2>
-                  <div className="space-y-2">
-                    {restaurant.awards.map((award, index) => (
-                      <div key={index} className="flex items-center">
-                        <Award size={16} className="mr-2 text-yellow-500" />
-                        <span className="text-gray-700">{award}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-              
-              <div className="pt-4">
-                <Button className="bg-primary hover:bg-primary/90" onClick={() => setActiveTab('booking')}>
-                  <Calendar size={18} className="mr-2" /> Prenota un tavolo
-                </Button>
-              </div>
+            )}
+            
+            <div className="pt-4">
+              <Button className="bg-primary hover:bg-primary/90" onClick={() => setActiveTab('booking')}>
+                <Calendar size={18} className="mr-2" /> Prenota un tavolo
+              </Button>
             </div>
-          </TabsContent>
+          </div>
+        )}
 
-          <TabsContent value="menu" className="animate-fade-in">
-            <MenuViewer />
-          </TabsContent>
+        {activeTab === 'gallery' && (
+          <div className="space-y-4 animate-fade-in">
+            <h2 className="font-poppins font-semibold text-lg">Galleria Fotografica</h2>
+            <div className="grid grid-cols-2 gap-2">
+              {restaurant.images.map((image, index) => (
+                <div key={index} className="aspect-square rounded-lg overflow-hidden">
+                  <img src={image} alt={`${restaurant.name} - Foto ${index + 1}`} className="w-full h-full object-cover" />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
-          <TabsContent value="booking" className="animate-fade-in">
+        {activeTab === 'videos' && (
+          <div className="space-y-4 animate-fade-in">
+            <h2 className="font-poppins font-semibold text-lg">Videoricette</h2>
+            <p className="text-gray-600">Le nostre migliori ricette in video, tutte senza glutine.</p>
+            <div className="p-8 border border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-center">
+              <Video size={48} className="text-gray-400 mb-2" />
+              <p className="text-gray-500">Presto disponibili le nostre videoricette!</p>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'booking' && (
+          <div className="animate-fade-in">
             <BookingForm 
               restaurantId={restaurant.id} 
               restaurantName={restaurant.name} 
               restaurantImage={restaurant.coverImage}
             />
-          </TabsContent>
+          </div>
+        )}
 
-          <TabsContent value="reviews" className="animate-fade-in">
-            <div className="space-y-6">
-              <div className="flex justify-between items-center">
-                <h2 className="font-poppins font-semibold text-lg">Recensioni</h2>
-                <span className="text-sm bg-primary/10 text-primary py-1 px-3 rounded-full">
-                  {restaurant.reviews} recensioni
-                </span>
-              </div>
-              
-              {/* Sample review form for demo */}
-              <ReviewForm 
-                restaurantId={restaurant.id}
-                restaurantName={restaurant.name}
-                bookingCode={sampleReview.bookingCode}
-                restaurantCode={sampleReview.restaurantCode}
-              />
+        {activeTab === 'reviews' && (
+          <div className="space-y-6 animate-fade-in">
+            <div className="flex justify-between items-center">
+              <h2 className="font-poppins font-semibold text-lg">Recensioni</h2>
+              <span className="text-sm bg-primary/10 text-primary py-1 px-3 rounded-full">
+                {restaurant.reviews} recensioni
+              </span>
             </div>
-          </TabsContent>
-        </Tabs>
+            
+            {/* Sample review form for demo */}
+            <ReviewForm 
+              restaurantId={restaurant.id}
+              restaurantName={restaurant.name}
+              bookingCode={sampleReview.bookingCode}
+              restaurantCode={sampleReview.restaurantCode}
+            />
+          </div>
+        )}
+
+        {activeTab === 'profile' && (
+          <div className="space-y-4 animate-fade-in">
+            <h2 className="font-poppins font-semibold text-lg">Profilo Ristorante</h2>
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-center space-x-4">
+                <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-200">
+                  <img 
+                    src={restaurant.coverImage} 
+                    alt={restaurant.name} 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div>
+                  <h3 className="font-medium">{restaurant.name}</h3>
+                  <p className="text-sm text-gray-600">
+                    {restaurant.hasGlutenFreeOptions ? 'Completamente senza glutine' : 'Con opzioni senza glutine'}
+                  </p>
+                </div>
+              </div>
+              <div className="mt-4 space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Recensioni:</span>
+                  <span className="font-medium">{restaurant.reviews}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Valutazione:</span>
+                  <div className="flex items-center">
+                    <StarRating rating={restaurant.rating} className="mr-1" />
+                    <span className="text-sm font-medium">{restaurant.rating}/5</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
