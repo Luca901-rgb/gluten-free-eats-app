@@ -3,6 +3,10 @@ import React, { createContext, useContext, useState, ReactNode, useEffect } from
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { toast } from 'sonner';
+import { getFirestore, doc, getDoc } from 'firebase/firestore';
+
+// Inizializza Firestore
+const db = getFirestore();
 
 // Definizione dei tipi per le statistiche delle prenotazioni
 interface BookingStats {
@@ -61,38 +65,41 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [appIssues, setAppIssues] = useState<{id: string, title: string, description: string, status: 'open' | 'resolved'}[]>([]);
 
-  // Verificare se l'utente è admin al caricamento
+  // Verificare se l'utente è admin controllando Firestore
   useEffect(() => {
-    const checkAdminStatus = () => {
-      onAuthStateChanged(auth, (user) => {
-        if (user) {
-          // Verifica se l'email è nell'elenco degli admin o se è stato impostato come admin nel localStorage
-          const adminEmail = localStorage.getItem('adminEmail');
-          
-          if (user.email === 'admin@glutenfreeeats.com' || user.email === adminEmail) {
-            setIsAdmin(true);
-            localStorage.setItem('isAdmin', 'true');
-            if (!adminEmail && user.email) {
-              localStorage.setItem('adminEmail', user.email);
-            }
-          } else {
-            setIsAdmin(false);
-            localStorage.removeItem('isAdmin');
-          }
+    const checkAdminStatus = async (userEmail: string | null) => {
+      if (!userEmail) return;
+      
+      try {
+        // Controlla se l'utente è nella collezione admins di Firestore
+        const adminRef = doc(db, "admins", userEmail);
+        const adminSnap = await getDoc(adminRef);
+        
+        if (adminSnap.exists()) {
+          setIsAdmin(true);
+          localStorage.setItem('isAdmin', 'true');
         } else {
           setIsAdmin(false);
           localStorage.removeItem('isAdmin');
         }
-      });
+      } catch (error) {
+        console.error("Errore nel controllo dello stato admin:", error);
+        setIsAdmin(false);
+        localStorage.removeItem('isAdmin');
+      }
     };
 
-    // Verifica se è già stato impostato come admin nel localStorage
-    const adminStatus = localStorage.getItem('isAdmin');
-    if (adminStatus === 'true') {
-      setIsAdmin(true);
-    }
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        checkAdminStatus(user.email);
+      } else {
+        setIsAdmin(false);
+        localStorage.removeItem('isAdmin');
+      }
+    });
 
-    checkAdminStatus();
+    // Clean up
+    return () => unsubscribe();
   }, []);
 
   // Funzione per caricare le statistiche delle prenotazioni

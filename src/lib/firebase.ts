@@ -9,6 +9,13 @@ import {
   GoogleAuthProvider,
   signInWithPopup
 } from 'firebase/auth';
+import { 
+  getFirestore, 
+  doc, 
+  getDoc, 
+  setDoc,
+  collection
+} from 'firebase/firestore';
 
 // La tua configurazione Firebase
 // IMPORTANTE: Queste sono solo chiavi pubbliche che possono essere incluse nel client
@@ -24,6 +31,7 @@ const firebaseConfig = {
 // Inizializza Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const db = getFirestore(app);
 const googleProvider = new GoogleAuthProvider();
 
 // Funzioni helper per l'autenticazione
@@ -72,5 +80,33 @@ export const signInWithGoogle = async () => {
   }
 };
 
-export { auth };
+// Funzione per impostare un utente come admin
+export const setUserAsAdmin = async (email: string) => {
+  try {
+    // Crea un documento nella collezione "admins" con l'email come ID
+    await setDoc(doc(db, "admins", email), {
+      email: email,
+      role: "admin",
+      createdAt: new Date()
+    });
+    return true;
+  } catch (error: any) {
+    console.error("Errore nella registrazione dell'admin:", error);
+    throw new Error(error.message);
+  }
+};
+
+// Funzione per verificare se un utente è admin
+export const isUserAdmin = async (email: string) => {
+  try {
+    const adminRef = doc(db, "admins", email);
+    const adminSnap = await getDoc(adminRef);
+    return adminSnap.exists();
+  } catch (error: any) {
+    console.error("Errore nella verifica dello stato admin:", error);
+    return false;
+  }
+};
+
+export { auth, db };
 export default app;
