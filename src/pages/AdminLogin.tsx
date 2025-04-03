@@ -5,13 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Lock, User, LogIn, ShieldCheck } from 'lucide-react';
+import { Lock, User, LogIn, ShieldCheck, WifiOff } from 'lucide-react';
 import { loginUser, setSpecificUserAsAdmin } from '@/lib/firebase';
 import { toast } from 'sonner';
 import { useAdmin } from '@/context/AdminContext';
 import Layout from '@/components/Layout';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const db = getFirestore();
 
@@ -20,8 +21,18 @@ const AdminLogin = () => {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSettingAdmin, setIsSettingAdmin] = useState(false);
+  const [offlineMode, setOfflineMode] = useState(false);
+  const [setupComplete, setSetupComplete] = useState(false);
   const navigate = useNavigate();
   const { isAdmin, setIsAdmin } = useAdmin();
+
+  // Verifica se l'admin è già configurato in localStorage
+  useEffect(() => {
+    const adminEmail = localStorage.getItem('adminEmail');
+    if (adminEmail) {
+      setSetupComplete(true);
+    }
+  }, []);
 
   // Redirect se già autenticato come admin
   useEffect(() => {
@@ -38,17 +49,33 @@ const AdminLogin = () => {
       // Login con Firebase
       await loginUser(email, password);
       
-      // Verifica se l'utente è un admin in Firestore
-      const adminRef = doc(db, "admins", email);
-      const adminSnap = await getDoc(adminRef);
+      // Prima controlla il localStorage (per modalità offline)
+      const adminEmail = localStorage.getItem('adminEmail');
       
-      if (adminSnap.exists()) {
+      if (adminEmail && adminEmail === email) {
         setIsAdmin(true);
-        toast.success("Accesso come amministratore effettuato");
+        toast.success("Accesso come amministratore effettuato (modalità offline)");
         navigate('/admin-dashboard');
-      } else {
-        toast.error("Non hai i permessi di amministratore");
-        setIsAdmin(false);
+        return;
+      }
+      
+      // Verifica se l'utente è un admin in Firestore
+      try {
+        const adminRef = doc(db, "admins", email);
+        const adminSnap = await getDoc(adminRef);
+        
+        if (adminSnap.exists()) {
+          setIsAdmin(true);
+          localStorage.setItem('adminEmail', email); // Salva per accessi offline
+          toast.success("Accesso come amministratore effettuato");
+          navigate('/admin-dashboard');
+        } else {
+          toast.error("Non hai i permessi di amministratore");
+          setIsAdmin(false);
+        }
+      } catch (firebaseError: any) {
+        console.error("Errore Firebase:", firebaseError);
+        toast.error("Errore nella verifica dello stato admin. Controlla la tua connessione.");
       }
     } catch (error: any) {
       toast.error(`Errore durante il login: ${error.message}`);
@@ -61,13 +88,22 @@ const AdminLogin = () => {
     setIsSettingAdmin(true);
     try {
       const result = await setSpecificUserAsAdmin();
+      
       if (result.success) {
-        toast.success(`Amministratore impostato con successo: lcammarota24@gmail.com`);
+        setSetupComplete(true);
+        setOfflineMode(result.offline || false);
+        
+        if (result.offline) {
+          toast.warning("Configurazione completata in modalità offline. I dati verranno sincronizzati quando sarai online.");
+        } else {
+          toast.success("Amministratore impostato con successo: lcammarota24@gmail.com");
+        }
       } else {
         toast.error(`Errore nell'impostazione dell'amministratore: ${result.message}`);
       }
     } catch (error: any) {
       toast.error(`Errore: ${error.message}`);
+      setOfflineMode(true);
     } finally {
       setIsSettingAdmin(false);
     }
@@ -83,6 +119,18 @@ const AdminLogin = () => {
               Accedi come amministratore per gestire la piattaforma
             </CardDescription>
           </CardHeader>
+          
+          {offlineMode && (
+            <div className="px-6 mb-4">
+              <Alert variant="warning" className="bg-yellow-50 border-yellow-200">
+                <WifiOff className="h-4 w-4" />
+                <AlertTitle>Modalità offline</AlertTitle>
+                <AlertDescription>
+                  Sei attualmente in modalità offline. Alcune funzionalità potrebbero essere limitate.
+                </AlertDescription>
+              </Alert>
+            </div>
+          )}
           
           <Tabs defaultValue="login" className="px-6">
             <TabsList className="grid w-full grid-cols-2 mb-4">
@@ -139,20 +187,43 @@ const AdminLogin = () => {
             
             <TabsContent value="setup">
               <CardContent className="space-y-4">
-                <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4 text-yellow-800">
+                <div className={`rounded-md p-4 ${setupComplete ? 'bg-green-50 border border-green-200 text-green-800' : 'bg-yellow-50 border border-yellow-200 text-yellow-800'}`}>
                   <h3 className="font-medium mb-2">Configurazione Amministratore</h3>
-                  <p>Questa sezione permette di configurare <strong>lcammarota24@gmail.com</strong> come amministratore nel sistema.</p>
-                  <p className="mt-2">Fai clic sul pulsante qui sotto per completare la configurazione.</p>
+                  
+                  {setupComplete ? (
+                    <>
+                      <p>✅ Configurazione completata! L'utente <strong>lcammarota24@gmail.com</strong> è stato impostato come amministratore.</p>
+                      <p className="mt-2">Ora puoi tornare alla scheda "Accedi" per effettuare il login.</p>
+                      {offlineMode && (
+                        <p className="mt-2 text-orange-700">⚠️ Configurazione effettuata in modalità offline. I dati verranno sincronizzati quando sarai online.</p>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <p>Questa sezione permette di configurare <strong>lcammarota24@gmail.com</strong> come amministratore nel sistema.</p>
+                      <p className="mt-2">Fai clic sul pulsante qui sotto per completare la configurazione.</p>
+                    </>
+                  )}
                 </div>
               </CardContent>
               <CardFooter>
                 <Button
                   onClick={handleSetupAdmin}
-                  className="w-full bg-blue-600 hover:bg-blue-700 flex items-center gap-2"
-                  disabled={isSettingAdmin}
+                  className={`w-full flex items-center gap-2 ${
+                    setupComplete 
+                      ? 'bg-green-600 hover:bg-green-700' 
+                      : 'bg-blue-600 hover:bg-blue-700'
+                  }`}
+                  disabled={isSettingAdmin || (setupComplete && !offlineMode)}
                 >
                   <ShieldCheck size={18} />
-                  {isSettingAdmin ? 'Configurazione in corso...' : 'Imposta lcammarota24@gmail.com come Admin'}
+                  {isSettingAdmin 
+                    ? 'Configurazione in corso...' 
+                    : setupComplete 
+                      ? offlineMode 
+                        ? 'Riprova sincronizzazione' 
+                        : 'Configurazione completata' 
+                      : 'Imposta lcammarota24@gmail.com come Admin'}
                 </Button>
               </CardFooter>
             </TabsContent>

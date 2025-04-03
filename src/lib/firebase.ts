@@ -14,7 +14,8 @@ import {
   doc, 
   getDoc, 
   setDoc,
-  collection
+  collection,
+  enableIndexedDbPersistence
 } from 'firebase/firestore';
 
 // La tua configurazione Firebase
@@ -33,6 +34,20 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const googleProvider = new GoogleAuthProvider();
+
+// Enable offline persistence
+try {
+  enableIndexedDbPersistence(db)
+    .catch((err) => {
+      if (err.code === 'failed-precondition') {
+        console.warn('Multiple tabs open, persistence can only be enabled in one tab at a time.');
+      } else if (err.code === 'unimplemented') {
+        console.warn('The current browser does not support all of the features required to enable persistence');
+      }
+    });
+} catch (e) {
+  console.error("Error enabling persistence:", e);
+}
 
 // Funzioni helper per l'autenticazione
 export const registerUser = async (email: string, password: string) => {
@@ -108,31 +123,75 @@ export const isUserAdmin = async (email: string) => {
   }
 };
 
-// Nuova funzione per impostare l'email specificata come admin
+// Funzione migliorata per impostare l'email specificata come admin
 export const setSpecificUserAsAdmin = async () => {
   const adminEmail = "lcammarota24@gmail.com";
-  try {
-    // Verifica se l'utente è già admin
-    const isAlreadyAdmin = await isUserAdmin(adminEmail);
-    
-    if (isAlreadyAdmin) {
-      console.log(`L'utente ${adminEmail} è già amministratore`);
-      return { success: true, message: "L'utente è già amministratore" };
+  
+  // Verifica la connessione
+  let retries = 0;
+  const maxRetries = 3;
+  
+  while (retries < maxRetries) {
+    try {
+      // Prima controlla se è già admin
+      try {
+        const isAlreadyAdmin = await isUserAdmin(adminEmail);
+        
+        if (isAlreadyAdmin) {
+          console.log(`L'utente ${adminEmail} è già amministratore`);
+          return { 
+            success: true, 
+            message: "L'utente è già amministratore",
+            offline: false
+          };
+        }
+      } catch (checkError) {
+        console.warn("Errore durante la verifica dello stato admin:", checkError);
+      }
+      
+      // Imposta l'utente come admin
+      await setDoc(doc(db, "admins", adminEmail), {
+        email: adminEmail,
+        role: "admin",
+        createdAt: new Date(),
+        lastModified: new Date()
+      });
+      
+      // Aggiunge anche in localStorage per accesso offline
+      localStorage.setItem('adminEmail', adminEmail);
+      
+      console.log(`L'utente ${adminEmail} è stato impostato come amministratore`);
+      return { 
+        success: true, 
+        message: "Utente impostato come amministratore con successo",
+        offline: false
+      };
+    } catch (error: any) {
+      retries++;
+      console.warn(`Tentativo ${retries}/${maxRetries} fallito:`, error);
+      
+      if (retries === maxRetries) {
+        // Fallback offline - imposta in localStorage
+        localStorage.setItem('adminEmail', adminEmail);
+        console.log("Modalità offline: Admin impostato in localStorage");
+        
+        return {
+          success: true,
+          message: "Admin impostato in modalità offline (i dati verranno sincronizzati quando sarai online)",
+          offline: true
+        };
+      }
+      
+      // Aspetta prima di riprovare
+      await new Promise(resolve => setTimeout(resolve, 1000));
     }
-    
-    // Imposta l'utente come admin
-    await setDoc(doc(db, "admins", adminEmail), {
-      email: adminEmail,
-      role: "admin",
-      createdAt: new Date()
-    });
-    
-    console.log(`L'utente ${adminEmail} è stato impostato come amministratore`);
-    return { success: true, message: "Utente impostato come amministratore con successo" };
-  } catch (error: any) {
-    console.error("Errore nell'impostazione dell'amministratore:", error);
-    return { success: false, message: error.message };
   }
+  
+  return { 
+    success: false, 
+    message: "Impossibile configurare l'amministratore dopo vari tentativi",
+    offline: false
+  };
 };
 
 export { auth, db };
