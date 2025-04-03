@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { Home, Search, Calendar, Star, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -10,6 +10,12 @@ interface LayoutProps {
 }
 
 const Layout = ({ children, hideNavigation = false }: LayoutProps) => {
+  const location = useLocation();
+  
+  // Automatically hide bottom navigation on restaurant dashboard
+  const isRestaurantDashboard = location.pathname === '/restaurant-dashboard';
+  const shouldHideNavigation = hideNavigation || isRestaurantDashboard;
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       {/* Header */}
@@ -28,7 +34,7 @@ const Layout = ({ children, hideNavigation = false }: LayoutProps) => {
       </main>
 
       {/* Bottom Navigation */}
-      {!hideNavigation && (
+      {!shouldHideNavigation && (
         <nav className="fixed bottom-0 w-full bg-white shadow-[0_0_15px_rgba(0,0,0,0.1)] z-10">
           <div className="flex justify-around items-center py-2">
             <NavLink 
