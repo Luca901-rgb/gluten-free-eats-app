@@ -87,7 +87,7 @@ export const RestaurantMap: React.FC<RestaurantMapProps> = ({
 
   return (
     <MapContainer 
-      center={[centerPosition[0], centerPosition[1]]}
+      center={[centerPosition[0] as number, centerPosition[1] as number]}
       zoom={13} 
       style={{ height: '100%', width: '100%' }}
       zoomControl={true}
@@ -100,7 +100,7 @@ export const RestaurantMap: React.FC<RestaurantMapProps> = ({
       {/* Add user location marker if available */}
       {userLocation && (
         <Marker 
-          position={[userLocation.lat, userLocation.lng]}
+          position={[userLocation.lat, userLocation.lng]} 
           icon={userIcon}
         >
           <Popup>
@@ -113,7 +113,7 @@ export const RestaurantMap: React.FC<RestaurantMapProps> = ({
       {restaurants.map(restaurant => (
         <Marker 
           key={restaurant.id}
-          position={[restaurant.location.lat, restaurant.location.lng]}
+          position={[restaurant.location.lat, restaurant.location.lng]} 
           icon={restaurantIcon}
         >
           <Popup>
