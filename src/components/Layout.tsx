@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { Home, Search, Calendar, Star, User, Image, Video, MessageCircle } from 'lucide-react';
@@ -23,7 +22,8 @@ const Layout = ({ children, hideNavigation = false }: LayoutProps) => {
   useEffect(() => {
     // Set body styles for mobile app look and feel
     document.body.style.overscrollBehavior = 'none';
-    document.body.style.WebkitOverflowScrolling = 'touch';
+    // Use type assertion for webkit properties
+    (document.body.style as any)['-webkit-overflow-scrolling'] = 'touch';
     document.body.style.touchAction = 'manipulation';
     
     // Set meta viewport for better mobile experience
@@ -38,7 +38,8 @@ const Layout = ({ children, hideNavigation = false }: LayoutProps) => {
     
     return () => {
       document.body.style.overscrollBehavior = '';
-      document.body.style.WebkitOverflowScrolling = '';
+      // Clean up webkit property with type assertion
+      (document.body.style as any)['-webkit-overflow-scrolling'] = '';
       document.body.style.touchAction = '';
     };
   }, []);
