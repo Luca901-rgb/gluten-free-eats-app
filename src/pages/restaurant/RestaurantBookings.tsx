@@ -9,6 +9,7 @@ import { formatDistance } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import PaymentForm from '@/components/Booking/PaymentForm';
+import PaymentManager from '@/components/Payment/PaymentManager';
 
 const RestaurantBookings = () => {
   // Mock bookings data
@@ -242,10 +243,11 @@ const RestaurantBookings = () => {
               <DialogTitle>Pagamento servizio di prenotazione</DialogTitle>
             </DialogHeader>
             <div className="flex justify-center py-4">
-              <PaymentForm 
-                onComplete={handlePaymentComplete} 
+              <PaymentManager 
                 amount={0.99} 
-                isGuarantee={false}
+                description="Pagamento del servizio di prenotazione. Questo importo verrà addebitato per ogni presenza confermata."
+                isRestaurantPayment={true}
+                onPaymentComplete={handlePaymentComplete}
               />
             </div>
           </DialogContent>

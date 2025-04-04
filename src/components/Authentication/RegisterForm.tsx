@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -6,8 +7,10 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { User, Mail, Lock, Phone, MapPin, Store } from 'lucide-react';
+import { User, Mail, Lock, Phone, MapPin, Store, CreditCard } from 'lucide-react';
 import { registerUser, signInWithGoogle } from '@/lib/firebase';
+import PaymentForm from '@/components/Booking/PaymentForm';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 const RegisterForm = () => {
   const navigate = useNavigate();
@@ -15,6 +18,8 @@ const RegisterForm = () => {
   const [userType, setUserType] = useState<'customer' | 'restaurant'>('customer');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [cardRegistered, setCardRegistered] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -35,21 +40,20 @@ const RegisterForm = () => {
     });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (formData.password !== formData.confirmPassword) {
-      toast.error("Le password non corrispondono");
-      return;
+  const handlePaymentComplete = (success: boolean) => {
+    setShowPaymentDialog(false);
+    if (success) {
+      setCardRegistered(true);
+      toast.success("Carta di credito registrata con successo");
+      
+      // Proceed with registration
+      completeRegistration();
+    } else {
+      toast.error("Registrazione carta non riuscita");
     }
+  };
 
-    if (!formData.acceptTerms) {
-      toast.error("Accetta i termini e condizioni per continuare");
-      return;
-    }
-
-    setIsLoading(true);
-
+  const completeRegistration = async () => {
     try {
       // Registrazione con Firebase
       const user = await registerUser(formData.email, formData.password);
@@ -65,6 +69,7 @@ const RegisterForm = () => {
         localStorage.setItem('restaurantName', formData.restaurantName);
         localStorage.setItem('restaurantAddress', formData.address);
         localStorage.setItem('restaurantPhone', formData.phone);
+        localStorage.setItem('hasPaymentMethod', 'true');
         navigate('/restaurant-dashboard');
       } else {
         navigate('/');
@@ -75,6 +80,30 @@ const RegisterForm = () => {
       toast.error(`Errore durante la registrazione: ${error.message}`);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (formData.password !== formData.confirmPassword) {
+      toast.error("Le password non corrispondono");
+      return;
+    }
+
+    if (!formData.acceptTerms) {
+      toast.error("Accetta i termini e condizioni per continuare");
+      return;
+    }
+
+    setIsLoading(true);
+
+    if (userType === 'restaurant') {
+      // Per i ristoranti, richiedi la carta di credito prima di completare la registrazione
+      setShowPaymentDialog(true);
+    } else {
+      // Per i clienti, procedi direttamente con la registrazione
+      completeRegistration();
     }
   };
 
@@ -97,7 +126,8 @@ const RegisterForm = () => {
       localStorage.setItem('userId', user.uid);
       
       if (userType === 'restaurant') {
-        navigate('/restaurant-dashboard');
+        // Per i ristoranti, richiedi la carta di credito prima di completare la registrazione
+        setShowPaymentDialog(true);
       } else {
         navigate('/');
       }
@@ -105,7 +135,6 @@ const RegisterForm = () => {
       toast.success("Registrazione con Google effettuata con successo");
     } catch (error: any) {
       toast.error(`Errore durante la registrazione con Google: ${error.message}`);
-    } finally {
       setIsLoading(false);
     }
   };
@@ -363,6 +392,14 @@ const RegisterForm = () => {
           </button>
         </div>
       </div>
+
+      <div className="flex items-start gap-2 bg-amber-50 p-3 rounded border border-amber-200">
+        <CreditCard className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
+        <div className="text-sm text-amber-700">
+          <p className="font-medium">Pagamento Richiesto</p>
+          <p>Per completare la registrazione del ristorante, sarà necessario registrare un metodo di pagamento.</p>
+        </div>
+      </div>
       
       <div className="flex items-center space-x-2 my-4">
         <Checkbox 
@@ -379,8 +416,12 @@ const RegisterForm = () => {
         </label>
       </div>
       
-      <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={isLoading}>
-        {isLoading ? 'Registrazione in corso...' : 'Registrati come ristoratore'}
+      <Button 
+        type="submit" 
+        className="w-full bg-primary hover:bg-primary/90" 
+        disabled={isLoading}
+      >
+        {isLoading ? 'Registrazione in corso...' : cardRegistered ? 'Completa registrazione' : 'Continua alla registrazione carta'}
       </Button>
       
       <div className="relative flex items-center my-4">
@@ -440,6 +481,27 @@ const RegisterForm = () => {
           </Link>
         </p>
       </div>
+      
+      {/* Payment dialog for restaurant registration */}
+      <Dialog open={showPaymentDialog} onOpenChange={(open) => {
+        if (!open) {
+          setIsLoading(false);
+        }
+        setShowPaymentDialog(open);
+      }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Registra metodo di pagamento</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <PaymentForm 
+              onComplete={handlePaymentComplete} 
+              isGuarantee={false}
+              amount={0.99}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

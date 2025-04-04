@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -10,13 +11,15 @@ import { CreditCard, Calendar, User, Lock, Info } from 'lucide-react';
 interface PaymentFormProps {
   onComplete: (success: boolean) => void;
   amount?: number;
-  isGuarantee?: boolean; 
+  isGuarantee?: boolean;
+  isRestaurantPayment?: boolean;
 }
 
 const PaymentForm: React.FC<PaymentFormProps> = ({ 
   onComplete, 
   amount = 0, 
-  isGuarantee = true 
+  isGuarantee = true,
+  isRestaurantPayment = false 
 }) => {
   const [cardNumber, setCardNumber] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
@@ -111,9 +114,15 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
     
     setTimeout(() => {
       setIsLoading(false);
-      toast.success(isGuarantee 
-        ? "Carta registrata con successo come garanzia" 
-        : "Pagamento effettuato con successo");
+      
+      if (isGuarantee) {
+        toast.success("Carta registrata con successo come garanzia");
+      } else if (isRestaurantPayment) {
+        toast.success("Pagamento del servizio completato con successo");
+      } else {
+        toast.success("Pagamento effettuato con successo");
+      }
+      
       onComplete(true);
     }, 1500);
   };
@@ -122,12 +131,19 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
     <Card className="w-full max-w-md">
       <CardHeader>
         <CardTitle className="text-xl">
-          {isGuarantee ? 'Registra carta come garanzia' : 'Pagamento servizio'}
+          {isGuarantee 
+            ? 'Registra carta come garanzia' 
+            : isRestaurantPayment 
+              ? 'Pagamento servizio di prenotazione' 
+              : 'Pagamento servizio'
+          }
         </CardTitle>
         <CardDescription>
           {isGuarantee 
             ? 'La carta verrà addebitata solo in caso di no-show non comunicato'
-            : `Completa il pagamento di €${amount.toFixed(2)}`
+            : isRestaurantPayment
+              ? `Pagamento di €${amount.toFixed(2)} per il servizio di prenotazione`
+              : `Completa il pagamento di €${amount.toFixed(2)}`
           }
         </CardDescription>
       </CardHeader>
@@ -222,7 +238,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
             />
             <div className="grid gap-1.5 leading-none">
               <Label htmlFor="saveCard" className="text-sm text-gray-600">
-                Salva questa carta per prenotazioni future
+                Salva questa carta per {isRestaurantPayment ? 'pagamenti futuri' : 'prenotazioni future'}
               </Label>
             </div>
           </div>
@@ -232,7 +248,9 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
             <div className="text-blue-700">
               {isGuarantee 
                 ? 'La tua carta verrà addebitata solo in caso di mancata presentazione senza aver cancellato con almeno 2 ore di anticipo. L\'importo dell\'addebito è di €10 (fino a 9 persone) o €20 (da 10 persone in su).'
-                : 'Questo pagamento è per il servizio di prenotazione. I tuoi dati di pagamento sono protetti con crittografia di livello bancario.'
+                : isRestaurantPayment
+                  ? 'Questo pagamento è per il servizio di prenotazione. Confermi di accettare l\'addebito per questo servizio.'
+                  : 'Questo pagamento è per il servizio di prenotazione. I tuoi dati di pagamento sono protetti con crittografia di livello bancario.'
               }
             </div>
           </div>

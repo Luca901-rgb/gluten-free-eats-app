@@ -11,6 +11,7 @@ interface PaymentManagerProps {
   amount: number;
   description: string;
   isGuarantee?: boolean;
+  isRestaurantPayment?: boolean;
   onPaymentComplete?: (success: boolean) => void;
 }
 
@@ -18,6 +19,7 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({
   amount, 
   description,
   isGuarantee = false,
+  isRestaurantPayment = false,
   onPaymentComplete 
 }) => {
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
@@ -32,16 +34,26 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({
     setIsPaying(false);
     
     if (success) {
-      toast.success(isGuarantee 
-        ? "Carta di garanzia registrata con successo" 
-        : "Pagamento effettuato con successo");
+      if (isGuarantee) {
+        toast.success("Carta di garanzia registrata con successo");
+      } else if (isRestaurantPayment) {
+        toast.success("Pagamento del servizio completato");
+      } else {
+        toast.success("Pagamento effettuato con successo");
+      }
+      
       if (onPaymentComplete) {
         onPaymentComplete(true);
       }
     } else {
-      toast.error(isGuarantee
-        ? "Registrazione carta non riuscita"
-        : "Il pagamento non è andato a buon fine");
+      if (isGuarantee) {
+        toast.error("Registrazione carta non riuscita");
+      } else if (isRestaurantPayment) {
+        toast.error("Pagamento del servizio non riuscito");
+      } else {
+        toast.error("Il pagamento non è andato a buon fine");
+      }
+      
       if (onPaymentComplete) {
         onPaymentComplete(false);
       }
@@ -57,6 +69,11 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({
               <>
                 <CreditCard className="h-5 w-5" />
                 Registra carta di garanzia
+              </>
+            ) : isRestaurantPayment ? (
+              <>
+                <Euro className="h-5 w-5" />
+                Paga servizio di prenotazione
               </>
             ) : (
               <>
@@ -90,7 +107,9 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({
             <span className="text-blue-700">
               {isGuarantee 
                 ? "La carta verrà addebitata solo in caso di no-show non comunicato." 
-                : "Il pagamento è sicuro e criptato. Utilizziamo tecnologie all'avanguardia per proteggere i tuoi dati."}
+                : isRestaurantPayment
+                  ? "Il pagamento serve a coprire i costi del servizio di prenotazione."
+                  : "Il pagamento è sicuro e criptato. Utilizziamo tecnologie all'avanguardia per proteggere i tuoi dati."}
             </span>
           </div>
         </CardContent>
@@ -99,13 +118,20 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({
       <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{isGuarantee ? "Registrazione carta di garanzia" : "Pagamento"}</DialogTitle>
+            <DialogTitle>
+              {isGuarantee 
+                ? "Registrazione carta di garanzia" 
+                : isRestaurantPayment 
+                  ? "Pagamento servizio" 
+                  : "Pagamento"}
+            </DialogTitle>
           </DialogHeader>
           <div className="flex justify-center py-4">
             <PaymentForm 
               onComplete={handlePaymentComplete} 
               amount={amount}
               isGuarantee={isGuarantee}
+              isRestaurantPayment={isRestaurantPayment}
             />
           </div>
         </DialogContent>
