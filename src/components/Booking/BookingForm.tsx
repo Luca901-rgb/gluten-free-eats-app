@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
-import { CalendarIcon, Clock, Users, Check, Info } from 'lucide-react';
+import { CalendarIcon, Clock, Users, Check, Info, CreditCard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -29,10 +29,17 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useBookings } from '@/context/BookingContext';
 import { addDays, isToday, format as dateFormat } from 'date-fns';
+import PaymentForm from './PaymentForm';
 
 interface BookingFormProps {
   restaurantId: string;
@@ -40,20 +47,17 @@ interface BookingFormProps {
   restaurantImage?: string;
 }
 
-// Orari disponibili con intervalli di 15 minuti
 const generateAvailableTimes = () => {
   const times = [];
-  // Pranzo: 12:00-14:30
   for (let h = 12; h <= 14; h++) {
     for (let m = 0; m <= 45; m += 15) {
-      if (h === 14 && m > 30) continue; // Non oltre le 14:30
+      if (h === 14 && m > 30) continue;
       times.push(`${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`);
     }
   }
-  // Cena: 19:00-22:30
   for (let h = 19; h <= 22; h++) {
     for (let m = 0; m <= 45; m += 15) {
-      if (h === 22 && m > 30) continue; // Non oltre le 22:30
+      if (h === 22 && m > 30) continue;
       times.push(`${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`);
     }
   }
@@ -70,26 +74,26 @@ const BookingForm: React.FC<BookingFormProps> = ({ restaurantId, restaurantName,
   const [isLoading, setIsLoading] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [bookingData, setBookingData] = useState<any>(null);
-  
-  // Opzioni aggiuntive
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [paymentComplete, setPaymentComplete] = useState(false);
+
   const [highChair, setHighChair] = useState(false);
   const [accessibility, setAccessibility] = useState(false);
   const [outdoorTable, setOutdoorTable] = useState(false);
   const [specialOccasion, setSpecialOccasion] = useState<string | undefined>(undefined);
-  
+
   const { addBooking } = useBookings();
 
   const handleSliderChange = (value: number[]) => {
     setPeople(value[0]);
   };
-  
-  // Simulazione date con disponibilità limitata (in un'app reale questo verrebbe dal backend)
+
   const limitedAvailabilityDates = [
     addDays(new Date(), 3),
     addDays(new Date(), 5),
     addDays(new Date(), 8)
   ];
-  
+
   const isLimitedAvailability = (date: Date) => {
     return limitedAvailabilityDates.some(
       limitedDate => 
@@ -107,25 +111,34 @@ const BookingForm: React.FC<BookingFormProps> = ({ restaurantId, restaurantName,
       return;
     }
 
+    setShowPaymentDialog(true);
+  };
+
+  const handlePaymentComplete = (success: boolean) => {
+    setShowPaymentDialog(false);
+    if (success) {
+      setPaymentComplete(true);
+      toast.success("Pagamento completato con successo");
+      processBooking();
+    }
+  };
+
+  const processBooking = async () => {
     setIsLoading(true);
 
     try {
-      // Generate a booking date by combining the selected date and time
-      const dateTime = new Date(date);
-      const [hours, minutes] = time.split(':').map(Number);
+      const dateTime = new Date(date!);
+      const [hours, minutes] = time!.split(':').map(Number);
       dateTime.setHours(hours, minutes);
       
-      // Generate a random booking code for demo
       const bookingCode = Math.random().toString(36).substring(2, 8).toUpperCase();
       
-      // Riepilogo opzioni aggiuntive
       const additionalOptions = [];
       if (highChair) additionalOptions.push('Seggiolone bambini');
       if (accessibility) additionalOptions.push('Accessibilità disabili');
       if (outdoorTable) additionalOptions.push('Tavolo all\'aperto');
       if (specialOccasion) additionalOptions.push(`Occasione speciale: ${specialOccasion}`);
       
-      // Create a new booking
       const newBooking = {
         id: `b${Date.now()}`,
         restaurantId,
@@ -137,16 +150,14 @@ const BookingForm: React.FC<BookingFormProps> = ({ restaurantId, restaurantName,
         additionalOptions,
         status: 'pending' as const,
         bookingCode,
-        customerName: localStorage.getItem('userName') || 'Cliente', // In un'app reale, prenderebbe i dati dell'utente loggato
+        customerName: localStorage.getItem('userName') || 'Cliente',
+        paymentConfirmed: true
       };
       
-      // Prepara dati per la conferma
       setBookingData(newBooking);
       
-      // Aggiungi la prenotazione
       addBooking(newBooking);
       
-      // Mostra la schermata di conferma
       setShowConfirmation(true);
     } catch (error) {
       toast.error('Errore durante la prenotazione. Riprova più tardi.');
@@ -154,12 +165,11 @@ const BookingForm: React.FC<BookingFormProps> = ({ restaurantId, restaurantName,
       setIsLoading(false);
     }
   };
-  
+
   const handleAddToCalendar = () => {
-    // In un'app reale, questo utilizzerebbe le API del calendario del dispositivo
     toast.success('Evento aggiunto al tuo calendario');
   };
-  
+
   const handleNewReservation = () => {
     setShowConfirmation(false);
     setDate(undefined);
@@ -172,7 +182,6 @@ const BookingForm: React.FC<BookingFormProps> = ({ restaurantId, restaurantName,
     setSpecialOccasion(undefined);
   };
 
-  // Schermata di conferma
   if (showConfirmation && bookingData) {
     return (
       <Card className="w-full max-w-md mx-auto animate-fade-in">
@@ -193,6 +202,14 @@ const BookingForm: React.FC<BookingFormProps> = ({ restaurantId, restaurantName,
               <p className="text-sm font-mono mt-2 border border-dashed border-gray-300 py-1 px-2 rounded inline-block">
                 Codice prenotazione: <span className="font-bold">{bookingData.bookingCode}</span>
               </p>
+            </div>
+          </div>
+          
+          <div className="flex items-start gap-2 bg-green-50 p-3 rounded-md border border-green-100">
+            <CreditCard className="h-5 w-5 text-green-500 flex-shrink-0" />
+            <div className="text-sm text-green-800">
+              <p className="font-medium">Pagamento confermato</p>
+              <p className="mt-1">Hai completato il pagamento per questa prenotazione</p>
             </div>
           </div>
           
@@ -408,13 +425,28 @@ const BookingForm: React.FC<BookingFormProps> = ({ restaurantId, restaurantName,
           className="w-full bg-accent hover:bg-accent/90 mt-4" 
           disabled={isLoading || !date || !time}
         >
-          {isLoading ? 'Prenotazione in corso...' : 'Conferma prenotazione'}
+          {isLoading ? 'Prenotazione in corso...' : 'Procedi al pagamento'}
         </Button>
         
         <div className="text-center text-sm text-muted-foreground">
           <p>Puoi modificare o cancellare la tua prenotazione fino a 2 ore prima dell'orario scelto</p>
         </div>
       </form>
+      
+      <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Pagamento prenotazione</DialogTitle>
+          </DialogHeader>
+          <div className="flex justify-center py-4">
+            <PaymentForm 
+              onComplete={handlePaymentComplete} 
+              amount={5.99}
+              isGuarantee={false}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
