@@ -6,7 +6,7 @@ import RegisterForm from '@/components/Authentication/RegisterForm';
 const Register = () => {
   return (
     <Layout hideNavigation>
-      <div className="min-h-screen flex items-center justify-center px-4 py-12">
+      <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-b from-white to-gray-50">
         <RegisterForm />
       </div>
     </Layout>
@@ -14,3 +14,4 @@ const Register = () => {
 };
 
 export default Register;
+

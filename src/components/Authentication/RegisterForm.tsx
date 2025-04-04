@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -7,10 +6,14 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { User, Mail, Lock, Phone, MapPin, Store, CreditCard } from 'lucide-react';
+import { User, Mail, Lock, Phone, MapPin, Store, CreditCard, Clock, AlignLeft, Globe } from 'lucide-react';
 import { registerUser, signInWithGoogle } from '@/lib/firebase';
 import PaymentForm from '@/components/Booking/PaymentForm';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer';
+import { useMediaQuery } from '@/hooks/use-mobile';
 
 const RegisterForm = () => {
   const navigate = useNavigate();
@@ -20,6 +23,9 @@ const RegisterForm = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [cardRegistered, setCardRegistered] = useState(false);
+  const [showMoreFields, setShowMoreFields] = useState(false);
+  const isMobile = useMediaQuery("(max-width: 768px)");
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -30,13 +36,47 @@ const RegisterForm = () => {
     restaurantName: '',
     address: '',
     phone: '',
+    website: '',
+    description: '',
+    cuisine: '',
+    priceRange: '',
+    // Opening hours
+    openingHours: {
+      monday: { open: true, from: '12:00', to: '15:00', fromDinner: '19:00', toDinner: '23:00' },
+      tuesday: { open: true, from: '12:00', to: '15:00', fromDinner: '19:00', toDinner: '23:00' },
+      wednesday: { open: true, from: '12:00', to: '15:00', fromDinner: '19:00', toDinner: '23:00' },
+      thursday: { open: true, from: '12:00', to: '15:00', fromDinner: '19:00', toDinner: '23:00' },
+      friday: { open: true, from: '12:00', to: '15:00', fromDinner: '19:00', toDinner: '23:00' },
+      saturday: { open: true, from: '12:00', to: '15:00', fromDinner: '19:00', toDinner: '23:00' },
+      sunday: { open: false, from: '12:00', to: '15:00', fromDinner: '19:00', toDinner: '23:00' },
+    }
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target;
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value, type } = e.target;
     setFormData({
       ...formData,
-      [name]: type === 'checkbox' ? checked : value,
+      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
+    });
+  };
+
+  const handleSelectChange = (name: string, value: string) => {
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
+  };
+
+  const handleOpeningHoursChange = (day: string, field: string, value: string | boolean) => {
+    setFormData({
+      ...formData,
+      openingHours: {
+        ...formData.openingHours,
+        [day]: {
+          ...formData.openingHours[day as keyof typeof formData.openingHours],
+          [field]: value
+        }
+      }
     });
   };
 
@@ -69,6 +109,10 @@ const RegisterForm = () => {
         localStorage.setItem('restaurantName', formData.restaurantName);
         localStorage.setItem('restaurantAddress', formData.address);
         localStorage.setItem('restaurantPhone', formData.phone);
+        localStorage.setItem('restaurantWebsite', formData.website || '');
+        localStorage.setItem('restaurantDescription', formData.description || '');
+        localStorage.setItem('restaurantCuisine', formData.cuisine || '');
+        localStorage.setItem('restaurantPriceRange', formData.priceRange || '');
         localStorage.setItem('hasPaymentMethod', 'true');
         navigate('/restaurant-dashboard');
       } else {
@@ -262,6 +306,16 @@ const RegisterForm = () => {
     </form>
   );
 
+  const days = [
+    { id: 'monday', label: 'Lunedì' },
+    { id: 'tuesday', label: 'Martedì' },
+    { id: 'wednesday', label: 'Mercoledì' },
+    { id: 'thursday', label: 'Giovedì' },
+    { id: 'friday', label: 'Venerdì' },
+    { id: 'saturday', label: 'Sabato' },
+    { id: 'sunday', label: 'Domenica' },
+  ];
+
   const renderRestaurantForm = () => (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
@@ -326,6 +380,278 @@ const RegisterForm = () => {
           />
           <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={18} />
         </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="website">Sito Web</Label>
+        <div className="relative">
+          <Input
+            id="website"
+            name="website"
+            placeholder="www.ristorantesenzaglutine.it"
+            value={formData.website}
+            onChange={handleChange}
+            className="pl-10"
+          />
+          <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={18} />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="cuisine">Tipo di cucina</Label>
+          <Select value={formData.cuisine} onValueChange={(value) => handleSelectChange('cuisine', value)}>
+            <SelectTrigger id="cuisine">
+              <SelectValue placeholder="Seleziona tipo di cucina" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="italiana">Italiana</SelectItem>
+              <SelectItem value="pizzeria">Pizzeria</SelectItem>
+              <SelectItem value="internazionale">Internazionale</SelectItem>
+              <SelectItem value="fusion">Fusion</SelectItem>
+              <SelectItem value="asiatica">Asiatica</SelectItem>
+              <SelectItem value="americana">Americana</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="priceRange">Fascia di prezzo</Label>
+          <Select value={formData.priceRange} onValueChange={(value) => handleSelectChange('priceRange', value)}>
+            <SelectTrigger id="priceRange">
+              <SelectValue placeholder="Seleziona fascia di prezzo" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="€">€ - Economico</SelectItem>
+              <SelectItem value="€€">€€ - Nella media</SelectItem>
+              <SelectItem value="€€€">€€€ - Costoso</SelectItem>
+              <SelectItem value="€€€€">€€€€ - Lusso</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="description">Descrizione del ristorante</Label>
+        <div className="relative">
+          <Textarea
+            id="description"
+            name="description"
+            placeholder="Descrivi il tuo ristorante, specialità, servizi..."
+            value={formData.description}
+            onChange={handleChange}
+            className="min-h-[100px] pl-10 pt-8"
+          />
+          <AlignLeft className="absolute left-3 top-3 text-gray-500" size={18} />
+        </div>
+      </div>
+
+      <div className="mt-6">
+        {isMobile ? (
+          <Drawer>
+            <DrawerTrigger asChild>
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="w-full flex items-center gap-2"
+              >
+                <Clock size={16} />
+                <span>Imposta orari di apertura</span>
+              </Button>
+            </DrawerTrigger>
+            <DrawerContent>
+              <DrawerHeader>
+                <DrawerTitle>Orari di Apertura</DrawerTitle>
+                <DrawerDescription>
+                  Imposta gli orari di apertura del tuo ristorante
+                </DrawerDescription>
+              </DrawerHeader>
+              <div className="p-4 max-h-[60vh] overflow-y-auto">
+                {days.map((day) => {
+                  const dayData = formData.openingHours[day.id as keyof typeof formData.openingHours];
+                  return (
+                    <div key={day.id} className="border-b border-gray-200 py-4 last:border-b-0">
+                      <div className="flex justify-between items-center mb-3">
+                        <Label htmlFor={`open-${day.id}`} className="text-base font-medium">{day.label}</Label>
+                        <div className="flex items-center gap-2">
+                          <Checkbox
+                            id={`open-${day.id}`}
+                            checked={dayData.open}
+                            onCheckedChange={(checked) => 
+                              handleOpeningHoursChange(day.id, 'open', !!checked)
+                            }
+                          />
+                          <Label htmlFor={`open-${day.id}`} className="cursor-pointer">
+                            {dayData.open ? "Aperto" : "Chiuso"}
+                          </Label>
+                        </div>
+                      </div>
+                      
+                      {dayData.open && (
+                        <div className="grid grid-cols-1 gap-4">
+                          <div className="space-y-2">
+                            <Label className="text-sm text-gray-500">Pranzo</Label>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <Label htmlFor={`${day.id}-lunch-from`} className="text-xs">Dalle</Label>
+                                <Input
+                                  id={`${day.id}-lunch-from`}
+                                  type="time"
+                                  value={dayData.from}
+                                  onChange={(e) => handleOpeningHoursChange(day.id, 'from', e.target.value)}
+                                  className="mt-1"
+                                />
+                              </div>
+                              <div>
+                                <Label htmlFor={`${day.id}-lunch-to`} className="text-xs">Alle</Label>
+                                <Input
+                                  id={`${day.id}-lunch-to`}
+                                  type="time"
+                                  value={dayData.to}
+                                  onChange={(e) => handleOpeningHoursChange(day.id, 'to', e.target.value)}
+                                  className="mt-1"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label className="text-sm text-gray-500">Cena</Label>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <Label htmlFor={`${day.id}-dinner-from`} className="text-xs">Dalle</Label>
+                                <Input
+                                  id={`${day.id}-dinner-from`}
+                                  type="time"
+                                  value={dayData.fromDinner}
+                                  onChange={(e) => handleOpeningHoursChange(day.id, 'fromDinner', e.target.value)}
+                                  className="mt-1"
+                                />
+                              </div>
+                              <div>
+                                <Label htmlFor={`${day.id}-dinner-to`} className="text-xs">Alle</Label>
+                                <Input
+                                  id={`${day.id}-dinner-to`}
+                                  type="time"
+                                  value={dayData.toDinner}
+                                  onChange={(e) => handleOpeningHoursChange(day.id, 'toDinner', e.target.value)}
+                                  className="mt-1"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+              <DrawerFooter>
+                <DrawerClose asChild>
+                  <Button>Salva orari</Button>
+                </DrawerClose>
+              </DrawerFooter>
+            </DrawerContent>
+          </Drawer>
+        ) : (
+          <Dialog open={showMoreFields} onOpenChange={setShowMoreFields}>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full flex items-center gap-2"
+              onClick={() => setShowMoreFields(true)}
+            >
+              <Clock size={16} />
+              <span>Imposta orari di apertura</span>
+            </Button>
+            <DialogContent className="sm:max-w-[525px] max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Orari di Apertura</DialogTitle>
+              </DialogHeader>
+              <div className="py-4 space-y-5">
+                {days.map((day) => {
+                  const dayData = formData.openingHours[day.id as keyof typeof formData.openingHours];
+                  return (
+                    <div key={day.id} className="border-b border-gray-200 pb-5 last:border-b-0">
+                      <div className="flex justify-between items-center mb-3">
+                        <Label htmlFor={`open-${day.id}`} className="text-base font-medium">{day.label}</Label>
+                        <div className="flex items-center gap-2">
+                          <Checkbox
+                            id={`open-${day.id}`}
+                            checked={dayData.open}
+                            onCheckedChange={(checked) => 
+                              handleOpeningHoursChange(day.id, 'open', !!checked)
+                            }
+                          />
+                          <Label htmlFor={`open-${day.id}`} className="cursor-pointer">
+                            {dayData.open ? "Aperto" : "Chiuso"}
+                          </Label>
+                        </div>
+                      </div>
+                      
+                      {dayData.open && (
+                        <div className="grid grid-cols-1 gap-4">
+                          <div className="space-y-2">
+                            <Label className="text-sm text-gray-500">Pranzo</Label>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <Label htmlFor={`${day.id}-lunch-from`} className="text-xs">Dalle</Label>
+                                <Input
+                                  id={`${day.id}-lunch-from`}
+                                  type="time"
+                                  value={dayData.from}
+                                  onChange={(e) => handleOpeningHoursChange(day.id, 'from', e.target.value)}
+                                  className="mt-1"
+                                />
+                              </div>
+                              <div>
+                                <Label htmlFor={`${day.id}-lunch-to`} className="text-xs">Alle</Label>
+                                <Input
+                                  id={`${day.id}-lunch-to`}
+                                  type="time"
+                                  value={dayData.to}
+                                  onChange={(e) => handleOpeningHoursChange(day.id, 'to', e.target.value)}
+                                  className="mt-1"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label className="text-sm text-gray-500">Cena</Label>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <Label htmlFor={`${day.id}-dinner-from`} className="text-xs">Dalle</Label>
+                                <Input
+                                  id={`${day.id}-dinner-from`}
+                                  type="time"
+                                  value={dayData.fromDinner}
+                                  onChange={(e) => handleOpeningHoursChange(day.id, 'fromDinner', e.target.value)}
+                                  className="mt-1"
+                                />
+                              </div>
+                              <div>
+                                <Label htmlFor={`${day.id}-dinner-to`} className="text-xs">Alle</Label>
+                                <Input
+                                  id={`${day.id}-dinner-to`}
+                                  type="time"
+                                  value={dayData.toDinner}
+                                  onChange={(e) => handleOpeningHoursChange(day.id, 'toDinner', e.target.value)}
+                                  className="mt-1"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+              <Button onClick={() => setShowMoreFields(false)}>Salva orari</Button>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
       
       <div className="space-y-2">
@@ -406,7 +732,7 @@ const RegisterForm = () => {
           id="acceptTerms" 
           name="acceptTerms" 
           checked={formData.acceptTerms} 
-          onCheckedChange={(checked) => setFormData({...formData, acceptTerms: checked as boolean})}
+          onCheckedChange={(checked) => setFormData({...formData, acceptTerms: !!checked})}
         />
         <label
           htmlFor="acceptTerms"
@@ -498,6 +824,7 @@ const RegisterForm = () => {
               onComplete={handlePaymentComplete} 
               isGuarantee={false}
               amount={0.99}
+              isRestaurantRegistration={true}
             />
           </div>
         </DialogContent>
