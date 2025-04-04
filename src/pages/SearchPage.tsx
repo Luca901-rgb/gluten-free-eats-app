@@ -3,9 +3,10 @@ import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ChefHat, MapPin, Navigation } from 'lucide-react';
+import { ChefHat, MapPin, Navigation, List, Map } from 'lucide-react';
 import { RestaurantMap } from '@/components/Map/RestaurantMap';
 import { toast } from 'sonner';
+import RestaurantCard from '@/components/Restaurant/RestaurantCard';
 
 // Sample restaurant location data (would come from API in production)
 const sampleRestaurantLocations = [
@@ -15,6 +16,11 @@ const sampleRestaurantLocations = [
     location: { lat: 45.4642, lng: 9.1900 }, // Milano
     address: 'Via Roma 123, Milano',
     distance: '0.8 km',
+    image: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+    rating: 4.7,
+    reviews: 128,
+    cuisine: 'Italiana',
+    isFavorite: false,
   },
   {
     id: '2',
@@ -22,6 +28,11 @@ const sampleRestaurantLocations = [
     location: { lat: 45.4649, lng: 9.1880 }, // Milano nearby
     address: 'Via Dante 45, Milano',
     distance: '1.2 km',
+    image: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+    rating: 4.5,
+    reviews: 95,
+    cuisine: 'Pizzeria',
+    isFavorite: true,
   },
   {
     id: '3',
@@ -29,6 +40,11 @@ const sampleRestaurantLocations = [
     location: { lat: 45.4710, lng: 9.1930 }, // Milano nearby
     address: 'Piazza Duomo 10, Milano',
     distance: '2.5 km',
+    image: 'https://images.unsplash.com/photo-1458644267420-66bc8a5f21e4?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+    rating: 4.3,
+    reviews: 72,
+    cuisine: 'Italiana',
+    isFavorite: false,
   },
 ];
 
@@ -37,6 +53,7 @@ const SearchPage = () => {
   const [isLocating, setIsLocating] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [restaurants, setRestaurants] = useState(sampleRestaurantLocations);
+  const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
   
   // Get user's location if allowed
   const getUserLocation = () => {
@@ -92,6 +109,14 @@ const SearchPage = () => {
   useEffect(() => {
     getUserLocation();
   }, []);
+  
+  const handleToggleFavorite = (id: string) => {
+    setRestaurants(restaurants.map(restaurant => 
+      restaurant.id === id 
+        ? { ...restaurant, isFavorite: !restaurant.isFavorite } 
+        : restaurant
+    ));
+  };
 
   return (
     <Layout>
@@ -130,13 +155,45 @@ const SearchPage = () => {
           )}
         </div>
         
-        {/* Map Component replaced with list view */}
-        <div className="h-[60vh] rounded-lg border overflow-hidden mb-4">
-          <RestaurantMap 
-            userLocation={userPosition}
-            restaurants={restaurants}
-          />
+        {/* View toggle buttons */}
+        <div className="flex justify-center mb-4">
+          <div className="inline-flex rounded-md shadow-sm" role="group">
+            <Button 
+              variant={viewMode === 'map' ? 'default' : 'outline'} 
+              className="rounded-r-none"
+              onClick={() => setViewMode('map')}
+            >
+              <Map size={18} className="mr-1" /> Mappa
+            </Button>
+            <Button 
+              variant={viewMode === 'list' ? 'default' : 'outline'} 
+              className="rounded-l-none"
+              onClick={() => setViewMode('list')}
+            >
+              <List size={18} className="mr-1" /> Lista
+            </Button>
+          </div>
         </div>
+        
+        {/* Map or List View */}
+        {viewMode === 'map' ? (
+          <div className="h-[60vh] rounded-lg border overflow-hidden mb-4">
+            <RestaurantMap 
+              userLocation={userPosition}
+              restaurants={restaurants}
+            />
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {restaurants.map(restaurant => (
+              <RestaurantCard 
+                key={restaurant.id} 
+                restaurant={restaurant}
+                onToggleFavorite={handleToggleFavorite}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </Layout>
   );
