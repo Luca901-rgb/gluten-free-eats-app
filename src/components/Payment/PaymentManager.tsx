@@ -12,6 +12,7 @@ interface PaymentManagerProps {
   description: string;
   isGuarantee?: boolean;
   isRestaurantPayment?: boolean;
+  isRestaurantRegistration?: boolean;
   onPaymentComplete?: (success: boolean) => void;
 }
 
@@ -20,6 +21,7 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({
   description,
   isGuarantee = false,
   isRestaurantPayment = false,
+  isRestaurantRegistration = false,
   onPaymentComplete 
 }) => {
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
@@ -36,6 +38,8 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({
     if (success) {
       if (isGuarantee) {
         toast.success("Carta di garanzia registrata con successo");
+      } else if (isRestaurantRegistration) {
+        toast.success("Carta registrata con successo per il ristorante");
       } else if (isRestaurantPayment) {
         toast.success("Pagamento del servizio completato");
       } else {
@@ -48,6 +52,8 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({
     } else {
       if (isGuarantee) {
         toast.error("Registrazione carta non riuscita");
+      } else if (isRestaurantRegistration) {
+        toast.error("Registrazione carta del ristorante non riuscita");
       } else if (isRestaurantPayment) {
         toast.error("Pagamento del servizio non riuscito");
       } else {
@@ -69,6 +75,11 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({
               <>
                 <CreditCard className="h-5 w-5" />
                 Registra carta di garanzia
+              </>
+            ) : isRestaurantRegistration ? (
+              <>
+                <CreditCard className="h-5 w-5" />
+                Registra carta del ristorante
               </>
             ) : isRestaurantPayment ? (
               <>
@@ -99,7 +110,9 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({
                 ? "Elaborazione..." 
                 : isGuarantee 
                   ? "Registra carta" 
-                  : "Paga ora"}
+                  : isRestaurantRegistration
+                    ? "Registra carta"
+                    : "Paga ora"}
             </Button>
           </div>
           <div className="mt-4 text-sm flex items-start gap-2 bg-blue-50 p-3 rounded-md">
@@ -107,9 +120,11 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({
             <span className="text-blue-700">
               {isGuarantee 
                 ? "La carta verrà addebitata solo in caso di no-show non comunicato." 
-                : isRestaurantPayment
-                  ? "Il pagamento serve a coprire i costi del servizio di prenotazione."
-                  : "Il pagamento è sicuro e criptato. Utilizziamo tecnologie all'avanguardia per proteggere i tuoi dati."}
+                : isRestaurantRegistration
+                  ? "La carta verrà utilizzata per i pagamenti del servizio di prenotazione."
+                  : isRestaurantPayment
+                    ? "Il pagamento serve a coprire i costi del servizio di prenotazione."
+                    : "Il pagamento è sicuro e criptato. Utilizziamo tecnologie all'avanguardia per proteggere i tuoi dati."}
             </span>
           </div>
         </CardContent>
@@ -121,9 +136,11 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({
             <DialogTitle>
               {isGuarantee 
                 ? "Registrazione carta di garanzia" 
-                : isRestaurantPayment 
-                  ? "Pagamento servizio" 
-                  : "Pagamento"}
+                : isRestaurantRegistration
+                  ? "Registrazione carta del ristorante"
+                  : isRestaurantPayment 
+                    ? "Pagamento servizio" 
+                    : "Pagamento"}
             </DialogTitle>
           </DialogHeader>
           <div className="flex justify-center py-4">
@@ -131,6 +148,7 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({
               onComplete={handlePaymentComplete} 
               amount={amount}
               isGuarantee={isGuarantee}
+              isRestaurantRegistration={isRestaurantRegistration}
               isRestaurantPayment={isRestaurantPayment}
             />
           </div>
