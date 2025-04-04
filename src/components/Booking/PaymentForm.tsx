@@ -13,7 +13,7 @@ interface PaymentFormProps {
   amount?: number;
   isGuarantee?: boolean;
   isRestaurantPayment?: boolean;
-  isRestaurantRegistration?: boolean; // Added missing prop
+  isRestaurantRegistration?: boolean;
 }
 
 const PaymentForm: React.FC<PaymentFormProps> = ({ 
@@ -21,7 +21,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
   amount = 0, 
   isGuarantee = true,
   isRestaurantPayment = false,
-  isRestaurantRegistration = false // Added default value
+  isRestaurantRegistration = false
 }) => {
   const [cardNumber, setCardNumber] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
