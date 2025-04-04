@@ -54,7 +54,7 @@ const AdminDashboard = () => {
       return;
     }
 
-    // Carica i dati iniziali
+    // Carica i dati iniziali senza mostrare notifiche
     loadBookingStats();
     loadPayments();
     loadAppIssues();
@@ -69,6 +69,22 @@ const AdminDashboard = () => {
     } catch (error: any) {
       toast.error(`Errore durante il logout: ${error.message}`);
     }
+  };
+
+  // Funzioni di aggiornamento manuale che mostrano una notifica
+  const handleLoadPayments = () => {
+    loadPayments();
+    toast.success("Dati pagamenti caricati");
+  };
+  
+  const handleLoadAppIssues = () => {
+    loadAppIssues();
+    toast.success("Problematiche app caricate");
+  };
+  
+  const handleLoadBookingStats = () => {
+    loadBookingStats();
+    toast.success("Statistiche aggiornate");
   };
 
   // Prepara i dati per il grafico dei ristoranti top
@@ -183,6 +199,11 @@ const AdminDashboard = () => {
                       </ResponsiveContainer>
                     </div>
                   </CardContent>
+                  <CardFooter>
+                    <Button onClick={handleLoadBookingStats} className="ml-auto">
+                      Aggiorna statistiche
+                    </Button>
+                  </CardFooter>
                 </Card>
               </div>
             </TabsContent>
@@ -230,7 +251,7 @@ const AdminDashboard = () => {
                   </Table>
                 </CardContent>
                 <CardFooter>
-                  <Button onClick={loadPayments} className="ml-auto">
+                  <Button onClick={handleLoadPayments} className="ml-auto">
                     Aggiorna dati
                   </Button>
                 </CardFooter>
@@ -311,7 +332,7 @@ const AdminDashboard = () => {
                   )}
                 </CardContent>
                 <CardFooter>
-                  <Button onClick={loadAppIssues} className="ml-auto">
+                  <Button onClick={handleLoadAppIssues} className="ml-auto">
                     Aggiorna problemi
                   </Button>
                 </CardFooter>

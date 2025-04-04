@@ -132,7 +132,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         totalCovers: 964,
         coverRevenue: 1928 // €2 a persona
       });
-      toast.success("Statistiche aggiornate");
+      // Rimosso il toast di notifica
     }, 800);
   };
 
@@ -178,7 +178,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
           status: 'completed'
         }
       ]);
-      toast.success("Dati pagamenti caricati");
+      // Rimosso il toast di notifica
     }, 800);
   };
 
@@ -206,7 +206,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
           status: 'resolved'
         }
       ]);
-      toast.success("Problematiche app caricate");
+      // Rimosso il toast di notifica
     }, 800);
   };
 
