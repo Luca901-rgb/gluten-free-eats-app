@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Lock, User, LogIn, ShieldCheck, WifiOff } from 'lucide-react';
+import { Lock, User, LogIn, ShieldCheck, WifiOff, Home } from 'lucide-react';
 import { loginUser, setSpecificUserAsAdmin } from '@/lib/firebase';
 import { toast } from 'sonner';
 import { useAdmin } from '@/context/AdminContext';
@@ -226,6 +226,10 @@ const AdminLogin = () => {
           <div className="px-6 pb-6 text-center text-sm text-gray-500">
             <p>Solo gli utenti registrati come amministratori possono accedere</p>
             <p className="mt-1">Usa la scheda "Setup Admin" per configurare l'amministratore</p>
+            <Link to="/" className="mt-4 text-primary hover:underline inline-flex items-center gap-1">
+              <Home size={14} />
+              <span>Torna alla home principale</span>
+            </Link>
           </div>
         </Card>
       </div>
