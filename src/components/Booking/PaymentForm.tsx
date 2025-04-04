@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -10,8 +9,8 @@ import { CreditCard, Calendar, User, Lock, Info } from 'lucide-react';
 
 interface PaymentFormProps {
   onComplete: (success: boolean) => void;
-  amount?: number; // Importo da pagare, se presente
-  isGuarantee?: boolean; // Se è una garanzia o un pagamento effettivo
+  amount?: number;
+  isGuarantee?: boolean; 
 }
 
 const PaymentForm: React.FC<PaymentFormProps> = ({ 
@@ -27,7 +26,6 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{[key: string]: string}>({});
 
-  // Funzione per formattare il numero della carta
   const formatCardNumber = (value: string) => {
     const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
     const matches = v.match(/\d{4,16}/g);
@@ -45,7 +43,6 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
     }
   };
 
-  // Funzione per formattare la data di scadenza
   const formatExpiryDate = (value: string) => {
     const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
     if (v.length > 2) {
@@ -54,12 +51,10 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
     return v;
   };
 
-  // Gestione input numero carta
   const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formattedValue = formatCardNumber(e.target.value);
     setCardNumber(formattedValue);
     
-    // Validazione base
     if (formattedValue.replace(/\s/g, '').length < 16) {
       setErrors({...errors, cardNumber: 'Numero carta non valido'});
     } else {
@@ -69,12 +64,10 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
     }
   };
 
-  // Gestione input data di scadenza
   const handleExpiryDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formattedValue = formatExpiryDate(e.target.value);
     setExpiryDate(formattedValue);
     
-    // Validazione base
     if (formattedValue.length < 5) {
       setErrors({...errors, expiryDate: 'Data non valida'});
     } else {
@@ -84,7 +77,6 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
     }
   };
 
-  // Validazione del form
   const validateForm = () => {
     const newErrors: {[key: string]: string} = {};
     
@@ -108,7 +100,6 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
     return Object.keys(newErrors).length === 0;
   };
 
-  // Gestione invio form
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -118,7 +109,6 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
     
     setIsLoading(true);
     
-    // Simuliamo una chiamata API per il pagamento
     setTimeout(() => {
       setIsLoading(false);
       toast.success(isGuarantee 
@@ -132,7 +122,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
     <Card className="w-full max-w-md">
       <CardHeader>
         <CardTitle className="text-xl">
-          {isGuarantee ? 'Registra carta come garanzia' : 'Pagamento prenotazione'}
+          {isGuarantee ? 'Registra carta come garanzia' : 'Pagamento servizio'}
         </CardTitle>
         <CardDescription>
           {isGuarantee 
@@ -241,8 +231,8 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
             <Info className="text-blue-600 flex-shrink-0" size={16} />
             <div className="text-blue-700">
               {isGuarantee 
-                ? 'La tua carta verrà addebitata di €10 (fino a 9 persone) o €20 (da 10 persone in su) solo in caso di mancata presentazione senza cancellazione.'
-                : 'I tuoi dati di pagamento sono protetti con crittografia di livello bancario.'
+                ? 'La tua carta verrà addebitata solo in caso di mancata presentazione senza aver cancellato con almeno 2 ore di anticipo. L\'importo dell\'addebito è di €10 (fino a 9 persone) o €20 (da 10 persone in su).'
+                : 'Questo pagamento è per il servizio di prenotazione. I tuoi dati di pagamento sono protetti con crittografia di livello bancario.'
               }
             </div>
           </div>
