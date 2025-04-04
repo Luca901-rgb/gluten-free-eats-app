@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -26,7 +25,6 @@ const AdminLogin = () => {
   const navigate = useNavigate();
   const { isAdmin, setIsAdmin } = useAdmin();
 
-  // Verifica se l'admin è già configurato in localStorage
   useEffect(() => {
     const adminEmail = localStorage.getItem('adminEmail');
     if (adminEmail) {
@@ -34,7 +32,6 @@ const AdminLogin = () => {
     }
   }, []);
 
-  // Redirect se già autenticato come admin
   useEffect(() => {
     if (isAdmin) {
       navigate('/admin-dashboard');
@@ -46,10 +43,8 @@ const AdminLogin = () => {
     setIsLoading(true);
 
     try {
-      // Login con Firebase
       await loginUser(email, password);
       
-      // Prima controlla il localStorage (per modalità offline)
       const adminEmail = localStorage.getItem('adminEmail');
       
       if (adminEmail && adminEmail === email) {
@@ -59,14 +54,13 @@ const AdminLogin = () => {
         return;
       }
       
-      // Verifica se l'utente è un admin in Firestore
       try {
         const adminRef = doc(db, "admins", email);
         const adminSnap = await getDoc(adminRef);
         
         if (adminSnap.exists()) {
           setIsAdmin(true);
-          localStorage.setItem('adminEmail', email); // Salva per accessi offline
+          localStorage.setItem('adminEmail', email);
           toast.success("Accesso come amministratore effettuato");
           navigate('/admin-dashboard');
         } else {
@@ -122,7 +116,7 @@ const AdminLogin = () => {
           
           {offlineMode && (
             <div className="px-6 mb-4">
-              <Alert variant="warning" className="bg-yellow-50 border-yellow-200">
+              <Alert className="bg-yellow-50 border-yellow-200">
                 <WifiOff className="h-4 w-4" />
                 <AlertTitle>Modalità offline</AlertTitle>
                 <AlertDescription>
