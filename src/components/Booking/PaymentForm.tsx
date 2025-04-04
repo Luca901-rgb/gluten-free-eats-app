@@ -13,13 +13,15 @@ interface PaymentFormProps {
   amount?: number;
   isGuarantee?: boolean;
   isRestaurantPayment?: boolean;
+  isRestaurantRegistration?: boolean; // Added missing prop
 }
 
 const PaymentForm: React.FC<PaymentFormProps> = ({ 
   onComplete, 
   amount = 0, 
   isGuarantee = true,
-  isRestaurantPayment = false 
+  isRestaurantPayment = false,
+  isRestaurantRegistration = false // Added default value
 }) => {
   const [cardNumber, setCardNumber] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
@@ -117,6 +119,8 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
       
       if (isGuarantee) {
         toast.success("Carta registrata con successo come garanzia");
+      } else if (isRestaurantRegistration) {
+        toast.success("Carta registrata con successo per il ristorante");
       } else if (isRestaurantPayment) {
         toast.success("Pagamento del servizio completato con successo");
       } else {
@@ -133,17 +137,21 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
         <CardTitle className="text-xl">
           {isGuarantee 
             ? 'Registra carta come garanzia' 
-            : isRestaurantPayment 
-              ? 'Pagamento servizio di prenotazione' 
-              : 'Pagamento servizio'
+            : isRestaurantRegistration
+              ? 'Registrazione carta del ristorante'
+              : isRestaurantPayment 
+                ? 'Pagamento servizio di prenotazione' 
+                : 'Pagamento servizio'
           }
         </CardTitle>
         <CardDescription>
           {isGuarantee 
             ? 'La carta verrà addebitata solo in caso di no-show non comunicato'
-            : isRestaurantPayment
-              ? `Pagamento di €${amount.toFixed(2)} per il servizio di prenotazione`
-              : `Completa il pagamento di €${amount.toFixed(2)}`
+            : isRestaurantRegistration
+              ? 'Registra la carta per il ristorante per accettare prenotazioni'
+              : isRestaurantPayment
+                ? `Pagamento di €${amount.toFixed(2)} per il servizio di prenotazione`
+                : `Completa il pagamento di €${amount.toFixed(2)}`
           }
         </CardDescription>
       </CardHeader>
@@ -238,7 +246,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
             />
             <div className="grid gap-1.5 leading-none">
               <Label htmlFor="saveCard" className="text-sm text-gray-600">
-                Salva questa carta per {isRestaurantPayment ? 'pagamenti futuri' : 'prenotazioni future'}
+                Salva questa carta per {isRestaurantPayment || isRestaurantRegistration ? 'pagamenti futuri' : 'prenotazioni future'}
               </Label>
             </div>
           </div>
@@ -248,9 +256,11 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
             <div className="text-blue-700">
               {isGuarantee 
                 ? 'La tua carta verrà addebitata solo in caso di mancata presentazione senza aver cancellato con almeno 2 ore di anticipo. L\'importo dell\'addebito è di €10 (fino a 9 persone) o €20 (da 10 persone in su).'
-                : isRestaurantPayment
-                  ? 'Questo pagamento è per il servizio di prenotazione. Confermi di accettare l\'addebito per questo servizio.'
-                  : 'Questo pagamento è per il servizio di prenotazione. I tuoi dati di pagamento sono protetti con crittografia di livello bancario.'
+                : isRestaurantRegistration
+                  ? 'Questa carta sarà utilizzata per i pagamenti futuri del servizio di prenotazione. Non verrà addebitato nulla in questa fase.'
+                  : isRestaurantPayment
+                    ? 'Questo pagamento è per il servizio di prenotazione. Confermi di accettare l\'addebito per questo servizio.'
+                    : 'Questo pagamento è per il servizio di prenotazione. I tuoi dati di pagamento sono protetti con crittografia di livello bancario.'
               }
             </div>
           </div>
@@ -261,7 +271,13 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
             className="w-full" 
             disabled={isLoading}
           >
-            {isLoading ? 'Elaborazione...' : isGuarantee ? 'Conferma Carta di Garanzia' : 'Paga Ora'}
+            {isLoading 
+              ? 'Elaborazione...' 
+              : isGuarantee 
+                ? 'Conferma Carta di Garanzia' 
+                : isRestaurantRegistration
+                  ? 'Registra Carta'
+                  : 'Paga Ora'}
           </Button>
         </CardFooter>
       </form>
