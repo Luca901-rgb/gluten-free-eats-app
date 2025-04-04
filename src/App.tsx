@@ -1,9 +1,8 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
@@ -55,14 +54,12 @@ const AdminAccessButton = () => {
   
   return (
     <div className="fixed bottom-4 right-4 z-50">
-      <Button
-        as="a"
-        href="/admin-login"
-        className="flex items-center gap-2 shadow-lg"
-      >
-        <ShieldCheck size={18} />
-        Area Admin
-      </Button>
+      <Link to="/admin-login">
+        <Button className="flex items-center gap-2 shadow-lg">
+          <ShieldCheck size={18} />
+          Area Admin
+        </Button>
+      </Link>
     </div>
   );
 };
