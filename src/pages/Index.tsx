@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Search, Settings } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -7,7 +6,6 @@ import Layout from '@/components/Layout';
 import RestaurantCard, { Restaurant } from '@/components/Restaurant/RestaurantCard';
 import { Link } from 'react-router-dom';
 
-// Sample data for now - would connect to an API in a real app
 const sampleRestaurants: Restaurant[] = [
   {
     id: '1',
@@ -67,7 +65,6 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate loading time
     const timer = setTimeout(() => {
       setIsLoading(false);
     }, 1000);
@@ -77,8 +74,6 @@ const Index = () => {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, this would filter from the API
-    // For demo, just filter the sample data
     const filtered = sampleRestaurants.filter(restaurant => 
       restaurant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       restaurant.cuisine.toLowerCase().includes(searchTerm.toLowerCase())
@@ -155,6 +150,18 @@ const Index = () => {
               )}
             </div>
           )}
+        </div>
+
+        <div className="flex flex-wrap gap-4 mt-8">
+          <Button size="lg" asChild>
+            <Link to="/search">Trova Ristoranti</Link>
+          </Button>
+          <Button size="lg" variant="outline" asChild>
+            <Link to="/videos">Scopri Ricette</Link>
+          </Button>
+          <Button size="lg" variant="secondary" asChild>
+            <Link to="/payments">Sistema Pagamenti</Link>
+          </Button>
         </div>
       </div>
     </Layout>

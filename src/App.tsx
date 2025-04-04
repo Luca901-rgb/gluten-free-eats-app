@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -14,6 +15,7 @@ import SearchPage from "./pages/SearchPage";
 import BookingsPage from "./pages/BookingsPage";
 import FavoritesPage from "./pages/FavoritesPage";
 import VideoRecipesPage from "./pages/VideoRecipesPage";
+import PaymentsPage from "./pages/PaymentsPage";
 import RestaurantDashboard from "./pages/RestaurantDashboard";
 import { BookingProvider } from "./context/BookingContext";
 import { AdminProvider } from "./context/AdminContext";
@@ -85,6 +87,7 @@ const App = () => (
               <Route path="/bookings" element={<BookingsPage />} />
               <Route path="/favorites" element={<FavoritesPage />} />
               <Route path="/videos" element={<VideoRecipesPage />} />
+              <Route path="/payments" element={<PaymentsPage />} />
               
               {/* Restaurant Dashboard Routes */}
               <Route path="/restaurant-dashboard" element={<RestaurantDashboard />} />
