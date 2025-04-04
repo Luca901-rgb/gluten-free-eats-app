@@ -1,4 +1,3 @@
-
 import { initializeApp } from 'firebase/app';
 import { 
   getAuth, 
@@ -90,6 +89,31 @@ export const signInWithGoogle = async () => {
     const result = await signInWithPopup(auth, googleProvider);
     const user = result.user;
     return user;
+  } catch (error: any) {
+    throw new Error(error.message);
+  }
+};
+
+// Funzione specializzata per accedere come admin
+export const loginAdmin = async (email: string, password: string) => {
+  try {
+    // Verifica se le credenziali corrispondono all'admin predefinito
+    if (email === "lcammarota24@gmail.com" && password === "Camma8790") {
+      try {
+        // Prova ad accedere tramite Firebase se online
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        return userCredential.user;
+      } catch (error) {
+        // Se fallisce (utente non esistente o offline), impostiamo l'admin localmente
+        console.log("Accesso Firebase fallito, usando modalità offline");
+        localStorage.setItem('adminEmail', email);
+        localStorage.setItem('isAdmin', 'true');
+        return { email, uid: 'offline-admin' };
+      }
+    } else {
+      // Se le credenziali non corrispondono, prova il login normale
+      return await loginUser(email, password);
+    }
   } catch (error: any) {
     throw new Error(error.message);
   }

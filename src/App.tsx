@@ -18,6 +18,9 @@ import VideoRecipesPage from "./pages/VideoRecipesPage";
 import RestaurantDashboard from "./pages/RestaurantDashboard";
 import { BookingProvider } from "./context/BookingContext";
 import { AdminProvider } from "./context/AdminContext";
+import { Button } from "./components/ui/button";
+import { ShieldCheck } from "lucide-react";
+import { useState, useEffect } from "react";
 
 // Admin pages
 import AdminLogin from "./pages/AdminLogin";
@@ -29,6 +32,40 @@ import RestaurantVideos from "./pages/restaurant/RestaurantVideos";
 import RestaurantBookings from "./pages/restaurant/RestaurantBookings";
 import RestaurantReviews from "./pages/restaurant/RestaurantReviews";
 import RestaurantProfile from "./pages/restaurant/RestaurantProfile";
+
+// Admin Access Button Component
+const AdminAccessButton = () => {
+  const [showButton, setShowButton] = useState(false);
+  
+  useEffect(() => {
+    // Mostra il pulsante solo nella homepage
+    const isHomepage = window.location.pathname === '/';
+    setShowButton(isHomepage);
+    
+    const handleRouteChange = () => {
+      const isHomepage = window.location.pathname === '/';
+      setShowButton(isHomepage);
+    };
+    
+    window.addEventListener('popstate', handleRouteChange);
+    return () => window.removeEventListener('popstate', handleRouteChange);
+  }, []);
+  
+  if (!showButton) return null;
+  
+  return (
+    <div className="fixed bottom-4 right-4 z-50">
+      <Button
+        as="a"
+        href="/admin-login"
+        className="flex items-center gap-2 shadow-lg"
+      >
+        <ShieldCheck size={18} />
+        Area Admin
+      </Button>
+    </div>
+  );
+};
 
 // Create a new QueryClient instance
 const queryClient = new QueryClient();
@@ -67,6 +104,7 @@ const App = () => (
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
+            <AdminAccessButton />
             <Toaster />
             <Sonner />
           </TooltipProvider>

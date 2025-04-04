@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Lock, User, LogIn, ShieldCheck, WifiOff, Home } from 'lucide-react';
-import { loginUser, setSpecificUserAsAdmin } from '@/lib/firebase';
+import { loginAdmin, setSpecificUserAsAdmin } from '@/lib/firebase';
 import { toast } from 'sonner';
 import { useAdmin } from '@/context/AdminContext';
 import Layout from '@/components/Layout';
@@ -17,7 +17,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 const db = getFirestore();
 
 const AdminLogin = () => {
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState('lcammarota24@gmail.com');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSettingAdmin, setIsSettingAdmin] = useState(false);
@@ -45,13 +45,14 @@ const AdminLogin = () => {
     setIsLoading(true);
 
     try {
-      await loginUser(email, password);
+      // Usa loginAdmin invece di loginUser
+      await loginAdmin(email, password);
       
       const adminEmail = localStorage.getItem('adminEmail');
       
       if (adminEmail && adminEmail === email) {
         setIsAdmin(true);
-        toast.success("Accesso come amministratore effettuato (modalità offline)");
+        toast.success("Accesso come amministratore effettuato");
         navigate('/admin-dashboard');
         return;
       }
@@ -194,6 +195,10 @@ const AdminLogin = () => {
                       />
                       <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={18} />
                     </div>
+                  </div>
+                  <div className="text-sm text-primary">
+                    <p>Admin: lcammarota24@gmail.com</p>
+                    <p>Password: Camma8790</p>
                   </div>
                 </CardContent>
                 <CardFooter>
