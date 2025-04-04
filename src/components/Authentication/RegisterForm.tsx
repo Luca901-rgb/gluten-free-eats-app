@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer';
-import { useMediaQuery } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const RegisterForm = () => {
   const navigate = useNavigate();
@@ -24,7 +24,7 @@ const RegisterForm = () => {
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [cardRegistered, setCardRegistered] = useState(false);
   const [showMoreFields, setShowMoreFields] = useState(false);
-  const isMobile = useMediaQuery("(max-width: 768px)");
+  const isMobile = useIsMobile();
 
   const [formData, setFormData] = useState({
     name: '',
@@ -32,7 +32,6 @@ const RegisterForm = () => {
     password: '',
     confirmPassword: '',
     acceptTerms: false,
-    // Restaurant specific fields
     restaurantName: '',
     address: '',
     phone: '',
@@ -40,7 +39,6 @@ const RegisterForm = () => {
     description: '',
     cuisine: '',
     priceRange: '',
-    // Opening hours
     openingHours: {
       monday: { open: true, from: '12:00', to: '15:00', fromDinner: '19:00', toDinner: '23:00' },
       tuesday: { open: true, from: '12:00', to: '15:00', fromDinner: '19:00', toDinner: '23:00' },
@@ -86,7 +84,6 @@ const RegisterForm = () => {
       setCardRegistered(true);
       toast.success("Carta di credito registrata con successo");
       
-      // Proceed with registration
       completeRegistration();
     } else {
       toast.error("Registrazione carta non riuscita");
@@ -95,10 +92,8 @@ const RegisterForm = () => {
 
   const completeRegistration = async () => {
     try {
-      // Registrazione con Firebase
       const user = await registerUser(formData.email, formData.password);
       
-      // Salva i dati utente nel localStorage
       localStorage.setItem('userType', userType);
       localStorage.setItem('isAuthenticated', 'true');
       localStorage.setItem('userEmail', formData.email);
@@ -143,10 +138,8 @@ const RegisterForm = () => {
     setIsLoading(true);
 
     if (userType === 'restaurant') {
-      // Per i ristoranti, richiedi la carta di credito prima di completare la registrazione
       setShowPaymentDialog(true);
     } else {
-      // Per i clienti, procedi direttamente con la registrazione
       completeRegistration();
     }
   };
@@ -162,7 +155,6 @@ const RegisterForm = () => {
     try {
       const user = await signInWithGoogle();
       
-      // Salva i dati utente nel localStorage
       localStorage.setItem('userType', userType);
       localStorage.setItem('isAuthenticated', 'true');
       localStorage.setItem('userEmail', user.email || '');
@@ -170,7 +162,6 @@ const RegisterForm = () => {
       localStorage.setItem('userId', user.uid);
       
       if (userType === 'restaurant') {
-        // Per i ristoranti, richiedi la carta di credito prima di completare la registrazione
         setShowPaymentDialog(true);
       } else {
         navigate('/');
@@ -808,7 +799,6 @@ const RegisterForm = () => {
         </p>
       </div>
       
-      {/* Payment dialog for restaurant registration */}
       <Dialog open={showPaymentDialog} onOpenChange={(open) => {
         if (!open) {
           setIsLoading(false);
