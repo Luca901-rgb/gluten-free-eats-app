@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -22,6 +23,7 @@ const AdminLogin = () => {
   const [isSettingAdmin, setIsSettingAdmin] = useState(false);
   const [offlineMode, setOfflineMode] = useState(false);
   const [setupComplete, setSetupComplete] = useState(false);
+  const [setupError, setSetupError] = useState<string | null>(null);
   const navigate = useNavigate();
   const { isAdmin, setIsAdmin } = useAdmin();
 
@@ -80,12 +82,26 @@ const AdminLogin = () => {
 
   const handleSetupAdmin = async () => {
     setIsSettingAdmin(true);
+    setSetupError(null);
+    
+    // Impostiamo un timeout di 10 secondi per evitare che il processo si blocchi
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error("Timeout: Operazione interrotta dopo 10 secondi")), 10000);
+    });
+    
     try {
-      const result = await setSpecificUserAsAdmin();
+      // Eseguiamo l'operazione con un timeout
+      const result = await Promise.race([
+        setSpecificUserAsAdmin(),
+        timeoutPromise
+      ]) as { success: boolean; message: string; offline: boolean };
       
       if (result.success) {
         setSetupComplete(true);
         setOfflineMode(result.offline || false);
+        
+        // Forziamo la modalità offline per garantire il funzionamento
+        localStorage.setItem('adminEmail', 'lcammarota24@gmail.com');
         
         if (result.offline) {
           toast.warning("Configurazione completata in modalità offline. I dati verranno sincronizzati quando sarai online.");
@@ -93,14 +109,28 @@ const AdminLogin = () => {
           toast.success("Amministratore impostato con successo: lcammarota24@gmail.com");
         }
       } else {
+        setSetupError(`Errore nell'impostazione dell'amministratore: ${result.message}`);
         toast.error(`Errore nell'impostazione dell'amministratore: ${result.message}`);
       }
     } catch (error: any) {
+      console.error("Errore durante la configurazione admin:", error);
+      setSetupError(error.message || "Errore sconosciuto durante la configurazione");
       toast.error(`Errore: ${error.message}`);
+      
+      // In caso di errore, imposta comunque l'admin in localStorage (fallback)
+      localStorage.setItem('adminEmail', 'lcammarota24@gmail.com');
+      setSetupComplete(true);
       setOfflineMode(true);
     } finally {
       setIsSettingAdmin(false);
     }
+  };
+
+  const handleForceOfflineSetup = () => {
+    localStorage.setItem('adminEmail', 'lcammarota24@gmail.com');
+    setSetupComplete(true);
+    setOfflineMode(true);
+    toast.success("Amministratore impostato con successo in modalità offline");
   };
 
   return (
@@ -116,7 +146,7 @@ const AdminLogin = () => {
           
           {offlineMode && (
             <div className="px-6 mb-4">
-              <Alert className="bg-yellow-50 border-yellow-200">
+              <Alert variant="default" className="bg-yellow-50 border-yellow-200">
                 <WifiOff className="h-4 w-4" />
                 <AlertTitle>Modalità offline</AlertTitle>
                 <AlertDescription>
@@ -196,11 +226,14 @@ const AdminLogin = () => {
                     <>
                       <p>Questa sezione permette di configurare <strong>lcammarota24@gmail.com</strong> come amministratore nel sistema.</p>
                       <p className="mt-2">Fai clic sul pulsante qui sotto per completare la configurazione.</p>
+                      {setupError && (
+                        <p className="mt-2 text-red-600">⚠️ Errore: {setupError}</p>
+                      )}
                     </>
                   )}
                 </div>
               </CardContent>
-              <CardFooter>
+              <CardFooter className="flex flex-col space-y-2">
                 <Button
                   onClick={handleSetupAdmin}
                   className={`w-full flex items-center gap-2 ${
@@ -219,6 +252,18 @@ const AdminLogin = () => {
                         : 'Configurazione completata' 
                       : 'Imposta lcammarota24@gmail.com come Admin'}
                 </Button>
+                
+                {!setupComplete && (
+                  <Button
+                    onClick={handleForceOfflineSetup}
+                    variant="outline"
+                    className="w-full flex items-center gap-2 text-orange-700 border-orange-300 bg-orange-50 hover:bg-orange-100"
+                    disabled={isSettingAdmin}
+                  >
+                    <WifiOff size={18} />
+                    Configura in modalità offline
+                  </Button>
+                )}
               </CardFooter>
             </TabsContent>
           </Tabs>

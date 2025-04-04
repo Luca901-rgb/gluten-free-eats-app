@@ -127,12 +127,18 @@ export const isUserAdmin = async (email: string) => {
 export const setSpecificUserAsAdmin = async () => {
   const adminEmail = "lcammarota24@gmail.com";
   
-  // Verifica la connessione
+  // Prima imposta in localStorage per garantire funzionalità offline
+  localStorage.setItem('adminEmail', adminEmail);
+  console.log("Admin impostato in localStorage per modalità offline");
+  
+  // Verifica la connessione e tenta di impostare su Firebase
   let retries = 0;
-  const maxRetries = 3;
+  const maxRetries = 2;
   
   while (retries < maxRetries) {
     try {
+      console.log(`Tentativo ${retries + 1}/${maxRetries} di impostare admin su Firebase`);
+      
       // Prima controlla se è già admin
       try {
         const isAlreadyAdmin = await isUserAdmin(adminEmail);
@@ -157,10 +163,7 @@ export const setSpecificUserAsAdmin = async () => {
         lastModified: new Date()
       });
       
-      // Aggiunge anche in localStorage per accesso offline
-      localStorage.setItem('adminEmail', adminEmail);
-      
-      console.log(`L'utente ${adminEmail} è stato impostato come amministratore`);
+      console.log(`L'utente ${adminEmail} è stato impostato come amministratore su Firebase`);
       return { 
         success: true, 
         message: "Utente impostato come amministratore con successo",
@@ -170,27 +173,16 @@ export const setSpecificUserAsAdmin = async () => {
       retries++;
       console.warn(`Tentativo ${retries}/${maxRetries} fallito:`, error);
       
-      if (retries === maxRetries) {
-        // Fallback offline - imposta in localStorage
-        localStorage.setItem('adminEmail', adminEmail);
-        console.log("Modalità offline: Admin impostato in localStorage");
-        
-        return {
-          success: true,
-          message: "Admin impostato in modalità offline (i dati verranno sincronizzati quando sarai online)",
-          offline: true
-        };
-      }
-      
       // Aspetta prima di riprovare
       await new Promise(resolve => setTimeout(resolve, 1000));
     }
   }
   
-  return { 
-    success: false, 
-    message: "Impossibile configurare l'amministratore dopo vari tentativi",
-    offline: false
+  // Se arriviamo qui, tutti i tentativi sono falliti, ma è già impostato in localStorage
+  return {
+    success: true,
+    message: "Admin impostato in modalità offline (i dati verranno sincronizzati quando sarai online)",
+    offline: true
   };
 };
 
