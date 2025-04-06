@@ -1,10 +1,14 @@
+
 import React, { useState, useEffect } from 'react';
-import { Search, Settings } from 'lucide-react';
+import { Search, Settings, MapPin, Info } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import Layout from '@/components/Layout';
 import RestaurantCard, { Restaurant } from '@/components/Restaurant/RestaurantCard';
 import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
+import { checkUserRegion } from '@/utils/geolocation';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const sampleRestaurants: Restaurant[] = [
   {
@@ -63,11 +67,51 @@ const Index = () => {
   const [restaurants, setRestaurants] = useState<Restaurant[]>(sampleRestaurants);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [regionStatus, setRegionStatus] = useState<{
+    checked: boolean;
+    inRegion: boolean;
+    regionName?: string;
+    error?: string;
+  }>({
+    checked: false,
+    inRegion: false
+  });
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false);
     }, 1000);
+
+    // Verifica la regione dell'utente
+    const verifyRegion = async () => {
+      try {
+        const result = await checkUserRegion();
+        setRegionStatus({
+          checked: true,
+          inRegion: result.inRegion,
+          regionName: result.regionName,
+          error: result.error
+        });
+
+        if (result.inRegion) {
+          toast.success(`Benvenuto! Il servizio è disponibile nella tua regione: ${result.regionName}`);
+        } else if (result.error) {
+          toast.error(result.error);
+        } else {
+          toast.warning("Il servizio è attualmente disponibile solo in Campania durante la fase pilota.");
+        }
+      } catch (error) {
+        console.error("Errore durante la verifica della regione:", error);
+        setRegionStatus({
+          checked: true,
+          inRegion: false,
+          error: "Si è verificato un errore durante la verifica della tua posizione."
+        });
+        toast.error("Si è verificato un errore durante la verifica della tua posizione.");
+      }
+    };
+
+    verifyRegion();
 
     return () => clearTimeout(timer);
   }, []);
@@ -106,6 +150,30 @@ const Index = () => {
           </Link>
         </div>
 
+        {/* Avviso di regione */}
+        {regionStatus.checked && !regionStatus.inRegion && !regionStatus.error && (
+          <Alert variant="warning" className="bg-amber-50 border-amber-200">
+            <MapPin className="h-4 w-4 text-amber-600" />
+            <AlertTitle className="text-amber-800">Programma Pilota: Area Limitata</AlertTitle>
+            <AlertDescription className="text-amber-700">
+              Al momento, il nostro servizio è disponibile solo in Campania durante la fase pilota.
+              Grazie per la comprensione.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Errore di geolocalizzazione */}
+        {regionStatus.error && (
+          <Alert variant="destructive" className="bg-red-50 border-red-200">
+            <Info className="h-4 w-4 text-red-600" />
+            <AlertTitle className="text-red-800">Posizione non disponibile</AlertTitle>
+            <AlertDescription className="text-red-700">
+              {regionStatus.error}
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Resto del componente rimane invariato */}
         <form onSubmit={handleSearch} className="flex gap-2">
           <div className="relative flex-grow">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
@@ -135,15 +203,26 @@ const Index = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-4">
-              {restaurants.map(restaurant => (
-                <RestaurantCard 
-                  key={restaurant.id} 
-                  restaurant={restaurant} 
-                  onToggleFavorite={handleToggleFavorite}
-                />
-              ))}
+              {regionStatus.inRegion ? (
+                restaurants.map(restaurant => (
+                  <RestaurantCard 
+                    key={restaurant.id} 
+                    restaurant={restaurant} 
+                    onToggleFavorite={handleToggleFavorite}
+                  />
+                ))
+              ) : (
+                <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
+                  <MapPin className="mx-auto h-12 w-12 text-gray-400 mb-3" />
+                  <h3 className="text-lg font-medium text-gray-800 mb-1">Servizio disponibile solo in Campania</h3>
+                  <p className="text-gray-600 max-w-md mx-auto">
+                    Durante la fase pilota, il nostro servizio è disponibile esclusivamente nella regione Campania.
+                    Stiamo lavorando per espandere il servizio ad altre regioni presto.
+                  </p>
+                </div>
+              )}
               
-              {restaurants.length === 0 && (
+              {regionStatus.inRegion && restaurants.length === 0 && (
                 <div className="text-center py-8">
                   <p className="text-gray-500">Nessun ristorante trovato</p>
                 </div>
@@ -153,7 +232,7 @@ const Index = () => {
         </div>
 
         <div className="flex flex-wrap gap-4 mt-8">
-          <Button size="lg" asChild>
+          <Button size="lg" asChild disabled={!regionStatus.inRegion}>
             <Link to="/search">Trova Ristoranti</Link>
           </Button>
           <Button size="lg" variant="outline" asChild>

@@ -3,10 +3,12 @@ import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ChefHat, MapPin, Navigation, List, Map } from 'lucide-react';
+import { ChefHat, MapPin, Navigation, List, Map, Info } from 'lucide-react';
 import { RestaurantMap } from '@/components/Map/RestaurantMap';
 import { toast } from 'sonner';
 import RestaurantCard from '@/components/Restaurant/RestaurantCard';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { isInAvailableRegion } from '@/utils/geolocation';
 
 // Sample restaurant location data (would come from API in production)
 const sampleRestaurantLocations = [
@@ -54,6 +56,7 @@ const SearchPage = () => {
   const [locationError, setLocationError] = useState<string | null>(null);
   const [restaurants, setRestaurants] = useState(sampleRestaurantLocations);
   const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
+  const [inAvailableRegion, setInAvailableRegion] = useState<boolean | null>(null);
   
   // Get user's location if allowed
   const getUserLocation = () => {
@@ -67,9 +70,20 @@ const SearchPage = () => {
             lat: position.coords.latitude,
             lng: position.coords.longitude
           };
+          
           setUserPosition(pos);
+          
+          // Verifica se l'utente è nella regione disponibile
+          const regionCheck = isInAvailableRegion(pos);
+          setInAvailableRegion(regionCheck.inRegion);
+          
+          if (regionCheck.inRegion) {
+            toast.success(`Posizione rilevata in ${regionCheck.regionName}!`);
+          } else {
+            toast.warning("La tua posizione è al di fuori dell'area del programma pilota (solo Campania).");
+          }
+          
           setIsLocating(false);
-          toast.success("Posizione rilevata con successo!");
         },
         (error) => {
           console.error('Error getting location:', error);
@@ -131,6 +145,18 @@ const SearchPage = () => {
           </Link>
         </div>
         
+        {/* Region availability check */}
+        {inAvailableRegion === false && (
+          <Alert variant="warning" className="mb-4 bg-amber-50 border-amber-200">
+            <MapPin className="h-4 w-4 text-amber-600" />
+            <AlertTitle className="text-amber-800">Area non disponibile</AlertTitle>
+            <AlertDescription className="text-amber-700">
+              Il nostro servizio è attualmente disponibile solo in Campania durante la fase pilota.
+              La tua posizione attuale è al di fuori di quest'area.
+            </AlertDescription>
+          </Alert>
+        )}
+        
         {/* User location and error states */}
         <div className="mb-4">
           <Button 
@@ -148,7 +174,7 @@ const SearchPage = () => {
             </div>
           )}
           
-          {userPosition && !locationError && (
+          {userPosition && !locationError && inAvailableRegion && (
             <div className="p-2 bg-green-50 border border-green-200 rounded-md text-green-600 text-sm mb-4">
               Posizione rilevata! Mostro i ristoranti vicini.
             </div>
@@ -176,22 +202,33 @@ const SearchPage = () => {
         </div>
         
         {/* Map or List View */}
-        {viewMode === 'map' ? (
-          <div className="h-[60vh] rounded-lg border overflow-hidden mb-4">
-            <RestaurantMap 
-              userLocation={userPosition}
-              restaurants={restaurants}
-            />
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {restaurants.map(restaurant => (
-              <RestaurantCard 
-                key={restaurant.id} 
-                restaurant={restaurant}
-                onToggleFavorite={handleToggleFavorite}
+        {inAvailableRegion ? (
+          viewMode === 'map' ? (
+            <div className="h-[60vh] rounded-lg border overflow-hidden mb-4">
+              <RestaurantMap 
+                userLocation={userPosition}
+                restaurants={restaurants}
               />
-            ))}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {restaurants.map(restaurant => (
+                <RestaurantCard 
+                  key={restaurant.id} 
+                  restaurant={restaurant}
+                  onToggleFavorite={handleToggleFavorite}
+                />
+              ))}
+            </div>
+          )
+        ) : (
+          <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
+            <MapPin className="mx-auto h-12 w-12 text-gray-400 mb-3" />
+            <h3 className="text-lg font-medium text-gray-800 mb-1">Servizio disponibile solo in Campania</h3>
+            <p className="text-gray-600 max-w-md mx-auto">
+              Durante la fase pilota, il nostro servizio è disponibile esclusivamente nella regione Campania.
+              Stiamo lavorando per espandere il servizio ad altre regioni presto.
+            </p>
           </div>
         )}
       </div>
