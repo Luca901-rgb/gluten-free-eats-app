@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Search, Settings, MapPin, Info } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -173,7 +172,6 @@ const Index = () => {
           </Alert>
         )}
 
-        {/* Resto del componente rimane invariato */}
         <form onSubmit={handleSearch} className="flex gap-2">
           <div className="relative flex-grow">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { Link } from 'react-router-dom';
@@ -10,7 +9,6 @@ import RestaurantCard from '@/components/Restaurant/RestaurantCard';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { isInAvailableRegion } from '@/utils/geolocation';
 
-// Sample restaurant location data (would come from API in production)
 const sampleRestaurantLocations = [
   {
     id: '1',
@@ -58,7 +56,6 @@ const SearchPage = () => {
   const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
   const [inAvailableRegion, setInAvailableRegion] = useState<boolean | null>(null);
   
-  // Get user's location if allowed
   const getUserLocation = () => {
     setIsLocating(true);
     setLocationError(null);
@@ -73,7 +70,6 @@ const SearchPage = () => {
           
           setUserPosition(pos);
           
-          // Verifica se l'utente è nella regione disponibile
           const regionCheck = isInAvailableRegion(pos);
           setInAvailableRegion(regionCheck.inRegion);
           
@@ -119,7 +115,6 @@ const SearchPage = () => {
     }
   };
   
-  // Effect to prompt for location on page load
   useEffect(() => {
     getUserLocation();
   }, []);
