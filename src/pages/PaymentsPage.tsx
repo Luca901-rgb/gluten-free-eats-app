@@ -2,7 +2,7 @@
 import React from 'react';
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { CreditCard, CheckCircle, XCircle, AlertTriangle, Info } from 'lucide-react';
+import { CheckCircle, XCircle, AlertTriangle, Info } from 'lucide-react';
 
 const PaymentsPage = () => {
   return (
@@ -12,7 +12,7 @@ const PaymentsPage = () => {
         
         <div className="mb-8 bg-white p-6 rounded-lg shadow-sm">
           <h2 className="text-xl font-semibold mb-4 flex items-center">
-            <CreditCard className="mr-2 h-5 w-5" /> Come funziona il sistema di prenotazioni
+            <Info className="mr-2 h-5 w-5" /> Come funziona il sistema di prenotazioni
           </h2>
           <div className="space-y-4 text-gray-700">
             <div className="flex items-start gap-3">

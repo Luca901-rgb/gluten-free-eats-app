@@ -1,9 +1,9 @@
+
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
-import { CalendarIcon, Clock, Users, Check, Info, CreditCard } from 'lucide-react';
+import { CalendarIcon, Clock, Users, Check, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Calendar } from '@/components/ui/calendar';
 import { Textarea } from '@/components/ui/textarea';
@@ -29,17 +29,10 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useBookings } from '@/context/BookingContext';
-import { addDays, isToday, format as dateFormat } from 'date-fns';
-import PaymentForm from './PaymentForm';
+import { addDays, format as dateFormat } from 'date-fns';
 
 interface BookingFormProps {
   restaurantId: string;
@@ -74,8 +67,6 @@ const BookingForm: React.FC<BookingFormProps> = ({ restaurantId, restaurantName,
   const [isLoading, setIsLoading] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [bookingData, setBookingData] = useState<any>(null);
-  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
-  const [paymentComplete, setPaymentComplete] = useState(false);
 
   const [highChair, setHighChair] = useState(false);
   const [accessibility, setAccessibility] = useState(false);
@@ -110,17 +101,8 @@ const BookingForm: React.FC<BookingFormProps> = ({ restaurantId, restaurantName,
       toast.error('Seleziona data e ora per la prenotazione');
       return;
     }
-
-    setShowPaymentDialog(true);
-  };
-
-  const handlePaymentComplete = (success: boolean) => {
-    setShowPaymentDialog(false);
-    if (success) {
-      setPaymentComplete(true);
-      toast.success("Pagamento completato con successo");
-      processBooking();
-    }
+    
+    processBooking();
   };
 
   const processBooking = async () => {
@@ -151,7 +133,7 @@ const BookingForm: React.FC<BookingFormProps> = ({ restaurantId, restaurantName,
         status: 'pending' as const,
         bookingCode,
         customerName: localStorage.getItem('userName') || 'Cliente',
-        paymentConfirmed: true
+        hasGuarantee: false
       };
       
       setBookingData(newBooking);
@@ -205,15 +187,7 @@ const BookingForm: React.FC<BookingFormProps> = ({ restaurantId, restaurantName,
             </div>
           </div>
           
-          <div className="flex items-start gap-2 bg-green-50 p-3 rounded-md border border-green-100">
-            <CreditCard className="h-5 w-5 text-green-500 flex-shrink-0" />
-            <div className="text-sm text-green-800">
-              <p className="font-medium">Pagamento confermato</p>
-              <p className="mt-1">Hai completato il pagamento per questa prenotazione</p>
-            </div>
-          </div>
-          
-          {bookingData.additionalOptions.length > 0 && (
+          {bookingData.additionalOptions?.length > 0 && (
             <div className="border-t border-gray-200 pt-2 mt-2">
               <p className="text-sm font-medium mb-1">Opzioni richieste:</p>
               <ul className="text-sm">
@@ -425,28 +399,13 @@ const BookingForm: React.FC<BookingFormProps> = ({ restaurantId, restaurantName,
           className="w-full bg-accent hover:bg-accent/90 mt-4" 
           disabled={isLoading || !date || !time}
         >
-          {isLoading ? 'Prenotazione in corso...' : 'Procedi al pagamento'}
+          {isLoading ? 'Prenotazione in corso...' : 'Conferma prenotazione'}
         </Button>
         
         <div className="text-center text-sm text-muted-foreground">
           <p>Puoi modificare o cancellare la tua prenotazione fino a 2 ore prima dell'orario scelto</p>
         </div>
       </form>
-      
-      <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Pagamento prenotazione</DialogTitle>
-          </DialogHeader>
-          <div className="flex justify-center py-4">
-            <PaymentForm 
-              onComplete={handlePaymentComplete} 
-              amount={5.99}
-              isGuarantee={false}
-            />
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };

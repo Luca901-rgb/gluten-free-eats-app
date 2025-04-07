@@ -4,7 +4,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Info } from 'lucide-react';
 
 interface PaymentManagerProps {
-  amount: number;
   description: string;
   isGuarantee?: boolean;
   isRestaurantPayment?: boolean;
@@ -13,7 +12,6 @@ interface PaymentManagerProps {
 }
 
 const PaymentManager: React.FC<PaymentManagerProps> = ({ 
-  amount, 
   description,
   isGuarantee = false,
   isRestaurantPayment = false,
@@ -21,7 +19,7 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({
   onPaymentComplete
 }) => {
 
-  // Auto-complete the payment with success
+  // Auto-complete any action with success
   React.useEffect(() => {
     if (onPaymentComplete) {
       onPaymentComplete(true);
@@ -37,7 +35,7 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({
             ? "Garanzia non richiesta" 
             : isRestaurantRegistration 
               ? "Registrazione non richiesta"
-              : "Pagamento non richiesto"}
+              : "Servizio gratuito"}
         </CardTitle>
         <CardDescription>
           {description}
@@ -47,7 +45,7 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({
         <div className="text-sm flex items-start gap-2 bg-blue-50 p-3 rounded-md">
           <Info className="h-4 w-4 text-blue-500 flex-shrink-0 mt-0.5" />
           <span className="text-blue-700">
-            Questa funzionalità è ora sempre attiva senza necessità di pagamento.
+            Questo servizio è completamente gratuito e non richiede alcun pagamento.
           </span>
         </div>
       </CardContent>
