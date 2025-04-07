@@ -15,6 +15,8 @@ export interface Booking {
   hasReview?: boolean;
   restaurantImage?: string;
   customerName: string;
+  attendance?: 'confirmed' | 'no-show' | null;
+  restaurantReviewCode?: string;
 }
 
 interface BookingContextType {
@@ -23,9 +25,19 @@ interface BookingContextType {
   updateBooking: (id: string, updates: Partial<Booking>) => void;
   cancelBooking: (id: string) => void;
   generateReviewCode: (bookingId: string) => string;
+  generateRestaurantReviewCode: (bookingId: string) => string;
+  getBookingByCode: (bookingCode: string) => Booking | undefined;
 }
 
 const BookingContext = createContext<BookingContextType | undefined>(undefined);
+
+// Generate a random code
+const generateRandomCode = (length: number = 6, numbersOnly: boolean = false): string => {
+  if (numbersOnly) {
+    return Math.floor(Math.random() * Math.pow(10, length)).toString().padStart(length, '0');
+  }
+  return Math.random().toString(36).substring(2, 2 + length).toUpperCase();
+};
 
 // Sample initial bookings data
 const initialBookings: Booking[] = [
@@ -41,6 +53,8 @@ const initialBookings: Booking[] = [
     reviewCode: 'RES456',
     customerName: 'Mario Rossi',
     restaurantImage: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+    attendance: 'confirmed',
+    restaurantReviewCode: '1234',
   },
   {
     id: 'b2',
@@ -53,6 +67,7 @@ const initialBookings: Booking[] = [
     bookingCode: 'PZA456',
     customerName: 'Laura Bianchi',
     restaurantImage: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+    attendance: null,
   },
   // ... altri booking di esempio
 ];
@@ -61,7 +76,13 @@ export function BookingProvider({ children }: { children: ReactNode }) {
   const [bookings, setBookings] = useState<Booking[]>(initialBookings);
 
   const addBooking = (booking: Booking) => {
-    setBookings([...bookings, booking]);
+    // Assicuriamoci che ci sia un codice prenotazione
+    const newBooking: Booking = {
+      ...booking,
+      bookingCode: booking.bookingCode || generateRandomCode(6),
+    };
+    setBookings([...bookings, newBooking]);
+    return newBooking;
   };
 
   const updateBooking = (id: string, updates: Partial<Booking>) => {
@@ -75,9 +96,19 @@ export function BookingProvider({ children }: { children: ReactNode }) {
   };
 
   const generateReviewCode = (bookingId: string): string => {
-    const reviewCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+    const reviewCode = generateRandomCode(6);
     updateBooking(bookingId, { reviewCode });
     return reviewCode;
+  };
+
+  const generateRestaurantReviewCode = (bookingId: string): string => {
+    const restaurantReviewCode = generateRandomCode(4, true);
+    updateBooking(bookingId, { restaurantReviewCode });
+    return restaurantReviewCode;
+  };
+
+  const getBookingByCode = (bookingCode: string): Booking | undefined => {
+    return bookings.find(booking => booking.bookingCode === bookingCode);
   };
 
   return (
@@ -87,7 +118,9 @@ export function BookingProvider({ children }: { children: ReactNode }) {
         addBooking, 
         updateBooking, 
         cancelBooking,
-        generateReviewCode
+        generateReviewCode,
+        generateRestaurantReviewCode,
+        getBookingByCode
       }}
     >
       {children}

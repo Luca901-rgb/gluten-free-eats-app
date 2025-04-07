@@ -1,112 +1,76 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Clock, Users, CheckCircle, XCircle, CreditCard } from 'lucide-react';
+import { Calendar, Clock, Users, CheckCircle, XCircle, CreditCard, Copy, CheckCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDistance } from 'date-fns';
 import { it } from 'date-fns/locale';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import PaymentForm from '@/components/Booking/PaymentForm';
 import PaymentManager from '@/components/Payment/PaymentManager';
+import { useBookings } from '@/context/BookingContext';
 
 const RestaurantBookings = () => {
   const hidePayment = true;
+  const { bookings: allBookings, updateBooking, generateRestaurantReviewCode } = useBookings();
 
-  const [bookings, setBookings] = useState([
-    { 
-      id: 1, 
-      customerName: 'Mario Rossi', 
-      date: '2023-09-15', 
-      time: '19:30', 
-      guests: 4, 
-      status: 'confirmed',
-      phone: '+39 123 456 7890',
-      hasGuarantee: true,
-      attendance: null
-    },
-    { 
-      id: 2, 
-      customerName: 'Giulia Bianchi', 
-      date: '2023-09-15', 
-      time: '20:00', 
-      guests: 2, 
-      status: 'pending',
-      phone: '+39 098 765 4321',
-      hasGuarantee: false,
-      attendance: null
-    },
-    { 
-      id: 3, 
-      customerName: 'Paolo Verdi', 
-      date: '2023-09-16', 
-      time: '13:00', 
-      guests: 6, 
-      status: 'confirmed',
-      phone: '+39 333 444 5555',
-      hasGuarantee: true,
-      attendance: null
-    },
-    { 
-      id: 4, 
-      customerName: 'Chiara Neri', 
-      date: '2023-09-17', 
-      time: '20:30', 
-      guests: 3, 
-      status: 'cancelled',
-      phone: '+39 777 888 9999',
-      hasGuarantee: false,
-      attendance: null
-    }
-  ]);
+  // Filtraggio delle prenotazioni per questo ristorante (simulato con ID '1')
+  const restaurantId = '1'; // In un'app reale, questo verrebbe dal contesto dell'autenticazione
+  const bookings = allBookings.filter(booking => booking.restaurantId === restaurantId);
 
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
-  const [currentBookingId, setCurrentBookingId] = useState<number | null>(null);
-
-  const handleConfirmBooking = (id: number) => {
-    setBookings(bookings.map(booking => 
-      booking.id === id ? {...booking, status: 'confirmed'} : booking
-    ));
+  const [currentBookingId, setCurrentBookingId] = useState<string | null>(null);
+  const [showReviewCodeDialog, setShowReviewCodeDialog] = useState(false);
+  const [generatedReviewCode, setGeneratedReviewCode] = useState<string>('');
+  
+  const handleConfirmBooking = (id: string) => {
+    updateBooking(id, { status: 'confirmed' });
+    toast.success('Prenotazione confermata con successo');
   };
 
-  const handleCancelBooking = (id: number) => {
-    setBookings(bookings.map(booking => 
-      booking.id === id ? {...booking, status: 'cancelled'} : booking
-    ));
+  const handleCancelBooking = (id: string) => {
+    updateBooking(id, { status: 'cancelled' });
+    toast.error('Prenotazione cancellata');
   };
 
-  const handleConfirmAttendance = (id: number) => {
+  const handleConfirmAttendance = (id: string) => {
     if (hidePayment) {
-      setBookings(bookings.map(booking => 
-        booking.id === id ? {...booking, attendance: 'confirmed'} : booking
-      ));
-      toast.success('Presenza cliente confermata');
+      // Generiamo il codice recensione per il ristorante
+      const code = generateRestaurantReviewCode(id);
+      updateBooking(id, { attendance: 'confirmed' });
+      setGeneratedReviewCode(code);
+      setCurrentBookingId(id);
+      setShowReviewCodeDialog(true);
       return;
     }
-    
-    const booking = bookings.find(b => b.id === id);
-    if (!booking) return;
     
     setCurrentBookingId(id);
     setShowPaymentDialog(true);
   };
 
-  const handleNoShow = (id: number) => {
-    setBookings(bookings.map(booking => 
-      booking.id === id ? {...booking, attendance: 'no-show'} : booking
-    ));
+  const handleNoShow = (id: string) => {
+    updateBooking(id, { attendance: 'no-show' });
     toast.success('Cliente segnato come no-show. La carta di garanzia verrà addebitata automaticamente.');
   };
 
   const handlePaymentComplete = (success: boolean) => {
     if (success && currentBookingId) {
-      setBookings(bookings.map(booking => 
-        booking.id === currentBookingId ? {...booking, attendance: 'confirmed'} : booking
-      ));
-      toast.success('Pagamento completato e presenza cliente confermata');
+      const code = generateRestaurantReviewCode(currentBookingId);
+      updateBooking(currentBookingId, { attendance: 'confirmed' });
+      setGeneratedReviewCode(code);
+      setShowPaymentDialog(false);
+      setShowReviewCodeDialog(true);
+    } else {
+      setShowPaymentDialog(false);
+      setCurrentBookingId(null);
     }
-    setShowPaymentDialog(false);
-    setCurrentBookingId(null);
+  };
+
+  const handleCopyCode = () => {
+    navigator.clipboard.writeText(generatedReviewCode);
+    toast.success('Codice copiato negli appunti');
   };
 
   const getStatusBadge = (status: string) => {
@@ -163,14 +127,14 @@ const RestaurantBookings = () => {
                       <div className="text-sm text-gray-500 mt-1 space-y-1">
                         <div className="flex items-center">
                           <Clock className="mr-2 h-4 w-4" />
-                          {booking.time}
+                          {new Date(booking.date).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}
                         </div>
                         <div className="flex items-center">
                           <Users className="mr-2 h-4 w-4" />
-                          {booking.guests} {booking.guests === 1 ? 'persona' : 'persone'}
+                          {booking.people} {booking.people === 1 ? 'persona' : 'persone'}
                         </div>
                         <div>
-                          <a href={`tel:${booking.phone}`} className="text-primary underline">{booking.phone}</a>
+                          <span className="text-primary">Codice prenotazione: {booking.bookingCode}</span>
                         </div>
                         {booking.hasGuarantee && (
                           <div className="flex items-center text-green-600">
@@ -183,6 +147,13 @@ const RestaurantBookings = () => {
                     <div className="text-right flex flex-col gap-2">
                       {getStatusBadge(booking.status)}
                       {getAttendanceBadge(booking.attendance)}
+                      
+                      {booking.restaurantReviewCode && (
+                        <div className="text-xs text-green-700 flex items-center">
+                          <CheckCheck className="h-3 w-3 mr-1" />
+                          Codice recensione generato
+                        </div>
+                      )}
                     </div>
                   </div>
                   
@@ -259,6 +230,33 @@ const RestaurantBookings = () => {
             </DialogContent>
           </Dialog>
         )}
+        
+        <Dialog open={showReviewCodeDialog} onOpenChange={(open) => {
+          if (!open) setShowReviewCodeDialog(false);
+        }}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Codice recensione generato</DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
+              <p className="text-sm text-gray-600 mb-4">
+                Questo è il codice che il cliente dovrà inserire per lasciare una recensione verificata:
+              </p>
+              <div className="flex items-center justify-between bg-gray-100 p-3 rounded-md">
+                <span className="font-mono text-lg font-semibold">{generatedReviewCode}</span>
+                <Button variant="outline" size="sm" onClick={handleCopyCode}>
+                  <Copy className="h-4 w-4 mr-1" /> Copia
+                </Button>
+              </div>
+              <p className="mt-4 text-sm text-gray-600">
+                Il cliente può inserire questo codice nella sezione recensioni per verificare la sua esperienza.
+              </p>
+            </div>
+            <DialogFooter>
+              <Button onClick={() => setShowReviewCodeDialog(false)}>Chiudi</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </Layout>
   );

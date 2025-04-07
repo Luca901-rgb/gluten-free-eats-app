@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
-import { Calendar, Clock, MapPin, Users, MessageSquare, Trash2, Check } from 'lucide-react';
+import { Calendar, Clock, MapPin, Users, MessageSquare, Trash2, Check, Copy } from 'lucide-react';
 import {
   Card,
   CardContent,
@@ -28,12 +28,21 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { toast } from 'sonner';
 import { format, isBefore, isPast, parseISO } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useBookings } from '@/context/BookingContext';
+import { useNavigate } from 'react-router-dom';
 
 const formatDate = (dateString: string) => {
   try {
@@ -47,6 +56,11 @@ const formatDate = (dateString: string) => {
 const BookingsPage = () => {
   const [activeTab, setActiveTab] = useState('upcoming');
   const { bookings, cancelBooking, updateBooking } = useBookings();
+  const navigate = useNavigate();
+
+  const [showCodeDialog, setShowCodeDialog] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState<any>(null);
+  const [restaurantCode, setRestaurantCode] = useState('');
 
   const upcomingBookings = bookings.filter(booking => 
     !isPast(parseISO(booking.date)) && 
@@ -57,17 +71,29 @@ const BookingsPage = () => {
     isPast(parseISO(booking.date)) || booking.status === 'completed'
   );
 
-  const addReviewCode = (bookingId: string, reviewCode: string) => {
-    updateBooking(bookingId, { reviewCode: reviewCode, hasReview: false });
-    toast.success('Codice recensione salvato! Ora puoi lasciare una recensione');
+  const handleCopyCode = (code: string) => {
+    navigator.clipboard.writeText(code);
+    toast.success('Codice copiato negli appunti');
+  };
+
+  const handleReviewCodeSubmit = () => {
+    if (!restaurantCode || !selectedBooking) return;
+    
+    updateBooking(selectedBooking.id, { restaurantReviewCode: restaurantCode });
+    toast.success('Codice recensione verificato!');
+    setShowCodeDialog(false);
+    
+    // Naviga alla pagina delle recensioni dopo un breve ritardo
+    setTimeout(() => {
+      navigate(`/restaurant/review/${selectedBooking.restaurantId}?booking=${selectedBooking.id}`);
+    }, 1000);
   };
 
   const BookingCard = ({ booking }: { booking: any }) => {
     const isPending = booking.status === 'pending';
     const isCompleted = booking.status === 'completed' || isPast(parseISO(booking.date));
     const isUpcoming = !isCompleted && !isPending;
-    const canBeReviewed = isCompleted && booking.reviewStatus !== 'completed';
-    const [reviewCode, setReviewCode] = useState('');
+    const canBeReviewed = isCompleted && !booking.hasReview;
     
     return (
       <Card className="overflow-hidden animate-fade-in">
@@ -102,7 +128,18 @@ const BookingsPage = () => {
           </div>
           <div className="flex items-center text-sm text-gray-600">
             <MapPin size={16} className="mr-2" />
-            <span>Codice prenotazione: {booking.bookingCode}</span>
+            <span>Codice prenotazione: </span>
+            <div className="flex items-center ml-1">
+              <span className="font-mono font-medium">{booking.bookingCode}</span>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-6 w-6 ml-1" 
+                onClick={() => handleCopyCode(booking.bookingCode)}
+              >
+                <Copy size={12} />
+              </Button>
+            </div>
           </div>
           {booking.notes && (
             <div className="flex items-start text-sm text-gray-600">
@@ -111,7 +148,7 @@ const BookingsPage = () => {
             </div>
           )}
         </CardContent>
-        <CardFooter className="pt-0">
+        <CardFooter className="pt-0 flex flex-col gap-2">
           {!isCompleted && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
@@ -142,40 +179,26 @@ const BookingsPage = () => {
           
           {canBeReviewed && (
             <div className="w-full">
-              {booking.reviewStatus === 'pending' && (
-                <div className="space-y-2 w-full">
-                  <p className="text-sm text-gray-600">
-                    Inserisci il codice fornito dal ristorante per lasciare una recensione:
-                  </p>
-                  <div className="flex gap-2">
-                    <input 
-                      type="text" 
-                      placeholder="Codice recensione" 
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                      value={reviewCode}
-                      onChange={(e) => setReviewCode(e.target.value)}
-                    />
-                    <Button 
-                      disabled={!reviewCode.trim()} 
-                      onClick={() => addReviewCode(booking.id, reviewCode)}
-                      size="sm"
-                    >
-                      <Check size={16} className="mr-1" /> Conferma
-                    </Button>
-                  </div>
-                </div>
-              )}
-              
-              {booking.reviewStatus === 'ready' && (
-                <Button className="w-full" onClick={() => {
-                  toast.info('Funzionalità di recensione in arrivo');
-                  // In a real app, this would navigate to the review form
-                }}>
+              {booking.attendance === 'confirmed' && (
+                <Button 
+                  className="w-full" 
+                  onClick={() => {
+                    setSelectedBooking(booking);
+                    setRestaurantCode('');
+                    setShowCodeDialog(true);
+                  }}
+                >
                   Lascia una recensione
                 </Button>
               )}
               
-              {booking.reviewStatus === 'completed' && (
+              {booking.attendance !== 'confirmed' && (
+                <Button variant="outline" className="w-full" disabled>
+                  In attesa di conferma presenza
+                </Button>
+              )}
+              
+              {booking.hasReview && (
                 <Button variant="outline" className="w-full" disabled>
                   Recensione già inserita
                 </Button>
@@ -243,6 +266,58 @@ const BookingsPage = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      <Dialog open={showCodeDialog} onOpenChange={setShowCodeDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Inserisci il codice ristorante</DialogTitle>
+            <DialogDescription>
+              Per lasciare una recensione verificata, inserisci il codice a 4 cifre fornito dal ristorante.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center mb-2">
+                <span className="text-sm font-medium mr-2">Il tuo codice cliente:</span>
+                <span className="font-mono bg-gray-100 p-1 rounded">{selectedBooking?.bookingCode}</span>
+              </div>
+              <div className="space-y-1">
+                <label htmlFor="restaurantCode" className="text-sm font-medium">
+                  Codice ristorante (4 cifre)
+                </label>
+                <div className="flex gap-2">
+                  <input 
+                    type="text" 
+                    id="restaurantCode"
+                    placeholder="0000" 
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-mono"
+                    value={restaurantCode}
+                    onChange={(e) => {
+                      // Accetta solo numeri e limita a 4 caratteri
+                      const value = e.target.value.replace(/\D/g, '').slice(0, 4);
+                      setRestaurantCode(value);
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowCodeDialog(false)}
+            >
+              Annulla
+            </Button>
+            <Button 
+              onClick={handleReviewCodeSubmit}
+              disabled={restaurantCode.length !== 4}
+            >
+              Conferma
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 };

@@ -80,7 +80,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
   const [images, setImages] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [isPreview, setIsPreview] = useState<boolean>(false);
-  const [isVerified, setIsVerified] = useState<boolean>(false);
+  const [isVerified, setIsVerified] = useState<boolean>(bookingCode && restaurantCode ? true : false);
   const [isVerifying, setIsVerifying] = useState<boolean>(false);
   const [timeLeft, setTimeLeft] = useState<number>(48 * 60); // 48h in minuti
 
@@ -98,6 +98,12 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
       authenticity: false
     }
   });
+
+  useEffect(() => {
+    if (bookingCode && restaurantCode && !isVerified) {
+      verifyCode();
+    }
+  }, [bookingCode, restaurantCode]);
 
   useEffect(() => {
     const timer = setInterval(() => {
