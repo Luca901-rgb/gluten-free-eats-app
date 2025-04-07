@@ -1,9 +1,8 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Clock, MapPin, Phone, Calendar, Star, Award, Image, Video, Home, User } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import StarRating from '@/components/common/StarRating';
 import BookingForm from '../Booking/BookingForm';
 import MenuViewer from './MenuViewer';
@@ -29,13 +28,19 @@ export interface RestaurantDetailProps {
 }
 
 const RestaurantDetails: React.FC<{ restaurant: RestaurantDetailProps }> = ({ restaurant }) => {
-  const [activeTab, setActiveTab] = useState('home');
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const tabFromUrl = searchParams.get('tab');
+  const bookingCodeFromUrl = searchParams.get('bookingCode');
+  const restaurantCodeFromUrl = searchParams.get('restaurantCode');
   
-  // Sample review data for demo
-  const sampleReview = {
-    bookingCode: 'TRA123',
-    restaurantCode: 'RES456',
-  };
+  const [activeTab, setActiveTab] = useState(tabFromUrl || 'home');
+  
+  useEffect(() => {
+    if (tabFromUrl) {
+      setActiveTab(tabFromUrl);
+    }
+  }, [tabFromUrl]);
   
   const navigationButtons = [
     { id: 'home', label: 'Home', icon: <Home size={18} /> },
@@ -48,7 +53,6 @@ const RestaurantDetails: React.FC<{ restaurant: RestaurantDetailProps }> = ({ re
   
   return (
     <div className="pb-20">
-      {/* Restaurant Cover Image */}
       <div className="relative h-56 md:h-72">
         <img 
           src={restaurant.coverImage} 
@@ -70,7 +74,6 @@ const RestaurantDetails: React.FC<{ restaurant: RestaurantDetailProps }> = ({ re
         </div>
       </div>
 
-      {/* Restaurant Navigation Buttons */}
       <div className="px-4 mt-4 overflow-x-auto">
         <div className="flex space-x-2 pb-2">
           {navigationButtons.map((button) => (
@@ -88,7 +91,6 @@ const RestaurantDetails: React.FC<{ restaurant: RestaurantDetailProps }> = ({ re
         </div>
       </div>
 
-      {/* Content based on active tab */}
       <div className="px-4 mt-4">
         {activeTab === 'home' && (
           <div className="space-y-6 animate-fade-in">
@@ -189,12 +191,11 @@ const RestaurantDetails: React.FC<{ restaurant: RestaurantDetailProps }> = ({ re
               </span>
             </div>
             
-            {/* Sample review form for demo */}
             <ReviewForm 
               restaurantId={restaurant.id}
               restaurantName={restaurant.name}
-              bookingCode={sampleReview.bookingCode}
-              restaurantCode={sampleReview.restaurantCode}
+              bookingCode={bookingCodeFromUrl || ""}
+              restaurantCode={restaurantCodeFromUrl || ""}
             />
           </div>
         )}

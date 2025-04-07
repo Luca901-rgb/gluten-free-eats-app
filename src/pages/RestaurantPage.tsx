@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import RestaurantDetails, { RestaurantDetailProps } from '@/components/Restaurant/RestaurantDetails';
 
@@ -37,6 +37,7 @@ const sampleRestaurant: RestaurantDetailProps = {
 
 const RestaurantPage = () => {
   const { id } = useParams<{ id: string }>();
+  const location = useLocation();
   
   return (
     <Layout>

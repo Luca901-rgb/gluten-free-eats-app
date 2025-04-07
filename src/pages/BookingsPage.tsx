@@ -83,9 +83,9 @@ const BookingsPage = () => {
     toast.success('Codice recensione verificato!');
     setShowCodeDialog(false);
     
-    // Naviga alla pagina delle recensioni dopo un breve ritardo
+    // Naviga alla pagina delle recensioni passando i codici come parametri di query
     setTimeout(() => {
-      navigate(`/restaurant/review/${selectedBooking.restaurantId}?booking=${selectedBooking.id}`);
+      navigate(`/restaurant/${selectedBooking.restaurantId}?tab=reviews&bookingCode=${selectedBooking.bookingCode}&restaurantCode=${restaurantCode}`);
     }, 1000);
   };
 
