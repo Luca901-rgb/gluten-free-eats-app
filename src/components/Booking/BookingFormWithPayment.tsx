@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
@@ -49,20 +48,17 @@ interface BookingFormProps {
   restaurantImage?: string;
 }
 
-// Orari disponibili con intervalli di 15 minuti
 const generateAvailableTimes = () => {
   const times = [];
-  // Pranzo: 12:00-14:30
   for (let h = 12; h <= 14; h++) {
     for (let m = 0; m <= 45; m += 15) {
-      if (h === 14 && m > 30) continue; // Non oltre le 14:30
+      if (h === 14 && m > 30) continue;
       times.push(`${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`);
     }
   }
-  // Cena: 19:00-22:30
   for (let h = 19; h <= 22; h++) {
     for (let m = 0; m <= 45; m += 15) {
-      if (h === 22 && m > 30) continue; // Non oltre le 22:30
+      if (h === 22 && m > 30) continue;
       times.push(`${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`);
     }
   }
@@ -80,13 +76,11 @@ const BookingFormWithPayment: React.FC<BookingFormProps> = ({ restaurantId, rest
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [bookingData, setBookingData] = useState<any>(null);
   
-  // Opzioni aggiuntive
   const [highChair, setHighChair] = useState(false);
   const [accessibility, setAccessibility] = useState(false);
   const [outdoorTable, setOutdoorTable] = useState(false);
   const [specialOccasion, setSpecialOccasion] = useState<string | undefined>(undefined);
   
-  // Stati per il sistema di pagamento
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [paymentComplete, setPaymentComplete] = useState(false);
   
@@ -96,7 +90,6 @@ const BookingFormWithPayment: React.FC<BookingFormProps> = ({ restaurantId, rest
     setPeople(value[0]);
   };
   
-  // Simulazione date con disponibilità limitata (in un'app reale questo verrebbe dal backend)
   const limitedAvailabilityDates = [
     addDays(new Date(), 3),
     addDays(new Date(), 5),
@@ -120,13 +113,13 @@ const BookingFormWithPayment: React.FC<BookingFormProps> = ({ restaurantId, rest
       return;
     }
 
-    // Determina se è necessaria una carta di garanzia (per prenotazioni > 6 persone)
-    if (people >= 6 && !paymentComplete) {
+    const hidePayment = true;
+
+    if (people >= 6 && !paymentComplete && !hidePayment) {
       setShowPaymentDialog(true);
       return;
     }
     
-    // Se la garanzia è già stata fornita o non è necessaria, procedi con la prenotazione
     processBooking();
   };
   
@@ -134,22 +127,18 @@ const BookingFormWithPayment: React.FC<BookingFormProps> = ({ restaurantId, rest
     setIsLoading(true);
 
     try {
-      // Generate a booking date by combining the selected date and time
       const dateTime = new Date(date!);
       const [hours, minutes] = time!.split(':').map(Number);
       dateTime.setHours(hours, minutes);
       
-      // Generate a random booking code for demo
       const bookingCode = Math.random().toString(36).substring(2, 8).toUpperCase();
       
-      // Riepilogo opzioni aggiuntive
       const additionalOptions = [];
       if (highChair) additionalOptions.push('Seggiolone bambini');
       if (accessibility) additionalOptions.push('Accessibilità disabili');
       if (outdoorTable) additionalOptions.push('Tavolo all\'aperto');
       if (specialOccasion) additionalOptions.push(`Occasione speciale: ${specialOccasion}`);
       
-      // Create a new booking
       const newBooking = {
         id: `b${Date.now()}`,
         restaurantId,
@@ -161,17 +150,14 @@ const BookingFormWithPayment: React.FC<BookingFormProps> = ({ restaurantId, rest
         additionalOptions,
         status: 'pending' as const,
         bookingCode,
-        customerName: localStorage.getItem('userName') || 'Cliente', // In un'app reale, prenderebbe i dati dell'utente loggato
-        guaranteeProvided: paymentComplete, // Flag per indicare che è stata fornita una carta di garanzia
+        customerName: localStorage.getItem('userName') || 'Cliente',
+        guaranteeProvided: paymentComplete,
       };
       
-      // Prepara dati per la conferma
       setBookingData(newBooking);
       
-      // Aggiungi la prenotazione
       addBooking(newBooking);
       
-      // Mostra la schermata di conferma
       setShowConfirmation(true);
     } catch (error) {
       toast.error('Errore durante la prenotazione. Riprova più tardi.');
@@ -185,13 +171,11 @@ const BookingFormWithPayment: React.FC<BookingFormProps> = ({ restaurantId, rest
       setPaymentComplete(true);
       setShowPaymentDialog(false);
       toast.success("Carta di garanzia registrata con successo");
-      // Procedi automaticamente con la prenotazione
       processBooking();
     }
   };
   
   const handleAddToCalendar = () => {
-    // In un'app reale, questo utilizzerebbe le API del calendario del dispositivo
     toast.success('Evento aggiunto al tuo calendario');
   };
   
@@ -208,7 +192,6 @@ const BookingFormWithPayment: React.FC<BookingFormProps> = ({ restaurantId, rest
     setPaymentComplete(false);
   };
 
-  // Schermata di conferma
   if (showConfirmation && bookingData) {
     return (
       <Card className="w-full max-w-md mx-auto animate-fade-in">
@@ -405,7 +388,7 @@ const BookingFormWithPayment: React.FC<BookingFormProps> = ({ restaurantId, rest
                     Per prenotazioni di {people >= 10 ? '10 o più' : '6 o più'} persone è richiesta una carta di credito a garanzia.
                     {people >= 10 
                       ? ' In caso di mancata presentazione, verrà addebitato un importo di €20.'
-                      : ' In caso di mancata presentazione, verrà addebitato un importo di €10.'}
+                      : ' In caso di manancata presentazione, verrà addebitato un importo di €10.'}
                   </span>
                 </div>
               </div>
@@ -471,12 +454,7 @@ const BookingFormWithPayment: React.FC<BookingFormProps> = ({ restaurantId, rest
             className="w-full bg-accent hover:bg-accent/90 mt-4" 
             disabled={isLoading || !date || !time}
           >
-            {isLoading ? 'Prenotazione in corso...' : paymentComplete 
-              ? 'Conferma prenotazione'
-              : people >= 6 
-                ? 'Continua al pagamento di garanzia' 
-                : 'Conferma prenotazione'
-            }
+            {isLoading ? 'Prenotazione in corso...' : 'Conferma prenotazione'}
           </Button>
           
           <div className="text-center text-sm text-muted-foreground">
@@ -485,8 +463,7 @@ const BookingFormWithPayment: React.FC<BookingFormProps> = ({ restaurantId, rest
         </form>
       </div>
       
-      {/* Dialog per il pagamento con carta di garanzia */}
-      <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
+      <Dialog open={showPaymentDialog && !hidePayment} onOpenChange={setShowPaymentDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Carta di garanzia</DialogTitle>

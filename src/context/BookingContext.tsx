@@ -17,6 +17,7 @@ export interface Booking {
   attendance?: 'confirmed' | 'no-show' | null;
   restaurantReviewCode?: string;
   hasGuarantee?: boolean;
+  additionalOptions?: string[];
 }
 
 interface BookingContextType {

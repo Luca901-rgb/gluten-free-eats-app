@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -13,6 +13,7 @@ import PaymentManager from '@/components/Payment/PaymentManager';
 import { useBookings } from '@/context/BookingContext';
 
 const RestaurantBookings = () => {
+  // Set hidePayment to true to disable payment functionality
   const hidePayment = true;
   const { bookings: allBookings, updateBooking, generateRestaurantReviewCode } = useBookings();
 
