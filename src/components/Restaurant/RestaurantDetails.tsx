@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -29,7 +28,17 @@ export interface RestaurantDetailProps {
   hasGlutenFreeOptions: boolean;
 }
 
-const RestaurantDetails: React.FC<{ restaurant: RestaurantDetailProps }> = ({ restaurant }) => {
+interface RestaurantDetailsProps {
+  restaurant: RestaurantDetailProps;
+  initialBookingCode?: string;
+  initialRestaurantCode?: string;
+}
+
+const RestaurantDetails: React.FC<RestaurantDetailsProps> = ({ 
+  restaurant, 
+  initialBookingCode = '', 
+  initialRestaurantCode = '' 
+}) => {
   const location = useLocation();
   const navigate = useNavigate();
   const searchParams = new URLSearchParams(location.search);
@@ -39,8 +48,8 @@ const RestaurantDetails: React.FC<{ restaurant: RestaurantDetailProps }> = ({ re
   
   const [activeTab, setActiveTab] = useState(tabFromUrl || 'home');
   const [copyIcon, setCopyIcon] = useState<'copy' | 'check'>('copy');
-  const [bookingCode, setBookingCode] = useState<string>(bookingCodeFromUrl || '');
-  const [restaurantCode, setRestaurantCode] = useState<string>(restaurantCodeFromUrl || '');
+  const [bookingCode, setBookingCode] = useState<string>(initialBookingCode || bookingCodeFromUrl || '');
+  const [restaurantCode, setRestaurantCode] = useState<string>(initialRestaurantCode || restaurantCodeFromUrl || '');
   
   useEffect(() => {
     if (tabFromUrl) {
@@ -73,7 +82,6 @@ const RestaurantDetails: React.FC<{ restaurant: RestaurantDetailProps }> = ({ re
   const navigateToTab = (tabId: string) => {
     setActiveTab(tabId);
     
-    // Se stiamo navigando alle recensioni e abbiamo i codici, aggiungiamoli all'URL
     if (tabId === 'reviews' && (bookingCode || restaurantCode)) {
       const params = new URLSearchParams();
       params.set('tab', 'reviews');
@@ -93,7 +101,6 @@ const RestaurantDetails: React.FC<{ restaurant: RestaurantDetailProps }> = ({ re
     { id: 'profile', label: 'Profilo', icon: <User size={18} /> },
   ];
 
-  // Funzione per aggiornare i codici dopo una prenotazione
   const handleBookingComplete = (newBookingCode: string, newRestaurantCode: string) => {
     setBookingCode(newBookingCode);
     setRestaurantCode(newRestaurantCode);
