@@ -84,6 +84,8 @@ const BookingFormWithPayment: React.FC<BookingFormProps> = ({ restaurantId, rest
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [paymentComplete, setPaymentComplete] = useState(false);
   
+  const hidePayment = true;
+  
   const { addBooking } = useBookings();
 
   const handleSliderChange = (value: number[]) => {
@@ -112,8 +114,6 @@ const BookingFormWithPayment: React.FC<BookingFormProps> = ({ restaurantId, rest
       toast.error('Seleziona data e ora per la prenotazione');
       return;
     }
-
-    const hidePayment = true;
 
     if (people >= 6 && !paymentComplete && !hidePayment) {
       setShowPaymentDialog(true);
@@ -151,7 +151,7 @@ const BookingFormWithPayment: React.FC<BookingFormProps> = ({ restaurantId, rest
         status: 'pending' as const,
         bookingCode,
         customerName: localStorage.getItem('userName') || 'Cliente',
-        guaranteeProvided: paymentComplete,
+        hasGuarantee: paymentComplete,
       };
       
       setBookingData(newBooking);
@@ -215,7 +215,7 @@ const BookingFormWithPayment: React.FC<BookingFormProps> = ({ restaurantId, rest
             </div>
           </div>
           
-          {bookingData.guaranteeProvided && (
+          {bookingData.hasGuarantee && (
             <div className="flex items-start gap-2 bg-blue-50 p-3 rounded-md border border-blue-100">
               <CreditCard className="h-5 w-5 text-blue-500 flex-shrink-0" />
               <div className="text-sm text-blue-800">
