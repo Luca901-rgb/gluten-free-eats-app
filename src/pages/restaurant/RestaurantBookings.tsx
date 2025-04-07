@@ -5,23 +5,16 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, Clock, Users, CheckCircle, XCircle, CreditCard, Copy, CheckCheck } from 'lucide-react';
 import { toast } from 'sonner';
-import { formatDistance } from 'date-fns';
-import { it } from 'date-fns/locale';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import PaymentForm from '@/components/Booking/PaymentForm';
-import PaymentManager from '@/components/Payment/PaymentManager';
 import { useBookings } from '@/context/BookingContext';
 
 const RestaurantBookings = () => {
-  // Set hidePayment to true to disable payment functionality
-  const hidePayment = true;
   const { bookings: allBookings, updateBooking, generateRestaurantReviewCode } = useBookings();
 
   // Filtraggio delle prenotazioni per questo ristorante (simulato con ID '1')
   const restaurantId = '1'; // In un'app reale, questo verrebbe dal contesto dell'autenticazione
   const bookings = allBookings.filter(booking => booking.restaurantId === restaurantId);
 
-  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [currentBookingId, setCurrentBookingId] = useState<string | null>(null);
   const [showReviewCodeDialog, setShowReviewCodeDialog] = useState(false);
   const [generatedReviewCode, setGeneratedReviewCode] = useState<string>('');
@@ -37,36 +30,17 @@ const RestaurantBookings = () => {
   };
 
   const handleConfirmAttendance = (id: string) => {
-    if (hidePayment) {
-      // Generiamo il codice recensione per il ristorante
-      const code = generateRestaurantReviewCode(id);
-      updateBooking(id, { attendance: 'confirmed' });
-      setGeneratedReviewCode(code);
-      setCurrentBookingId(id);
-      setShowReviewCodeDialog(true);
-      return;
-    }
-    
+    // Generiamo il codice recensione per il ristorante
+    const code = generateRestaurantReviewCode(id);
+    updateBooking(id, { attendance: 'confirmed' });
+    setGeneratedReviewCode(code);
     setCurrentBookingId(id);
-    setShowPaymentDialog(true);
+    setShowReviewCodeDialog(true);
   };
 
   const handleNoShow = (id: string) => {
     updateBooking(id, { attendance: 'no-show' });
-    toast.success('Cliente segnato come no-show. La carta di garanzia verrà addebitata automaticamente.');
-  };
-
-  const handlePaymentComplete = (success: boolean) => {
-    if (success && currentBookingId) {
-      const code = generateRestaurantReviewCode(currentBookingId);
-      updateBooking(currentBookingId, { attendance: 'confirmed' });
-      setGeneratedReviewCode(code);
-      setShowPaymentDialog(false);
-      setShowReviewCodeDialog(true);
-    } else {
-      setShowPaymentDialog(false);
-      setCurrentBookingId(null);
-    }
+    toast.success('Cliente segnato come no-show');
   };
 
   const handleCopyCode = () => {
@@ -197,7 +171,7 @@ const RestaurantBookings = () => {
                         onClick={() => handleConfirmAttendance(booking.id)}
                       >
                         <CheckCircle className="mr-1 h-4 w-4" />
-                        {hidePayment ? 'Conferma Presenza' : 'Conferma Presenza e Paga'}
+                        Conferma Presenza
                       </Button>
                     </div>
                   )}
@@ -211,25 +185,6 @@ const RestaurantBookings = () => {
           <div className="text-center py-10">
             <p className="text-gray-500">Nessuna prenotazione disponibile</p>
           </div>
-        )}
-
-        {!hidePayment && (
-          <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle>Pagamento servizio di prenotazione</DialogTitle>
-              </DialogHeader>
-              <div className="flex justify-center py-4">
-                <PaymentManager 
-                  amount={0.99} 
-                  description="Pagamento del servizio di prenotazione. Questo importo verrà addebitato per ogni presenza confermata."
-                  isRestaurantPayment={true}
-                  onPaymentComplete={handlePaymentComplete}
-                  hidePayment={hidePayment}
-                />
-              </div>
-            </DialogContent>
-          </Dialog>
         )}
         
         <Dialog open={showReviewCodeDialog} onOpenChange={(open) => {

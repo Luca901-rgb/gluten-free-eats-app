@@ -1,7 +1,8 @@
+
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
-import { CalendarIcon, Clock, Users, Check, Info, CreditCard } from 'lucide-react';
+import { CalendarIcon, Clock, Users, Check, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -29,18 +30,10 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useBookings } from '@/context/BookingContext';
-import { addDays, isToday, format as dateFormat } from 'date-fns';
-import PaymentForm from './PaymentForm';
+import { addDays, format as dateFormat } from 'date-fns';
 
 interface BookingFormProps {
   restaurantId: string;
@@ -81,11 +74,6 @@ const BookingFormWithPayment: React.FC<BookingFormProps> = ({ restaurantId, rest
   const [outdoorTable, setOutdoorTable] = useState(false);
   const [specialOccasion, setSpecialOccasion] = useState<string | undefined>(undefined);
   
-  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
-  const [paymentComplete, setPaymentComplete] = useState(false);
-  
-  const hidePayment = true;
-  
   const { addBooking } = useBookings();
 
   const handleSliderChange = (value: number[]) => {
@@ -112,11 +100,6 @@ const BookingFormWithPayment: React.FC<BookingFormProps> = ({ restaurantId, rest
 
     if (!date || !time) {
       toast.error('Seleziona data e ora per la prenotazione');
-      return;
-    }
-
-    if (people >= 6 && !paymentComplete && !hidePayment) {
-      setShowPaymentDialog(true);
       return;
     }
     
@@ -151,7 +134,7 @@ const BookingFormWithPayment: React.FC<BookingFormProps> = ({ restaurantId, rest
         status: 'pending' as const,
         bookingCode,
         customerName: localStorage.getItem('userName') || 'Cliente',
-        hasGuarantee: paymentComplete,
+        hasGuarantee: false,
       };
       
       setBookingData(newBooking);
@@ -163,15 +146,6 @@ const BookingFormWithPayment: React.FC<BookingFormProps> = ({ restaurantId, rest
       toast.error('Errore durante la prenotazione. Riprova più tardi.');
     } finally {
       setIsLoading(false);
-    }
-  };
-  
-  const handlePaymentComplete = (success: boolean) => {
-    if (success) {
-      setPaymentComplete(true);
-      setShowPaymentDialog(false);
-      toast.success("Carta di garanzia registrata con successo");
-      processBooking();
     }
   };
   
@@ -189,7 +163,6 @@ const BookingFormWithPayment: React.FC<BookingFormProps> = ({ restaurantId, rest
     setAccessibility(false);
     setOutdoorTable(false);
     setSpecialOccasion(undefined);
-    setPaymentComplete(false);
   };
 
   if (showConfirmation && bookingData) {
@@ -214,19 +187,6 @@ const BookingFormWithPayment: React.FC<BookingFormProps> = ({ restaurantId, rest
               </p>
             </div>
           </div>
-          
-          {bookingData.hasGuarantee && (
-            <div className="flex items-start gap-2 bg-blue-50 p-3 rounded-md border border-blue-100">
-              <CreditCard className="h-5 w-5 text-blue-500 flex-shrink-0" />
-              <div className="text-sm text-blue-800">
-                <p className="font-medium">Carta di garanzia registrata</p>
-                <p className="mt-1">
-                  In caso di mancata presentazione senza preavviso, verrà addebitato l'importo di 
-                  €{bookingData.people >= 10 ? '20' : '10'} sulla carta fornita.
-                </p>
-              </div>
-            </div>
-          )}
           
           {bookingData.additionalOptions?.length > 0 && (
             <div className="border-t border-gray-200 pt-2 mt-2">
@@ -380,19 +340,6 @@ const BookingFormWithPayment: React.FC<BookingFormProps> = ({ restaurantId, rest
                 className="flex-1"
               />
             </div>
-            {people >= 6 && (
-              <div className="text-sm text-amber-600 bg-amber-50 p-2 rounded border border-amber-200 mt-1">
-                <div className="flex items-start gap-2">
-                  <Info className="h-4 w-4 flex-shrink-0 mt-0.5" />
-                  <span>
-                    Per prenotazioni di {people >= 10 ? '10 o più' : '6 o più'} persone è richiesta una carta di credito a garanzia.
-                    {people >= 10 
-                      ? ' In caso di mancata presentazione, verrà addebitato un importo di €20.'
-                      : ' In caso di manancata presentazione, verrà addebitato un importo di €10.'}
-                  </span>
-                </div>
-              </div>
-            )}
           </div>
           
           <div className="space-y-4">
@@ -462,24 +409,6 @@ const BookingFormWithPayment: React.FC<BookingFormProps> = ({ restaurantId, rest
           </div>
         </form>
       </div>
-      
-      <Dialog open={showPaymentDialog && !hidePayment} onOpenChange={setShowPaymentDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Carta di garanzia</DialogTitle>
-            <DialogDescription>
-              Per prenotazioni di {people >= 10 ? '10 o più' : '6 o più'} persone è richiesta una carta di credito a garanzia
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex justify-center py-4">
-            <PaymentForm 
-              onComplete={handlePaymentComplete} 
-              isGuarantee={true}
-              amount={people >= 10 ? 20 : 10}
-            />
-          </div>
-        </DialogContent>
-      </Dialog>
     </>
   );
 };
