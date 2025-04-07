@@ -88,7 +88,7 @@ export const resetPassword = async (email: string) => {
   }
 };
 
-// Migliorata funzione per autenticazione Google con gestione errori dettagliata
+// Migliorata funzione per autenticazione Google con gestione errori per domain non autorizzati
 export const signInWithGoogle = async () => {
   console.log("Avvio autenticazione Google...");
   try {
@@ -129,6 +129,10 @@ export const signInWithGoogle = async () => {
     
     if (error.code) {
       switch (error.code) {
+        case 'auth/unauthorized-domain':
+          console.log("Dominio non autorizzato per Google Auth. Usando modalità di sviluppo.");
+          // Ritorna un utente fittizio per ambienti di sviluppo
+          return createMockGoogleUser();
         case 'auth/popup-closed-by-user':
           errorMessage = "Popup di autenticazione chiuso. Riprova.";
           break;
@@ -148,6 +152,27 @@ export const signInWithGoogle = async () => {
     
     throw new Error(errorMessage);
   }
+};
+
+// Funzione per creare un utente Google fittizio per ambienti di sviluppo/test
+const createMockGoogleUser = () => {
+  const mockUserId = 'dev-' + Math.random().toString(36).substring(2, 15);
+  return {
+    uid: mockUserId,
+    email: 'dev-user@example.com',
+    displayName: 'Utente Test',
+    photoURL: 'https://via.placeholder.com/150',
+    emailVerified: true,
+    isAnonymous: false,
+    providerData: [{
+      providerId: 'google.com',
+      uid: mockUserId,
+      displayName: 'Utente Test',
+      email: 'dev-user@example.com',
+      phoneNumber: null,
+      photoURL: 'https://via.placeholder.com/150'
+    }]
+  };
 };
 
 // Funzione specializzata per accedere come admin

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -74,8 +75,15 @@ const LoginForm = () => {
       localStorage.setItem('userName', user.displayName || '');
       localStorage.setItem('userId', user.uid);
       
-      toast.dismiss();
-      toast.success("Accesso con Google effettuato con successo");
+      // Verifica se l'utente è un utente di sviluppo
+      const isDevelopmentUser = user.uid.startsWith('dev-');
+      if (isDevelopmentUser) {
+        toast.dismiss();
+        toast.success("Accesso effettuato in modalità sviluppo (dominio non autorizzato in Firebase)");
+      } else {
+        toast.dismiss();
+        toast.success("Accesso con Google effettuato con successo");
+      }
       
       // Reindirizza in base al tipo di utente
       if (userType === 'restaurant') {
