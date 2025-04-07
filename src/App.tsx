@@ -16,6 +16,7 @@ import BookingsPage from "./pages/BookingsPage";
 import FavoritesPage from "./pages/FavoritesPage";
 import VideoRecipesPage from "./pages/VideoRecipesPage";
 import PaymentsPage from "./pages/PaymentsPage";
+import RestaurantDashboard from "./pages/RestaurantDashboard";
 import { BookingProvider } from "./context/BookingContext";
 
 // Create a new QueryClient instance
@@ -39,6 +40,7 @@ const App = () => (
             <Route path="/favorites" element={<FavoritesPage />} />
             <Route path="/videos" element={<VideoRecipesPage />} />
             <Route path="/payments" element={<PaymentsPage />} />
+            <Route path="/restaurant-dashboard" element={<RestaurantDashboard />} />
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
