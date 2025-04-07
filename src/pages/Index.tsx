@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Search, MapPin, Info } from 'lucide-react';
+import { Search, MapPin, Info, Store } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import Layout from '@/components/Layout';
@@ -139,6 +139,24 @@ const Index = () => {
         <div className="space-y-2">
           <h1 className="text-3xl font-poppins font-bold text-primary">Gluten Free Eats</h1>
           <p className="text-gray-600">Scopri i ristoranti gluten free vicino a te</p>
+        </div>
+
+        {/* Accesso rapido alla gestione ristorante */}
+        <div className="bg-accent/10 p-4 rounded-lg border border-accent/20">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="font-semibold flex items-center">
+              <Store className="mr-2 h-4 w-4" />
+              Accesso Ristoratori
+            </h3>
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/restaurant/1">
+                Accedi al ristorante demo
+              </Link>
+            </Button>
+          </div>
+          <p className="text-sm text-gray-600">
+            Visualizza tutte le funzionalità di gestione disponibili per i ristoranti
+          </p>
         </div>
 
         {/* Avviso di regione */}
