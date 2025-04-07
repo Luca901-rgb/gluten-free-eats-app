@@ -75,10 +75,10 @@ export const RestaurantMap: React.FC<RestaurantMapProps> = ({
       {/* The map container */}
       <div className="flex-1 rounded-lg overflow-hidden border border-gray-200 shadow-sm mb-4">
         <MapContainer 
-          center={center} 
-          zoom={zoom} 
           style={{ height: '100%', width: '100%' }}
           zoomControl={true}
+          zoom={zoom}
+          center={center}
         >
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
