@@ -10,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Eye, FileText, Download } from 'lucide-react';
+import { Eye, FileText, Download, Upload } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -127,10 +127,34 @@ const sampleMenu: MenuProps = {
 const MenuViewer: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState<string>(sampleMenu.categories[0]);
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
+  const [menuPdfFile, setMenuPdfFile] = useState<File | null>(null);
+  const [showPdfUpload, setShowPdfUpload] = useState(false);
 
   const handleDownloadMenu = () => {
     toast.info('Download del menu in corso...');
     // In a real app, this would initiate a download
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      if (file.type === 'application/pdf') {
+        setMenuPdfFile(file);
+        toast.success('File PDF selezionato');
+      } else {
+        toast.error('Per favore seleziona un file PDF');
+      }
+    }
+  };
+
+  const handlePdfUpload = () => {
+    if (menuPdfFile) {
+      // In a real app, this would upload the file to a server
+      toast.success('Menu PDF caricato con successo');
+      setShowPdfUpload(false);
+    } else {
+      toast.error('Seleziona un file PDF prima di caricare');
+    }
   };
 
   const filteredItems = sampleMenu.menuItems.filter(item => item.category === activeCategory);
@@ -139,11 +163,61 @@ const MenuViewer: React.FC = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="font-poppins font-semibold text-lg">{sampleMenu.restaurantName} - Menu</h2>
-        <Button variant="outline" size="sm" onClick={handleDownloadMenu} className="flex gap-1">
-          <Download size={16} />
-          <span className="hidden sm:inline">Scarica PDF</span>
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => setShowPdfUpload(true)} className="flex gap-1">
+            <Upload size={16} />
+            <span className="hidden sm:inline">Carica PDF</span>
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleDownloadMenu} className="flex gap-1">
+            <Download size={16} />
+            <span className="hidden sm:inline">Scarica PDF</span>
+          </Button>
+        </div>
       </div>
+
+      {showPdfUpload && (
+        <div className="border border-dashed rounded-lg p-6 text-center">
+          <FileText size={32} className="mx-auto text-gray-400 mb-2" />
+          <p className="font-medium text-gray-700 mb-2">Carica il menu in formato PDF</p>
+          <p className="text-sm text-gray-500 mb-4">Il file verrà mostrato ai clienti insieme al menu interattivo</p>
+          
+          <input
+            type="file"
+            id="menu-pdf-upload"
+            accept=".pdf"
+            className="hidden"
+            onChange={handleFileChange}
+          />
+          <div className="flex flex-col sm:flex-row justify-center gap-3">
+            <label htmlFor="menu-pdf-upload" className="cursor-pointer">
+              <Button variant="outline" type="button">
+                Seleziona file PDF
+              </Button>
+            </label>
+            
+            {menuPdfFile && (
+              <Button onClick={handlePdfUpload}>
+                Carica menu
+              </Button>
+            )}
+          </div>
+          
+          {menuPdfFile && (
+            <p className="mt-3 text-sm text-green-600">
+              File selezionato: {menuPdfFile.name}
+            </p>
+          )}
+          
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="mt-3" 
+            onClick={() => setShowPdfUpload(false)}
+          >
+            Annulla
+          </Button>
+        </div>
+      )}
 
       <div className="rounded-lg border">
         <Tabs defaultValue={sampleMenu.categories[0]} value={activeCategory} onValueChange={setActiveCategory}>

@@ -27,7 +27,6 @@ import {
   ChevronDown,
   Eye,
   Video,
-  FileText,
   Camera,
   Copy,
   Check,
