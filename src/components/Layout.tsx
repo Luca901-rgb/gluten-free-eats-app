@@ -1,7 +1,7 @@
 
 import React, { useEffect } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
-import { Home, Search, Calendar, Star, User, Image, Video, MessageCircle, CreditCard } from 'lucide-react';
+import { NavLink } from 'react-router-dom';
+import { Home, Search, Calendar, Star, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface LayoutProps {
@@ -10,15 +10,6 @@ interface LayoutProps {
 }
 
 const Layout = ({ children, hideNavigation = false }: LayoutProps) => {
-  const location = useLocation();
-  
-  // Automatically hide bottom navigation on restaurant dashboard
-  const isRestaurantDashboard = location.pathname.startsWith('/restaurant-dashboard');
-  const shouldHideNavigation = hideNavigation || isRestaurantDashboard;
-
-  // Determine if we should show restaurant navigation instead
-  const showRestaurantNavigation = isRestaurantDashboard;
-  
   // Add body style for mobile app appearance
   useEffect(() => {
     // Set body styles for mobile app look and feel
@@ -62,8 +53,8 @@ const Layout = ({ children, hideNavigation = false }: LayoutProps) => {
         {children}
       </main>
 
-      {/* Regular User Bottom Navigation */}
-      {!shouldHideNavigation && !showRestaurantNavigation && (
+      {/* Bottom Navigation - only shown if not explicitly hidden */}
+      {!hideNavigation && (
         <nav className="fixed bottom-0 w-full bg-white shadow-[0_0_15px_rgba(0,0,0,0.1)] z-10 pb-safe">
           <div className="grid grid-cols-5 items-center py-2">
             <NavLink 
@@ -109,75 +100,6 @@ const Layout = ({ children, hideNavigation = false }: LayoutProps) => {
             </NavLink>
             <NavLink 
               to="/profile" 
-              className={({ isActive }) => 
-                cn("flex flex-col items-center p-2", 
-                   isActive ? "text-accent" : "text-gray-500 hover:text-primary")
-              }
-            >
-              <User size={20} />
-              <span className="text-xs mt-1 font-medium">Profilo</span>
-            </NavLink>
-          </div>
-        </nav>
-      )}
-
-      {/* Restaurant Owner Bottom Navigation */}
-      {showRestaurantNavigation && (
-        <nav className="fixed bottom-0 w-full bg-white shadow-[0_0_15px_rgba(0,0,0,0.1)] z-10 pb-safe">
-          <div className="flex justify-around items-center py-2">
-            <NavLink 
-              to="/restaurant-dashboard" 
-              end
-              className={({ isActive }) => 
-                cn("flex flex-col items-center p-2", 
-                   isActive ? "text-accent" : "text-gray-500 hover:text-primary")
-              }
-            >
-              <Home size={20} />
-              <span className="text-xs mt-1 font-medium">Home</span>
-            </NavLink>
-            <NavLink 
-              to="/restaurant-dashboard/gallery" 
-              className={({ isActive }) => 
-                cn("flex flex-col items-center p-2", 
-                   isActive ? "text-accent" : "text-gray-500 hover:text-primary")
-              }
-            >
-              <Image size={20} />
-              <span className="text-xs mt-1 font-medium">Galleria</span>
-            </NavLink>
-            <NavLink 
-              to="/restaurant-dashboard/videos" 
-              className={({ isActive }) => 
-                cn("flex flex-col items-center p-2", 
-                   isActive ? "text-accent" : "text-gray-500 hover:text-primary")
-              }
-            >
-              <Video size={20} />
-              <span className="text-xs mt-1 font-medium">Video</span>
-            </NavLink>
-            <NavLink 
-              to="/restaurant-dashboard/bookings" 
-              className={({ isActive }) => 
-                cn("flex flex-col items-center p-2", 
-                   isActive ? "text-accent" : "text-gray-500 hover:text-primary")
-              }
-            >
-              <Calendar size={20} />
-              <span className="text-xs mt-1 font-medium">Prenotazioni</span>
-            </NavLink>
-            <NavLink 
-              to="/restaurant-dashboard/reviews" 
-              className={({ isActive }) => 
-                cn("flex flex-col items-center p-2", 
-                   isActive ? "text-accent" : "text-gray-500 hover:text-primary")
-              }
-            >
-              <MessageCircle size={20} />
-              <span className="text-xs mt-1 font-medium">Recensioni</span>
-            </NavLink>
-            <NavLink 
-              to="/restaurant-dashboard/profile" 
               className={({ isActive }) => 
                 cn("flex flex-col items-center p-2", 
                    isActive ? "text-accent" : "text-gray-500 hover:text-primary")
