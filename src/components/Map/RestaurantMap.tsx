@@ -1,9 +1,12 @@
 
 import React, { useEffect, FC } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
-import { MapPin } from 'lucide-react';
+import { MapPin, Navigation } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 // Fix Leaflet default icon issue
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -39,32 +42,11 @@ const SetMapView: FC<{ center: [number, number]; zoom: number }> = ({ center, zo
   return null;
 };
 
-// Type definition for MapContainer props
-interface MapProps {
-  center: [number, number];
-  zoom: number;
-  children: React.ReactNode;
-  style?: React.CSSProperties;
-  zoomControl?: boolean;
-}
-
-// Type definition for TileLayer props
-interface TileProps {
-  url: string;
-  attribution: string;
-}
-
-// Type definition for Marker props
-interface MarkerProps {
-  position: [number, number];
-  icon?: L.Icon;
-  children?: React.ReactNode;
-}
-
 export const RestaurantMap: FC<RestaurantMapProps> = ({ 
   userLocation, 
   restaurants 
 }) => {
+  const navigate = useNavigate();
   // Default center if no user location is provided (centered on Italy)
   const defaultCenter: [number, number] = [41.9028, 12.4964];
   const center: [number, number] = userLocation ? [userLocation.lat, userLocation.lng] : defaultCenter;
@@ -90,6 +72,19 @@ export const RestaurantMap: FC<RestaurantMapProps> = ({
     shadowSize: [41, 41]
   });
 
+  const navigateToRestaurant = (restaurantId: string, lat: number, lng: number) => {
+    // Navigate to the restaurant details page
+    navigate(`/restaurant/${restaurantId}`);
+    
+    // In a real app, you might also launch navigation in Google Maps
+    // This code demonstrates how to open Google Maps with directions
+    if (userLocation) {
+      const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${userLocation.lat},${userLocation.lng}&destination=${lat},${lng}&travelmode=driving`;
+      window.open(googleMapsUrl, '_blank');
+      toast.success('Apertura navigazione verso il ristorante');
+    }
+  };
+
   return (
     <div className="h-full w-full flex flex-col">
       <h3 className="text-lg font-medium text-gray-900 mb-3">Ristoranti nelle vicinanze</h3>
@@ -97,15 +92,14 @@ export const RestaurantMap: FC<RestaurantMapProps> = ({
       {/* The map container */}
       <div className="flex-1 rounded-lg overflow-hidden border border-gray-200 shadow-sm mb-4">
         <MapContainer 
-          style={{ height: '100%', width: '100%' }}
-          // @ts-ignore - Forcing props that TypeScript doesn't recognize correctly
-          center={center}
+          center={center as any}
           zoom={zoom}
+          style={{ height: '100%', width: '100%' }}
+          className="z-0"
         >
           <TileLayer
-            // @ts-ignore - Forcing props that TypeScript doesn't recognize correctly
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
           
           {/* Dynamic center recalculation when userLocation changes */}
@@ -114,9 +108,8 @@ export const RestaurantMap: FC<RestaurantMapProps> = ({
           {/* User location marker */}
           {userLocation && (
             <Marker 
-              // @ts-ignore - Forcing props that TypeScript doesn't recognize correctly
-              position={[userLocation.lat, userLocation.lng]}
-              icon={userIcon}
+              position={[userLocation.lat, userLocation.lng] as any}
+              icon={userIcon as any}
             >
               <Popup>
                 <div className="text-sm font-medium">La tua posizione</div>
@@ -128,15 +121,21 @@ export const RestaurantMap: FC<RestaurantMapProps> = ({
           {restaurants.map(restaurant => (
             <Marker 
               key={restaurant.id} 
-              // @ts-ignore - Forcing props that TypeScript doesn't recognize correctly
-              position={[restaurant.location.lat, restaurant.location.lng]}
-              icon={restaurantIcon}
+              position={[restaurant.location.lat, restaurant.location.lng] as any}
+              icon={restaurantIcon as any}
             >
               <Popup>
-                <div>
+                <div className="text-center">
                   <h5 className="font-medium">{restaurant.name}</h5>
                   <p className="text-sm text-gray-600">{restaurant.address}</p>
                   <p className="text-sm font-medium text-primary">{restaurant.distance}</p>
+                  <Button 
+                    onClick={() => navigateToRestaurant(restaurant.id, restaurant.location.lat, restaurant.location.lng)}
+                    className="mt-2 w-full"
+                    size="sm"
+                  >
+                    <Navigation className="mr-1 h-4 w-4" /> Vai da qui
+                  </Button>
                 </div>
               </Popup>
             </Marker>
@@ -147,13 +146,20 @@ export const RestaurantMap: FC<RestaurantMapProps> = ({
       {/* List of restaurants below the map */}
       <div className="w-full space-y-3 bg-gray-50 p-3 rounded-lg overflow-auto max-h-48">
         {restaurants.map(restaurant => (
-          <div key={restaurant.id} className="bg-white p-3 rounded-lg shadow-sm flex items-start gap-2">
+          <div 
+            key={restaurant.id} 
+            className="bg-white p-3 rounded-lg shadow-sm flex items-start gap-2 hover:bg-gray-50 cursor-pointer"
+            onClick={() => navigateToRestaurant(restaurant.id, restaurant.location.lat, restaurant.location.lng)}
+          >
             <MapPin className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
             <div className="flex-1">
               <h5 className="font-medium">{restaurant.name}</h5>
               <p className="text-sm text-gray-600">{restaurant.address}</p>
               <p className="text-sm font-medium text-primary">{restaurant.distance}</p>
             </div>
+            <Button variant="outline" size="icon" className="h-8 w-8">
+              <Navigation className="h-4 w-4" />
+            </Button>
           </div>
         ))}
       </div>
