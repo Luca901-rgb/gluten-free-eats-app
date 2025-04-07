@@ -92,21 +92,17 @@ export const RestaurantMap: FC<RestaurantMapProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-[70vh]">
         {/* The map container */}
         <div className="rounded-lg overflow-hidden border border-gray-200 shadow-sm h-full">
-          {/* @ts-ignore - TypeScript has issues with react-leaflet props types */}
           <MapContainer style={{ height: '100%', width: '100%' }} className="z-0">
-            {/* @ts-ignore - TypeScript has issues with react-leaflet props types */}
             <TileLayer
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             />
             
             {/* Dynamic center recalculation when userLocation changes */}
-            {/* @ts-ignore - TypeScript has issues with react-leaflet props types */}
             <SetMapView center={center} zoom={zoom} />
             
             {/* User location marker */}
             {userLocation && (
-              /* @ts-ignore - TypeScript has issues with react-leaflet props types */
               <Marker position={[userLocation.lat, userLocation.lng]} icon={userIcon}>
                 <Popup>
                   <div className="text-sm font-medium">La tua posizione</div>
@@ -116,7 +112,6 @@ export const RestaurantMap: FC<RestaurantMapProps> = ({
             
             {/* Restaurant markers */}
             {restaurants.map(restaurant => (
-              /* @ts-ignore - TypeScript has issues with react-leaflet props types */
               <Marker 
                 key={restaurant.id} 
                 position={[restaurant.location.lat, restaurant.location.lng]}
