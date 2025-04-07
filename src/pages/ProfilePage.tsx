@@ -13,7 +13,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Layout from '@/components/Layout';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
-import ProfileTypeSwitch from '@/components/ProfileTypeSwitch';
 import { logoutUser } from '@/lib/firebase';
 
 const ProfilePage = () => {
@@ -44,8 +43,6 @@ const ProfilePage = () => {
             Logout
           </Button>
         </div>
-
-        <ProfileTypeSwitch />
         
         <Card>
           <CardHeader className="pb-3">
