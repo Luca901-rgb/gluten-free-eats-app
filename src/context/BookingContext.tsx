@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, ReactNode } from 'react';
 
 // Define the booking type
@@ -28,6 +29,7 @@ interface BookingContextType {
   generateReviewCode: (bookingId: string) => string;
   generateRestaurantReviewCode: (bookingId: string) => string;
   getBookingByCode: (bookingCode: string) => Booking | undefined;
+  getRestaurantReviewCode: (bookingId: string) => string | undefined;
 }
 
 const BookingContext = createContext<BookingContextType | undefined>(undefined);
@@ -89,6 +91,12 @@ export function BookingProvider({ children }: { children: ReactNode }) {
   };
 
   const updateBooking = (id: string, updates: Partial<Booking>) => {
+    // Se stiamo confermando la presenza del cliente, generiamo anche il codice recensione 
+    // del ristorante se non esiste già
+    if (updates.attendance === 'confirmed' && !bookings.find(b => b.id === id)?.restaurantReviewCode) {
+      updates.restaurantReviewCode = generateRandomCode(4, true);
+    }
+    
     setBookings(bookings.map(booking => 
       booking.id === id ? { ...booking, ...updates } : booking
     ));
@@ -113,6 +121,11 @@ export function BookingProvider({ children }: { children: ReactNode }) {
   const getBookingByCode = (bookingCode: string): Booking | undefined => {
     return bookings.find(booking => booking.bookingCode === bookingCode);
   };
+  
+  const getRestaurantReviewCode = (bookingId: string): string | undefined => {
+    const booking = bookings.find(b => b.id === bookingId);
+    return booking?.restaurantReviewCode;
+  };
 
   return (
     <BookingContext.Provider 
@@ -123,7 +136,8 @@ export function BookingProvider({ children }: { children: ReactNode }) {
         cancelBooking,
         generateReviewCode,
         generateRestaurantReviewCode,
-        getBookingByCode
+        getBookingByCode,
+        getRestaurantReviewCode
       }}
     >
       {children}

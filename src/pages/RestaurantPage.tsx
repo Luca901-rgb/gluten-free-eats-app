@@ -1,8 +1,9 @@
 
 import React from 'react';
-import { useParams, useLocation } from 'react-router-dom';
+import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import RestaurantDetails, { RestaurantDetailProps } from '@/components/Restaurant/RestaurantDetails';
+import { useBookings } from '@/context/BookingContext';
 
 // Sample restaurant data - would be fetched from API in real app
 const sampleRestaurant: RestaurantDetailProps = {
@@ -38,10 +39,21 @@ const sampleRestaurant: RestaurantDetailProps = {
 const RestaurantPage = () => {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
+  const navigate = useNavigate();
+  const { getBookingByCode } = useBookings();
+  
+  // Check if we have a booking or restaurant code in the URL
+  const searchParams = new URLSearchParams(location.search);
+  const bookingCode = searchParams.get('bookingCode');
+  const restaurantCode = searchParams.get('restaurantCode');
   
   return (
     <Layout>
-      <RestaurantDetails restaurant={sampleRestaurant} />
+      <RestaurantDetails 
+        restaurant={sampleRestaurant} 
+        initialBookingCode={bookingCode || ''}
+        initialRestaurantCode={restaurantCode || ''}
+      />
     </Layout>
   );
 };

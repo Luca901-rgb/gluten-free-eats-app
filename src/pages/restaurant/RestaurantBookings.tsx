@@ -7,9 +7,11 @@ import { Calendar, Clock, Users, CheckCircle, XCircle, CreditCard, Copy, CheckCh
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useBookings } from '@/context/BookingContext';
+import { useNavigate } from 'react-router-dom';
 
 const RestaurantBookings = () => {
   const { bookings: allBookings, updateBooking, generateRestaurantReviewCode } = useBookings();
+  const navigate = useNavigate();
 
   // Filtraggio delle prenotazioni per questo ristorante (simulato con ID '1')
   const restaurantId = '1'; // In un'app reale, questo verrebbe dal contesto dell'autenticazione
@@ -36,6 +38,12 @@ const RestaurantBookings = () => {
     setGeneratedReviewCode(code);
     setCurrentBookingId(id);
     setShowReviewCodeDialog(true);
+    
+    // Recuperiamo il booking che è stato appena aggiornato
+    const updatedBooking = allBookings.find(b => b.id === id);
+    
+    // Notifica che il codice verrà usato automaticamente nella recensione
+    toast.success('Codice generato e pronto per la recensione del cliente');
   };
 
   const handleNoShow = (id: string) => {
@@ -46,6 +54,10 @@ const RestaurantBookings = () => {
   const handleCopyCode = () => {
     navigator.clipboard.writeText(generatedReviewCode);
     toast.success('Codice copiato negli appunti');
+  };
+  
+  const redirectToReviews = (bookingCode: string, restaurantCode: string) => {
+    navigate(`/restaurant/${restaurantId}?tab=reviews&bookingCode=${bookingCode}&restaurantCode=${restaurantCode}`);
   };
 
   const getStatusBadge = (status: string) => {
@@ -205,11 +217,20 @@ const RestaurantBookings = () => {
                 </Button>
               </div>
               <p className="mt-4 text-sm text-gray-600">
-                Il cliente può inserire questo codice nella sezione recensioni per verificare la sua esperienza.
+                Questo codice è stato automaticamente associato alla prenotazione. 
+                Quando il cliente accederà alla sezione recensioni, il codice sarà già inserito.
               </p>
             </div>
             <DialogFooter>
-              <Button onClick={() => setShowReviewCodeDialog(false)}>Chiudi</Button>
+              <Button onClick={() => {
+                setShowReviewCodeDialog(false);
+                const currentBooking = allBookings.find(b => b.id === currentBookingId);
+                if (currentBooking) {
+                  redirectToReviews(currentBooking.bookingCode, generatedReviewCode);
+                }
+              }}>
+                Visualizza in sezione recensioni
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
