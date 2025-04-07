@@ -1,12 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ChefHat, MapPin, Navigation, List, Map, Info } from 'lucide-react';
+import { ChefHat, MapPin, Navigation, Info } from 'lucide-react';
 import { RestaurantMap } from '@/components/Map/RestaurantMap';
 import { toast } from 'sonner';
-import RestaurantCard from '@/components/Restaurant/RestaurantCard';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { isInAvailableRegion } from '@/utils/geolocation';
 
@@ -54,7 +52,6 @@ const SearchPage = () => {
   const [isLocating, setIsLocating] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [restaurants, setRestaurants] = useState(sampleRestaurantLocations);
-  const [viewMode, setViewMode] = useState<'map' | 'list'>('map');
   const [inAvailableRegion, setInAvailableRegion] = useState<boolean | null>(null);
   
   const getUserLocation = () => {
@@ -177,46 +174,14 @@ const SearchPage = () => {
           )}
         </div>
         
-        {/* View toggle buttons */}
-        <div className="flex justify-center mb-4">
-          <div className="inline-flex rounded-md shadow-sm" role="group">
-            <Button 
-              variant={viewMode === 'map' ? 'default' : 'outline'} 
-              className="rounded-r-none"
-              onClick={() => setViewMode('map')}
-            >
-              <Map size={18} className="mr-1" /> Mappa
-            </Button>
-            <Button 
-              variant={viewMode === 'list' ? 'default' : 'outline'} 
-              className="rounded-l-none"
-              onClick={() => setViewMode('list')}
-            >
-              <List size={18} className="mr-1" /> Lista
-            </Button>
-          </div>
-        </div>
-        
-        {/* Map or List View */}
+        {/* Map and List View */}
         {inAvailableRegion ? (
-          viewMode === 'map' ? (
-            <div className="h-[70vh] rounded-lg border overflow-hidden mb-4">
-              <RestaurantMap 
-                userLocation={userPosition}
-                restaurants={restaurants}
-              />
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {restaurants.map(restaurant => (
-                <RestaurantCard 
-                  key={restaurant.id} 
-                  restaurant={restaurant}
-                  onToggleFavorite={handleToggleFavorite}
-                />
-              ))}
-            </div>
-          )
+          <div className="h-[75vh] rounded-lg border overflow-hidden mb-4">
+            <RestaurantMap 
+              userLocation={userPosition}
+              restaurants={restaurants}
+            />
+          </div>
         ) : (
           <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
             <MapPin className="mx-auto h-12 w-12 text-gray-400 mb-3" />

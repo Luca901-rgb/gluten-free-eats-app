@@ -86,86 +86,86 @@ export const RestaurantMap: FC<RestaurantMapProps> = ({
   };
 
   return (
-    <div className="h-full w-full flex flex-col">
+    <div className="h-full w-full">
       <h3 className="text-lg font-medium text-gray-900 mb-3">Ristoranti nelle vicinanze</h3>
       
-      {/* The map container */}
-      <div className="flex-1 rounded-lg overflow-hidden border border-gray-200 shadow-sm mb-4">
-        {/* @ts-ignore - Ignoring TypeScript issues with react-leaflet props */}
-        <MapContainer 
-          style={{ height: '100%', width: '100%' }}
-          center={center}
-          zoom={zoom}
-          className="z-0"
-        >
-          {/* @ts-ignore - Ignoring TypeScript issues with react-leaflet props */}
-          <TileLayer
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          />
-          
-          {/* Dynamic center recalculation when userLocation changes */}
-          <SetMapView center={center} zoom={zoom} />
-          
-          {/* User location marker */}
-          {userLocation && (
-            /* @ts-ignore - Ignoring TypeScript issues with react-leaflet props */
-            <Marker 
-              position={[userLocation.lat, userLocation.lng]}
-              icon={userIcon}
-            >
-              <Popup>
-                <div className="text-sm font-medium">La tua posizione</div>
-              </Popup>
-            </Marker>
-          )}
-          
-          {/* Restaurant markers */}
-          {restaurants.map(restaurant => (
-            /* @ts-ignore - Ignoring TypeScript issues with react-leaflet props */
-            <Marker 
-              key={restaurant.id} 
-              position={[restaurant.location.lat, restaurant.location.lng]}
-              icon={restaurantIcon}
-            >
-              <Popup>
-                <div className="text-center">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-[70vh]">
+        {/* The map container */}
+        <div className="rounded-lg overflow-hidden border border-gray-200 shadow-sm h-full">
+          {/* @ts-ignore - TypeScript has issues with react-leaflet props types */}
+          <MapContainer style={{ height: '100%', width: '100%' }} className="z-0">
+            {/* @ts-ignore - TypeScript has issues with react-leaflet props types */}
+            <TileLayer
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            />
+            
+            {/* Dynamic center recalculation when userLocation changes */}
+            {/* @ts-ignore - TypeScript has issues with react-leaflet props types */}
+            <SetMapView center={center} zoom={zoom} />
+            
+            {/* User location marker */}
+            {userLocation && (
+              /* @ts-ignore - TypeScript has issues with react-leaflet props types */
+              <Marker position={[userLocation.lat, userLocation.lng]} icon={userIcon}>
+                <Popup>
+                  <div className="text-sm font-medium">La tua posizione</div>
+                </Popup>
+              </Marker>
+            )}
+            
+            {/* Restaurant markers */}
+            {restaurants.map(restaurant => (
+              /* @ts-ignore - TypeScript has issues with react-leaflet props types */
+              <Marker 
+                key={restaurant.id} 
+                position={[restaurant.location.lat, restaurant.location.lng]}
+                icon={restaurantIcon}
+              >
+                <Popup>
+                  <div className="text-center">
+                    <h5 className="font-medium">{restaurant.name}</h5>
+                    <p className="text-sm text-gray-600">{restaurant.address}</p>
+                    <p className="text-sm font-medium text-primary">{restaurant.distance}</p>
+                    <Button 
+                      onClick={() => navigateToRestaurant(restaurant.id, restaurant.location.lat, restaurant.location.lng)}
+                      className="mt-2 w-full"
+                      size="sm"
+                    >
+                      <Navigation className="mr-1 h-4 w-4" /> Vai da qui
+                    </Button>
+                  </div>
+                </Popup>
+              </Marker>
+            ))}
+          </MapContainer>
+        </div>
+        
+        {/* List of restaurants */}
+        <div className="h-full border border-gray-200 rounded-lg shadow-sm overflow-hidden flex flex-col">
+          <div className="p-3 bg-gray-50 border-b">
+            <h4 className="font-medium">Lista Ristoranti</h4>
+          </div>
+          <div className="flex-1 overflow-auto p-2">
+            {restaurants.map(restaurant => (
+              <div 
+                key={restaurant.id} 
+                className="bg-white p-3 m-1 rounded-lg shadow-sm flex items-start gap-2 hover:bg-gray-50 cursor-pointer transition-colors"
+                onClick={() => navigateToRestaurant(restaurant.id, restaurant.location.lat, restaurant.location.lng)}
+              >
+                <MapPin className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
                   <h5 className="font-medium">{restaurant.name}</h5>
                   <p className="text-sm text-gray-600">{restaurant.address}</p>
                   <p className="text-sm font-medium text-primary">{restaurant.distance}</p>
-                  <Button 
-                    onClick={() => navigateToRestaurant(restaurant.id, restaurant.location.lat, restaurant.location.lng)}
-                    className="mt-2 w-full"
-                    size="sm"
-                  >
-                    <Navigation className="mr-1 h-4 w-4" /> Vai da qui
-                  </Button>
                 </div>
-              </Popup>
-            </Marker>
-          ))}
-        </MapContainer>
-      </div>
-      
-      {/* List of restaurants below the map */}
-      <div className="w-full space-y-3 bg-gray-50 p-3 rounded-lg overflow-auto max-h-48">
-        {restaurants.map(restaurant => (
-          <div 
-            key={restaurant.id} 
-            className="bg-white p-3 rounded-lg shadow-sm flex items-start gap-2 hover:bg-gray-50 cursor-pointer"
-            onClick={() => navigateToRestaurant(restaurant.id, restaurant.location.lat, restaurant.location.lng)}
-          >
-            <MapPin className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-            <div className="flex-1">
-              <h5 className="font-medium">{restaurant.name}</h5>
-              <p className="text-sm text-gray-600">{restaurant.address}</p>
-              <p className="text-sm font-medium text-primary">{restaurant.distance}</p>
-            </div>
-            <Button variant="outline" size="icon" className="h-8 w-8">
-              <Navigation className="h-4 w-4" />
-            </Button>
+                <Button variant="outline" size="icon" className="h-8 w-8 flex-shrink-0">
+                  <Navigation className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
           </div>
-        ))}
+        </div>
       </div>
       
       {userLocation && (
