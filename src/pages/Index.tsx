@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import { Search, Settings, MapPin, Info } from 'lucide-react';
+import { Search, MapPin, Info } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import Layout from '@/components/Layout';
@@ -135,18 +136,9 @@ const Index = () => {
   return (
     <Layout>
       <div className="px-4 py-6 space-y-6">
-        <div className="flex justify-between items-center">
-          <div className="space-y-2">
-            <h1 className="text-3xl font-poppins font-bold text-primary">Gluten Free Eats</h1>
-            <p className="text-gray-600">Scopri i ristoranti gluten free vicino a te</p>
-          </div>
-          
-          <Link to="/admin-login">
-            <Button variant="outline" size="sm" className="flex items-center gap-2">
-              <Settings size={16} />
-              <span className="hidden sm:inline">Admin</span>
-            </Button>
-          </Link>
+        <div className="space-y-2">
+          <h1 className="text-3xl font-poppins font-bold text-primary">Gluten Free Eats</h1>
+          <p className="text-gray-600">Scopri i ristoranti gluten free vicino a te</p>
         </div>
 
         {/* Avviso di regione */}
