@@ -34,6 +34,11 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const googleProvider = new GoogleAuthProvider();
 
+// Configurazione aggiuntiva per Google Provider
+googleProvider.setCustomParameters({
+  prompt: 'select_account'
+});
+
 // Enable offline persistence
 try {
   enableIndexedDbPersistence(db)
@@ -83,14 +88,65 @@ export const resetPassword = async (email: string) => {
   }
 };
 
-// Nuova funzione per autenticazione Google
+// Migliorata funzione per autenticazione Google con gestione errori dettagliata
 export const signInWithGoogle = async () => {
+  console.log("Avvio autenticazione Google...");
   try {
+    // Verifica se Firebase è inizializzato correttamente
+    if (!auth) {
+      console.error("Firebase auth non è inizializzato");
+      throw new Error("Servizio di autenticazione non disponibile");
+    }
+    
+    console.log("Apertura popup di autenticazione Google...");
     const result = await signInWithPopup(auth, googleProvider);
+    console.log("Autenticazione Google completata con successo", result);
+    
     const user = result.user;
+    
+    // Salvataggio minimo dei dati utente nel Firestore per tracciamento
+    try {
+      console.log("Salvataggio dati utente in Firestore...");
+      await setDoc(doc(db, "users", user.uid), {
+        email: user.email,
+        displayName: user.displayName,
+        photoURL: user.photoURL,
+        lastLogin: new Date(),
+        authProvider: "google"
+      }, { merge: true });
+      console.log("Dati utente salvati con successo");
+    } catch (firestoreError) {
+      // Continua anche se il salvataggio in Firestore fallisce
+      console.warn("Errore nel salvataggio dati utente:", firestoreError);
+    }
+    
     return user;
   } catch (error: any) {
-    throw new Error(error.message);
+    console.error("Errore durante l'autenticazione Google:", error);
+    
+    // Gestione errori specifici di Firebase Auth
+    let errorMessage = "Errore durante l'autenticazione con Google";
+    
+    if (error.code) {
+      switch (error.code) {
+        case 'auth/popup-closed-by-user':
+          errorMessage = "Popup di autenticazione chiuso. Riprova.";
+          break;
+        case 'auth/popup-blocked':
+          errorMessage = "Il popup è stato bloccato dal browser. Abilita i popup per questo sito.";
+          break;
+        case 'auth/cancelled-popup-request':
+          errorMessage = "Richiesta di autenticazione annullata.";
+          break;
+        case 'auth/network-request-failed':
+          errorMessage = "Errore di rete. Verifica la tua connessione.";
+          break;
+        default:
+          errorMessage = `Errore di autenticazione: ${error.message || error.code}`;
+      }
+    }
+    
+    throw new Error(errorMessage);
   }
 };
 

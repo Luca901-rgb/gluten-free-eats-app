@@ -151,9 +151,16 @@ const RegisterForm = () => {
     }
     
     setIsLoading(true);
+    toast.loading("Connessione a Google in corso...");
     
     try {
+      console.log("Avvio autenticazione Google dal form");
       const user = await signInWithGoogle();
+      console.log("Dati utente ricevuti:", user);
+      
+      if (!user || !user.uid) {
+        throw new Error("Dati utente non validi o incompleti");
+      }
       
       localStorage.setItem('userType', userType);
       localStorage.setItem('isAuthenticated', 'true');
@@ -161,15 +168,26 @@ const RegisterForm = () => {
       localStorage.setItem('userName', user.displayName || '');
       localStorage.setItem('userId', user.uid);
       
+      console.log("Dati salvati in localStorage:", {
+        userType,
+        email: user.email,
+        name: user.displayName,
+        uid: user.uid
+      });
+      
       if (userType === 'restaurant') {
         setShowPaymentDialog(true);
       } else {
+        toast.success("Registrazione con Google completata! Reindirizzamento...");
         navigate('/');
       }
       
       toast.success("Registrazione con Google effettuata con successo");
     } catch (error: any) {
+      console.error("Errore di registrazione con Google:", error);
+      toast.dismiss();
       toast.error(`Errore durante la registrazione con Google: ${error.message}`);
+    } finally {
       setIsLoading(false);
     }
   };
