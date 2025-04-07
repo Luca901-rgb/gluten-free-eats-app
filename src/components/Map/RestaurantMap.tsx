@@ -76,13 +76,12 @@ export const RestaurantMap: React.FC<RestaurantMapProps> = ({
       <div className="flex-1 rounded-lg overflow-hidden border border-gray-200 shadow-sm mb-4">
         <MapContainer 
           style={{ height: '100%', width: '100%' }}
-          zoomControl={true}
-          zoom={zoom}
           center={center}
+          zoom={zoom}
         >
           <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           />
           
           {/* Dynamic center recalculation when userLocation changes */}
@@ -92,7 +91,7 @@ export const RestaurantMap: React.FC<RestaurantMapProps> = ({
           {userLocation && (
             <Marker 
               position={[userLocation.lat, userLocation.lng]}
-              icon={userIcon}
+              icon={userIcon as unknown as L.Icon}
             >
               <Popup>
                 <div className="text-sm font-medium">La tua posizione</div>
@@ -105,7 +104,7 @@ export const RestaurantMap: React.FC<RestaurantMapProps> = ({
             <Marker 
               key={restaurant.id} 
               position={[restaurant.location.lat, restaurant.location.lng]} 
-              icon={restaurantIcon}
+              icon={restaurantIcon as unknown as L.Icon}
             >
               <Popup>
                 <div>
