@@ -1,12 +1,14 @@
+
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Clock, MapPin, Phone, Calendar, Star, Award, Image, Video, Home, User } from 'lucide-react';
+import { Clock, MapPin, Phone, Calendar, Star, Award, Image, Video, Home, User, Copy, Check } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import StarRating from '@/components/common/StarRating';
 import BookingForm from '../Booking/BookingForm';
 import MenuViewer from './MenuViewer';
 import ReviewForm from './ReviewForm';
+import { toast } from 'sonner';
 
 export interface RestaurantDetailProps {
   id: string;
@@ -35,12 +37,26 @@ const RestaurantDetails: React.FC<{ restaurant: RestaurantDetailProps }> = ({ re
   const restaurantCodeFromUrl = searchParams.get('restaurantCode');
   
   const [activeTab, setActiveTab] = useState(tabFromUrl || 'home');
+  const [copyIcon, setCopyIcon] = useState<'copy' | 'check'>('copy');
   
   useEffect(() => {
     if (tabFromUrl) {
       setActiveTab(tabFromUrl);
     }
   }, [tabFromUrl]);
+
+  const handleCopy = (text: string) => {
+    navigator.clipboard.writeText(text)
+      .then(() => {
+        setCopyIcon('check');
+        toast.success('Codice copiato negli appunti');
+        setTimeout(() => setCopyIcon('copy'), 2000);
+      })
+      .catch(err => {
+        console.error('Errore durante la copia: ', err);
+        toast.error('Impossibile copiare il codice');
+      });
+  };
   
   const navigationButtons = [
     { id: 'home', label: 'Home', icon: <Home size={18} /> },
@@ -190,6 +206,37 @@ const RestaurantDetails: React.FC<{ restaurant: RestaurantDetailProps }> = ({ re
                 {restaurant.reviews} recensioni
               </span>
             </div>
+            
+            {bookingCodeFromUrl && restaurantCodeFromUrl && (
+              <div className="flex items-center justify-between bg-gray-100 p-3 rounded-md">
+                <div className="flex flex-col">
+                  <div className="flex items-center">
+                    <span className="text-sm font-medium">Codice prenotazione:</span>
+                    <span className="ml-2 font-mono text-sm">{bookingCodeFromUrl}</span>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-6 w-6 ml-1" 
+                      onClick={() => handleCopy(bookingCodeFromUrl)}
+                    >
+                      {copyIcon === 'copy' ? <Copy size={12} /> : <Check size={12} className="text-green-500" />}
+                    </Button>
+                  </div>
+                  <div className="flex items-center">
+                    <span className="text-sm font-medium">Codice ristorante:</span>
+                    <span className="ml-2 font-mono text-sm">{restaurantCodeFromUrl}</span>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-6 w-6 ml-1" 
+                      onClick={() => handleCopy(restaurantCodeFromUrl)}
+                    >
+                      {copyIcon === 'copy' ? <Copy size={12} /> : <Check size={12} className="text-green-500" />}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
             
             <ReviewForm 
               restaurantId={restaurant.id}
