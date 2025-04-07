@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { Link } from 'react-router-dom';
@@ -199,7 +200,7 @@ const SearchPage = () => {
         {/* Map or List View */}
         {inAvailableRegion ? (
           viewMode === 'map' ? (
-            <div className="h-[60vh] rounded-lg border overflow-hidden mb-4">
+            <div className="h-[70vh] rounded-lg border overflow-hidden mb-4">
               <RestaurantMap 
                 userLocation={userPosition}
                 restaurants={restaurants}
