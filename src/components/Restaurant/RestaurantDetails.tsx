@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Clock, MapPin, Phone, Calendar, Star, Award, Image, Video, Home, User, Copy, Check } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import StarRating from '@/components/common/StarRating';
 import BookingForm from '../Booking/BookingForm';
 import MenuViewer from './MenuViewer';
@@ -31,6 +31,7 @@ export interface RestaurantDetailProps {
 
 const RestaurantDetails: React.FC<{ restaurant: RestaurantDetailProps }> = ({ restaurant }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const searchParams = new URLSearchParams(location.search);
   const tabFromUrl = searchParams.get('tab');
   const bookingCodeFromUrl = searchParams.get('bookingCode');
@@ -38,12 +39,23 @@ const RestaurantDetails: React.FC<{ restaurant: RestaurantDetailProps }> = ({ re
   
   const [activeTab, setActiveTab] = useState(tabFromUrl || 'home');
   const [copyIcon, setCopyIcon] = useState<'copy' | 'check'>('copy');
+  const [bookingCode, setBookingCode] = useState<string>(bookingCodeFromUrl || '');
+  const [restaurantCode, setRestaurantCode] = useState<string>(restaurantCodeFromUrl || '');
   
   useEffect(() => {
     if (tabFromUrl) {
       setActiveTab(tabFromUrl);
     }
   }, [tabFromUrl]);
+
+  useEffect(() => {
+    if (bookingCodeFromUrl) {
+      setBookingCode(bookingCodeFromUrl);
+    }
+    if (restaurantCodeFromUrl) {
+      setRestaurantCode(restaurantCodeFromUrl);
+    }
+  }, [bookingCodeFromUrl, restaurantCodeFromUrl]);
 
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text)
@@ -58,6 +70,20 @@ const RestaurantDetails: React.FC<{ restaurant: RestaurantDetailProps }> = ({ re
       });
   };
   
+  const navigateToTab = (tabId: string) => {
+    setActiveTab(tabId);
+    
+    // Se stiamo navigando alle recensioni e abbiamo i codici, aggiungiamoli all'URL
+    if (tabId === 'reviews' && (bookingCode || restaurantCode)) {
+      const params = new URLSearchParams();
+      params.set('tab', 'reviews');
+      if (bookingCode) params.set('bookingCode', bookingCode);
+      if (restaurantCode) params.set('restaurantCode', restaurantCode);
+      
+      navigate(`${location.pathname}?${params.toString()}`);
+    }
+  };
+  
   const navigationButtons = [
     { id: 'home', label: 'Home', icon: <Home size={18} /> },
     { id: 'gallery', label: 'Galleria', icon: <Image size={18} /> },
@@ -66,6 +92,13 @@ const RestaurantDetails: React.FC<{ restaurant: RestaurantDetailProps }> = ({ re
     { id: 'reviews', label: 'Recensioni', icon: <Star size={18} /> },
     { id: 'profile', label: 'Profilo', icon: <User size={18} /> },
   ];
+
+  // Funzione per aggiornare i codici dopo una prenotazione
+  const handleBookingComplete = (newBookingCode: string, newRestaurantCode: string) => {
+    setBookingCode(newBookingCode);
+    setRestaurantCode(newRestaurantCode);
+    navigateToTab('reviews');
+  };
   
   return (
     <div className="pb-20">
@@ -97,7 +130,7 @@ const RestaurantDetails: React.FC<{ restaurant: RestaurantDetailProps }> = ({ re
               key={button.id}
               variant={activeTab === button.id ? 'default' : 'outline'}
               size="sm"
-              onClick={() => setActiveTab(button.id)}
+              onClick={() => navigateToTab(button.id)}
               className="flex items-center gap-1 whitespace-nowrap"
             >
               {button.icon}
@@ -194,6 +227,7 @@ const RestaurantDetails: React.FC<{ restaurant: RestaurantDetailProps }> = ({ re
               restaurantId={restaurant.id} 
               restaurantName={restaurant.name} 
               restaurantImage={restaurant.coverImage}
+              onBookingComplete={handleBookingComplete}
             />
           </div>
         )}
@@ -207,33 +241,37 @@ const RestaurantDetails: React.FC<{ restaurant: RestaurantDetailProps }> = ({ re
               </span>
             </div>
             
-            {bookingCodeFromUrl && restaurantCodeFromUrl && (
+            {(bookingCode || restaurantCode) && (
               <div className="flex items-center justify-between bg-gray-100 p-3 rounded-md">
                 <div className="flex flex-col">
-                  <div className="flex items-center">
-                    <span className="text-sm font-medium">Codice prenotazione:</span>
-                    <span className="ml-2 font-mono text-sm">{bookingCodeFromUrl}</span>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-6 w-6 ml-1" 
-                      onClick={() => handleCopy(bookingCodeFromUrl)}
-                    >
-                      {copyIcon === 'copy' ? <Copy size={12} /> : <Check size={12} className="text-green-500" />}
-                    </Button>
-                  </div>
-                  <div className="flex items-center">
-                    <span className="text-sm font-medium">Codice ristorante:</span>
-                    <span className="ml-2 font-mono text-sm">{restaurantCodeFromUrl}</span>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-6 w-6 ml-1" 
-                      onClick={() => handleCopy(restaurantCodeFromUrl)}
-                    >
-                      {copyIcon === 'copy' ? <Copy size={12} /> : <Check size={12} className="text-green-500" />}
-                    </Button>
-                  </div>
+                  {bookingCode && (
+                    <div className="flex items-center">
+                      <span className="text-sm font-medium">Codice prenotazione:</span>
+                      <span className="ml-2 font-mono text-sm">{bookingCode}</span>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-6 w-6 ml-1" 
+                        onClick={() => handleCopy(bookingCode)}
+                      >
+                        {copyIcon === 'copy' ? <Copy size={12} /> : <Check size={12} className="text-green-500" />}
+                      </Button>
+                    </div>
+                  )}
+                  {restaurantCode && (
+                    <div className="flex items-center">
+                      <span className="text-sm font-medium">Codice ristorante:</span>
+                      <span className="ml-2 font-mono text-sm">{restaurantCode}</span>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-6 w-6 ml-1" 
+                        onClick={() => handleCopy(restaurantCode)}
+                      >
+                        {copyIcon === 'copy' ? <Copy size={12} /> : <Check size={12} className="text-green-500" />}
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -241,8 +279,8 @@ const RestaurantDetails: React.FC<{ restaurant: RestaurantDetailProps }> = ({ re
             <ReviewForm 
               restaurantId={restaurant.id}
               restaurantName={restaurant.name}
-              bookingCode={bookingCodeFromUrl || ""}
-              restaurantCode={restaurantCodeFromUrl || ""}
+              bookingCode={bookingCode}
+              restaurantCode={restaurantCode}
             />
           </div>
         )}

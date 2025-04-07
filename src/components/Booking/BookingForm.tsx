@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
@@ -38,6 +37,7 @@ interface BookingFormProps {
   restaurantId: string;
   restaurantName: string;
   restaurantImage?: string;
+  onBookingComplete?: (bookingCode: string, restaurantCode: string) => void;
 }
 
 const generateAvailableTimes = () => {
@@ -59,7 +59,12 @@ const generateAvailableTimes = () => {
 
 const availableTimes = generateAvailableTimes();
 
-const BookingForm: React.FC<BookingFormProps> = ({ restaurantId, restaurantName, restaurantImage }) => {
+const BookingForm: React.FC<BookingFormProps> = ({ 
+  restaurantId, 
+  restaurantName, 
+  restaurantImage,
+  onBookingComplete 
+}) => {
   const [date, setDate] = useState<Date | undefined>(undefined);
   const [time, setTime] = useState<string | undefined>(undefined);
   const [people, setPeople] = useState<number>(2);
@@ -73,7 +78,7 @@ const BookingForm: React.FC<BookingFormProps> = ({ restaurantId, restaurantName,
   const [outdoorTable, setOutdoorTable] = useState(false);
   const [specialOccasion, setSpecialOccasion] = useState<string | undefined>(undefined);
 
-  const { addBooking } = useBookings();
+  const { addBooking, generateRestaurantReviewCode } = useBookings();
 
   const handleSliderChange = (value: number[]) => {
     setPeople(value[0]);
@@ -114,6 +119,7 @@ const BookingForm: React.FC<BookingFormProps> = ({ restaurantId, restaurantName,
       dateTime.setHours(hours, minutes);
       
       const bookingCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+      const restaurantCode = Math.floor(1000 + Math.random() * 9000).toString();
       
       const additionalOptions = [];
       if (highChair) additionalOptions.push('Seggiolone bambini');
@@ -132,13 +138,14 @@ const BookingForm: React.FC<BookingFormProps> = ({ restaurantId, restaurantName,
         additionalOptions,
         status: 'pending' as const,
         bookingCode,
+        restaurantReviewCode: restaurantCode,
         customerName: localStorage.getItem('userName') || 'Cliente',
         hasGuarantee: false
       };
       
       setBookingData(newBooking);
       
-      addBooking(newBooking);
+      const booking = addBooking(newBooking);
       
       setShowConfirmation(true);
     } catch (error) {
@@ -150,6 +157,12 @@ const BookingForm: React.FC<BookingFormProps> = ({ restaurantId, restaurantName,
 
   const handleAddToCalendar = () => {
     toast.success('Evento aggiunto al tuo calendario');
+  };
+
+  const handleReviewNow = () => {
+    if (onBookingComplete && bookingData) {
+      onBookingComplete(bookingData.bookingCode, bookingData.restaurantReviewCode);
+    }
   };
 
   const handleNewReservation = () => {
@@ -218,6 +231,12 @@ const BookingForm: React.FC<BookingFormProps> = ({ restaurantId, restaurantName,
         </CardContent>
         <CardFooter className="flex flex-col space-y-2">
           <Button 
+            onClick={handleReviewNow} 
+            className="w-full bg-accent hover:bg-accent/90"
+          >
+            <Star className="mr-2 h-4 w-4" /> Lascia una recensione
+          </Button>
+          <Button 
             onClick={handleAddToCalendar} 
             variant="outline" 
             className="w-full"
@@ -226,6 +245,7 @@ const BookingForm: React.FC<BookingFormProps> = ({ restaurantId, restaurantName,
           </Button>
           <Button 
             onClick={handleNewReservation} 
+            variant="ghost"
             className="w-full"
           >
             Torna alla homepage
