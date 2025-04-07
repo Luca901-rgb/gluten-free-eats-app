@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Clock, MapPin, Phone, Calendar, Star, Award, Image, Video, Home, User, Copy, Check } from 'lucide-react';
+import { Clock, MapPin, Phone, Calendar, Star, Award, Image, Video, Home, User, Copy, Check, Menu } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import StarRating from '@/components/common/StarRating';
 import BookingForm from '../Booking/BookingForm';
@@ -94,6 +94,7 @@ const RestaurantDetails: React.FC<RestaurantDetailsProps> = ({
   
   const navigationButtons = [
     { id: 'home', label: 'Home', icon: <Home size={18} /> },
+    { id: 'menu', label: 'Menu', icon: <Menu size={18} /> },
     { id: 'gallery', label: 'Galleria', icon: <Image size={18} /> },
     { id: 'videos', label: 'Videoricette', icon: <Video size={18} /> },
     { id: 'booking', label: 'Prenotazioni', icon: <Calendar size={18} /> },
@@ -201,6 +202,12 @@ const RestaurantDetails: React.FC<RestaurantDetailsProps> = ({
                 <Calendar size={18} className="mr-2" /> Prenota un tavolo
               </Button>
             </div>
+          </div>
+        )}
+
+        {activeTab === 'menu' && (
+          <div className="animate-fade-in">
+            <MenuViewer />
           </div>
         )}
 

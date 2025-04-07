@@ -37,6 +37,7 @@ import {
   Calendar,
   Phone,
   MapPin,
+  Menu,
 } from 'lucide-react';
 import {
   Dialog,
@@ -59,6 +60,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useBookings } from '@/context/BookingContext';
+import MenuViewer from '@/components/Restaurant/MenuViewer';
 
 const restaurant = {
   id: '1',
@@ -208,9 +210,12 @@ const RestaurantDashboard = () => {
         </div>
 
         <Tabs defaultValue="home" value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="home">
               <Home size={18} className="mr-1" /> Home
+            </TabsTrigger>
+            <TabsTrigger value="menu">
+              <Menu size={18} className="mr-1" /> Menu
             </TabsTrigger>
             <TabsTrigger value="gallery">
               <Image size={18} className="mr-1" /> Galleria
@@ -345,6 +350,26 @@ const RestaurantDashboard = () => {
                 </CardFooter>
               </Card>
             </div>
+          </TabsContent>
+          
+          <TabsContent value="menu" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Menu del Ristorante</CardTitle>
+                <CardDescription>Gestisci il menu interattivo e in formato PDF del tuo ristorante</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <MenuViewer />
+              </CardContent>
+              <CardFooter className="flex justify-between">
+                <Button variant="outline" onClick={() => toast.info('Modifica menu in arrivo')}>
+                  Modifica menu
+                </Button>
+                <Button onClick={() => toast.info('Aggiunta piatto in arrivo')}>
+                  Aggiungi piatto
+                </Button>
+              </CardFooter>
+            </Card>
           </TabsContent>
           
           <TabsContent value="gallery" className="space-y-6">
