@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -57,9 +56,16 @@ const LoginForm = () => {
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
+    toast.loading("Accesso con Google in corso...");
     
     try {
+      console.log("Avvio autenticazione Google dal form di login");
       const user = await signInWithGoogle();
+      console.log("Autenticazione Google completata:", user);
+      
+      if (!user || !user.uid) {
+        throw new Error("Dati utente non validi o incompleti");
+      }
       
       // Salva i dati utente nel localStorage
       localStorage.setItem('userType', userType);
@@ -68,6 +74,7 @@ const LoginForm = () => {
       localStorage.setItem('userName', user.displayName || '');
       localStorage.setItem('userId', user.uid);
       
+      toast.dismiss();
       toast.success("Accesso con Google effettuato con successo");
       
       // Reindirizza in base al tipo di utente
@@ -77,6 +84,8 @@ const LoginForm = () => {
         navigate('/');
       }
     } catch (error: any) {
+      console.error("Errore durante l'accesso con Google:", error);
+      toast.dismiss();
       toast.error(`Errore durante l'accesso con Google: ${error.message}`);
     } finally {
       setIsLoading(false);
