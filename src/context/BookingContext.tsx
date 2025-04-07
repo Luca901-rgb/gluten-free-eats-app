@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, ReactNode } from 'react';
 
 // Define the booking type
@@ -17,6 +16,7 @@ export interface Booking {
   customerName: string;
   attendance?: 'confirmed' | 'no-show' | null;
   restaurantReviewCode?: string;
+  hasGuarantee?: boolean;
 }
 
 interface BookingContextType {
@@ -55,6 +55,7 @@ const initialBookings: Booking[] = [
     restaurantImage: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
     attendance: 'confirmed',
     restaurantReviewCode: '1234',
+    hasGuarantee: false,
   },
   {
     id: 'b2',
@@ -68,6 +69,7 @@ const initialBookings: Booking[] = [
     customerName: 'Laura Bianchi',
     restaurantImage: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
     attendance: null,
+    hasGuarantee: false,
   },
   // ... altri booking di esempio
 ];
