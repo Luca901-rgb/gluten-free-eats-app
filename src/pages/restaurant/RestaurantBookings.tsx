@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
@@ -12,7 +11,8 @@ import PaymentForm from '@/components/Booking/PaymentForm';
 import PaymentManager from '@/components/Payment/PaymentManager';
 
 const RestaurantBookings = () => {
-  // Mock bookings data
+  const hidePayment = true;
+
   const [bookings, setBookings] = useState([
     { 
       id: 1, 
@@ -76,7 +76,14 @@ const RestaurantBookings = () => {
   };
 
   const handleConfirmAttendance = (id: number) => {
-    // In a real app, this would trigger a payment for the restaurant service
+    if (hidePayment) {
+      setBookings(bookings.map(booking => 
+        booking.id === id ? {...booking, attendance: 'confirmed'} : booking
+      ));
+      toast.success('Presenza cliente confermata');
+      return;
+    }
+    
     const booking = bookings.find(b => b.id === id);
     if (!booking) return;
     
@@ -85,7 +92,6 @@ const RestaurantBookings = () => {
   };
 
   const handleNoShow = (id: number) => {
-    // In a real app, this would charge the customer's guarantee card
     setBookings(bookings.map(booking => 
       booking.id === id ? {...booking, attendance: 'no-show'} : booking
     ));
@@ -128,7 +134,6 @@ const RestaurantBookings = () => {
     }
   };
 
-  // Group bookings by date
   const bookingsByDate = bookings.reduce((acc, booking) => {
     if (!acc[booking.date]) {
       acc[booking.date] = [];
@@ -220,7 +225,7 @@ const RestaurantBookings = () => {
                         onClick={() => handleConfirmAttendance(booking.id)}
                       >
                         <CheckCircle className="mr-1 h-4 w-4" />
-                        Conferma Presenza e Paga
+                        {hidePayment ? 'Conferma Presenza' : 'Conferma Presenza e Paga'}
                       </Button>
                     </div>
                   )}
@@ -236,22 +241,24 @@ const RestaurantBookings = () => {
           </div>
         )}
 
-        {/* Dialog for restaurant payment */}
-        <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Pagamento servizio di prenotazione</DialogTitle>
-            </DialogHeader>
-            <div className="flex justify-center py-4">
-              <PaymentManager 
-                amount={0.99} 
-                description="Pagamento del servizio di prenotazione. Questo importo verrà addebitato per ogni presenza confermata."
-                isRestaurantPayment={true}
-                onPaymentComplete={handlePaymentComplete}
-              />
-            </div>
-          </DialogContent>
-        </Dialog>
+        {!hidePayment && (
+          <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Pagamento servizio di prenotazione</DialogTitle>
+              </DialogHeader>
+              <div className="flex justify-center py-4">
+                <PaymentManager 
+                  amount={0.99} 
+                  description="Pagamento del servizio di prenotazione. Questo importo verrà addebitato per ogni presenza confermata."
+                  isRestaurantPayment={true}
+                  onPaymentComplete={handlePaymentComplete}
+                  hidePayment={hidePayment}
+                />
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
     </Layout>
   );

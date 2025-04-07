@@ -7,6 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { CreditCard, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 
 const PaymentsPage = () => {
+  // Set hidePayment to true to hide all payment functionality
+  const hidePayment = true;
+  
   return (
     <Layout>
       <div className="container mx-auto py-8 px-4">
@@ -75,7 +78,8 @@ const PaymentsPage = () => {
                 <CardContent className="pt-6">
                   <PaymentManager 
                     amount={19.99} 
-                    description="Pacchetto da 30 prenotazioni senza commissioni aggiuntive" 
+                    description="Pacchetto da 30 prenotazioni senza commissioni aggiuntive"
+                    hidePayment={hidePayment}
                   />
                 </CardContent>
               </Card>
@@ -89,6 +93,7 @@ const PaymentsPage = () => {
                   <PaymentManager 
                     amount={49.99} 
                     description="Pacchetto da 100 prenotazioni con supporto prioritario" 
+                    hidePayment={hidePayment}
                   />
                 </CardContent>
               </Card>
@@ -106,6 +111,7 @@ const PaymentsPage = () => {
                   <PaymentManager 
                     amount={9.99} 
                     description="Abbonamento mensile base con prenotazioni illimitate" 
+                    hidePayment={hidePayment}
                   />
                 </CardContent>
               </Card>
@@ -119,6 +125,7 @@ const PaymentsPage = () => {
                   <PaymentManager 
                     amount={29.99} 
                     description="Abbonamento mensile premium con supporto dedicato" 
+                    hidePayment={hidePayment}
                   />
                 </CardContent>
               </Card>

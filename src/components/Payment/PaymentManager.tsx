@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,6 +13,7 @@ interface PaymentManagerProps {
   isRestaurantPayment?: boolean;
   isRestaurantRegistration?: boolean;
   onPaymentComplete?: (success: boolean) => void;
+  hidePayment?: boolean;
 }
 
 const PaymentManager: React.FC<PaymentManagerProps> = ({ 
@@ -22,7 +22,8 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({
   isGuarantee = false,
   isRestaurantPayment = false,
   isRestaurantRegistration = false,
-  onPaymentComplete 
+  onPaymentComplete,
+  hidePayment = false
 }) => {
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [isPaying, setIsPaying] = useState(false);
@@ -65,6 +66,44 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({
       }
     }
   };
+
+  if (hidePayment) {
+    return (
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            {isGuarantee ? (
+              <>
+                <Info className="h-5 w-5" />
+                Garanzia temporaneamente non disponibile
+              </>
+            ) : isRestaurantRegistration ? (
+              <>
+                <Info className="h-5 w-5" />
+                Registrazione temporaneamente non disponibile
+              </>
+            ) : (
+              <>
+                <Info className="h-5 w-5" />
+                Pagamenti temporaneamente non disponibili
+              </>
+            )}
+          </CardTitle>
+          <CardDescription>
+            Questa funzionalità non è attualmente disponibile
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="text-sm flex items-start gap-2 bg-blue-50 p-3 rounded-md">
+            <AlertCircle className="h-4 w-4 text-blue-500 flex-shrink-0 mt-0.5" />
+            <span className="text-blue-700">
+              Stiamo aggiornando il nostro sistema di pagamento. La funzionalità sarà disponibile a breve.
+            </span>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <>
