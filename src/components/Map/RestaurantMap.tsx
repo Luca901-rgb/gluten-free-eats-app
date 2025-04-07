@@ -93,9 +93,11 @@ export const RestaurantMap: FC<RestaurantMapProps> = ({
         {/* The map container */}
         <div className="rounded-lg overflow-hidden border border-gray-200 shadow-sm h-full">
           <MapContainer style={{ height: '100%', width: '100%' }} className="z-0">
+            {/* Using 'attribution' as part of TileLayerProps */}
             <TileLayer
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              attributionControl={true}
             />
             
             {/* Dynamic center recalculation when userLocation changes */}
@@ -103,7 +105,10 @@ export const RestaurantMap: FC<RestaurantMapProps> = ({
             
             {/* User location marker */}
             {userLocation && (
-              <Marker position={[userLocation.lat, userLocation.lng]} icon={userIcon}>
+              <Marker 
+                position={[userLocation.lat, userLocation.lng]} 
+                icon={userIcon as any}
+              >
                 <Popup>
                   <div className="text-sm font-medium">La tua posizione</div>
                 </Popup>
@@ -115,7 +120,7 @@ export const RestaurantMap: FC<RestaurantMapProps> = ({
               <Marker 
                 key={restaurant.id} 
                 position={[restaurant.location.lat, restaurant.location.lng]}
-                icon={restaurantIcon}
+                icon={restaurantIcon as any}
               >
                 <Popup>
                   <div className="text-center">
