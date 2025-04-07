@@ -1,8 +1,9 @@
 
 import React, { useEffect } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, Link } from 'react-router-dom';
 import { Home, Search, Calendar, Star, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -45,6 +46,19 @@ const Layout = ({ children, hideNavigation = false }: LayoutProps) => {
             <span className="text-white font-bold text-sm">GF</span>
           </div>
           <h1 className="text-xl font-poppins font-semibold text-primary">Gluten Free Eats</h1>
+        </div>
+        
+        {/* Temporary View Buttons */}
+        <div className="flex space-x-2">
+          <Button variant="client" size="sm" asChild>
+            <Link to="/restaurant/1">Cliente</Link>
+          </Button>
+          <Button variant="restaurant" size="sm" asChild>
+            <Link to="/restaurant-dashboard">Ristorante</Link>
+          </Button>
+          <Button variant="admin" size="sm" asChild>
+            <Link to="/admin-dashboard">Admin</Link>
+          </Button>
         </div>
       </header>
 
