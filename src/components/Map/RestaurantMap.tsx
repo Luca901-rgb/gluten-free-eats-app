@@ -91,15 +91,17 @@ export const RestaurantMap: FC<RestaurantMapProps> = ({
       
       {/* The map container */}
       <div className="flex-1 rounded-lg overflow-hidden border border-gray-200 shadow-sm mb-4">
+        {/* @ts-ignore - Ignoring TypeScript issues with react-leaflet props */}
         <MapContainer 
-          center={center as any}
-          zoom={zoom}
           style={{ height: '100%', width: '100%' }}
+          center={center}
+          zoom={zoom}
           className="z-0"
         >
+          {/* @ts-ignore - Ignoring TypeScript issues with react-leaflet props */}
           <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           />
           
           {/* Dynamic center recalculation when userLocation changes */}
@@ -107,9 +109,10 @@ export const RestaurantMap: FC<RestaurantMapProps> = ({
           
           {/* User location marker */}
           {userLocation && (
+            /* @ts-ignore - Ignoring TypeScript issues with react-leaflet props */
             <Marker 
-              position={[userLocation.lat, userLocation.lng] as any}
-              icon={userIcon as any}
+              position={[userLocation.lat, userLocation.lng]}
+              icon={userIcon}
             >
               <Popup>
                 <div className="text-sm font-medium">La tua posizione</div>
@@ -119,10 +122,11 @@ export const RestaurantMap: FC<RestaurantMapProps> = ({
           
           {/* Restaurant markers */}
           {restaurants.map(restaurant => (
+            /* @ts-ignore - Ignoring TypeScript issues with react-leaflet props */
             <Marker 
               key={restaurant.id} 
-              position={[restaurant.location.lat, restaurant.location.lng] as any}
-              icon={restaurantIcon as any}
+              position={[restaurant.location.lat, restaurant.location.lng]}
+              icon={restaurantIcon}
             >
               <Popup>
                 <div className="text-center">
