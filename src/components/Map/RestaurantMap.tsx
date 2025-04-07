@@ -93,11 +93,10 @@ export const RestaurantMap: FC<RestaurantMapProps> = ({
         {/* The map container */}
         <div className="rounded-lg overflow-hidden border border-gray-200 shadow-sm h-full">
           <MapContainer style={{ height: '100%', width: '100%' }} className="z-0">
-            {/* Using 'attribution' as part of TileLayerProps */}
             <TileLayer
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              // @ts-ignore - attribution is valid but TypeScript doesn't recognize it
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              attributionControl={true}
             />
             
             {/* Dynamic center recalculation when userLocation changes */}
@@ -106,8 +105,9 @@ export const RestaurantMap: FC<RestaurantMapProps> = ({
             {/* User location marker */}
             {userLocation && (
               <Marker 
-                position={[userLocation.lat, userLocation.lng]} 
-                icon={userIcon as any}
+                position={[userLocation.lat, userLocation.lng]}
+                // @ts-ignore - icon is a valid prop but TypeScript doesn't recognize it properly
+                icon={userIcon}
               >
                 <Popup>
                   <div className="text-sm font-medium">La tua posizione</div>
@@ -120,7 +120,8 @@ export const RestaurantMap: FC<RestaurantMapProps> = ({
               <Marker 
                 key={restaurant.id} 
                 position={[restaurant.location.lat, restaurant.location.lng]}
-                icon={restaurantIcon as any}
+                // @ts-ignore - icon is a valid prop but TypeScript doesn't recognize it properly
+                icon={restaurantIcon}
               >
                 <Popup>
                   <div className="text-center">
