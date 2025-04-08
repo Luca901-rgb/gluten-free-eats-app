@@ -61,13 +61,13 @@ const RestaurantDashboard = () => {
                     <FileText className="mr-2 h-4 w-4" />
                     Menu
                   </TabsTrigger>
-                  <TabsTrigger value="gallery" className="flex items-center">
-                    <Image className="mr-2 h-4 w-4" />
-                    Galleria
-                  </TabsTrigger>
                   <TabsTrigger value="videos" className="flex items-center">
                     <VideoIcon className="mr-2 h-4 w-4" />
                     Video Ricette
+                  </TabsTrigger>
+                  <TabsTrigger value="gallery" className="flex items-center">
+                    <Image className="mr-2 h-4 w-4" />
+                    Galleria
                   </TabsTrigger>
                   <TabsTrigger value="bookings" className="flex items-center">
                     <CalendarRange className="mr-2 h-4 w-4" />
@@ -136,12 +136,12 @@ const RestaurantDashboard = () => {
                   <MenuViewer isRestaurantOwner={true} />
                 </TabsContent>
                 
-                <TabsContent value="gallery">
-                  <RestaurantGallery />
-                </TabsContent>
-                
                 <TabsContent value="videos">
                   <RestaurantVideos />
+                </TabsContent>
+                
+                <TabsContent value="gallery">
+                  <RestaurantGallery />
                 </TabsContent>
                 
                 <TabsContent value="bookings">

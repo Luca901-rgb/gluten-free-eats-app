@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -96,8 +95,8 @@ const RestaurantDetails: React.FC<RestaurantDetailsProps> = ({
   const navigationButtons = [
     { id: 'home', label: 'Home', icon: <Home size={18} /> },
     { id: 'menu', label: 'Menu', icon: <Menu size={18} /> },
-    { id: 'gallery', label: 'Galleria', icon: <Image size={18} /> },
     { id: 'videos', label: 'Videoricette', icon: <Video size={18} /> },
+    { id: 'gallery', label: 'Galleria', icon: <Image size={18} /> },
     { id: 'booking', label: 'Prenotazioni', icon: <Calendar size={18} /> },
     { id: 'reviews', label: 'Recensioni', icon: <Star size={18} /> },
     { id: 'profile', label: 'Profilo', icon: <User size={18} /> },
@@ -212,6 +211,17 @@ const RestaurantDetails: React.FC<RestaurantDetailsProps> = ({
           </div>
         )}
 
+        {activeTab === 'videos' && (
+          <div className="space-y-4 animate-fade-in">
+            <h2 className="font-poppins font-semibold text-lg">Videoricette</h2>
+            <p className="text-gray-600">Le nostre migliori ricette in video, tutte senza glutine.</p>
+            <div className="p-8 border border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-center">
+              <Video size={48} className="text-gray-400 mb-2" />
+              <p className="text-gray-500">Presto disponibili le nostre videoricette!</p>
+            </div>
+          </div>
+        )}
+
         {activeTab === 'gallery' && (
           <div className="space-y-4 animate-fade-in">
             <h2 className="font-poppins font-semibold text-lg">Galleria Fotografica</h2>
@@ -221,17 +231,6 @@ const RestaurantDetails: React.FC<RestaurantDetailsProps> = ({
                   <img src={image} alt={`${restaurant.name} - Foto ${index + 1}`} className="w-full h-full object-cover" />
                 </div>
               ))}
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'videos' && (
-          <div className="space-y-4 animate-fade-in">
-            <h2 className="font-poppins font-semibold text-lg">Videoricette</h2>
-            <p className="text-gray-600">Le nostre migliori ricette in video, tutte senza glutine.</p>
-            <div className="p-8 border border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-center">
-              <Video size={48} className="text-gray-400 mb-2" />
-              <p className="text-gray-500">Presto disponibili le nostre videoricette!</p>
             </div>
           </div>
         )}
