@@ -4,12 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
   FileText, Image, MessageCircle, Settings, CalendarRange, 
   Clock, MapPin, Phone, Mail, Globe, VideoIcon, Home, 
-  Menu, Star, User, ChevronLeft, ChevronRight 
+  Menu, Star
 } from 'lucide-react';
 import RestaurantBookings from './restaurant/RestaurantBookings';
 import RestaurantReviews from './restaurant/RestaurantReviews';
 import RestaurantGallery from './restaurant/RestaurantGallery';
-import RestaurantProfile from './restaurant/RestaurantProfile';
 import RestaurantVideos from './restaurant/RestaurantVideos';
 import MenuViewer from '@/components/Restaurant/MenuViewer';
 import { Button } from '@/components/ui/button';
@@ -60,6 +59,7 @@ const RestaurantDashboard = () => {
     }
   };
 
+  // Rimuoviamo la tab del profilo dall'array di pulsanti di navigazione
   const navigationButtons = [
     { id: 'home', label: 'Home', icon: <Home size={18} /> },
     { id: 'menu', label: 'Menu', icon: <Menu size={18} /> },
@@ -67,7 +67,6 @@ const RestaurantDashboard = () => {
     { id: 'gallery', label: 'Galleria', icon: <Image size={18} /> },
     { id: 'bookings', label: 'Prenotazioni', icon: <CalendarRange size={18} /> },
     { id: 'reviews', label: 'Recensioni', icon: <Star size={18} /> },
-    { id: 'profile', label: 'Profilo', icon: <User size={18} /> },
   ];
 
   return (
@@ -205,12 +204,6 @@ const RestaurantDashboard = () => {
           {activeTab === 'reviews' && (
             <div className="animate-fade-in">
               <RestaurantReviews />
-            </div>
-          )}
-          
-          {activeTab === 'profile' && (
-            <div className="animate-fade-in">
-              <RestaurantProfile />
             </div>
           )}
         </div>

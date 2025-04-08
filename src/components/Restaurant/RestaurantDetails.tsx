@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Clock, MapPin, Phone, Calendar, Star, Award, Image, Video, Home, User, Copy, Check, Menu } from 'lucide-react';
+import { Clock, MapPin, Phone, Calendar, Star, Award, Image, Video, Home, Copy, Check, Menu } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import StarRating from '@/components/common/StarRating';
 import BookingForm from '../Booking/BookingForm';
@@ -100,7 +100,6 @@ const RestaurantDetails: React.FC<RestaurantDetailsProps> = ({
     { id: 'gallery', label: 'Galleria', icon: <Image size={18} /> },
     { id: 'booking', label: 'Prenotazioni', icon: <Calendar size={18} /> },
     { id: 'reviews', label: 'Recensioni', icon: <Star size={18} /> },
-    { id: 'profile', label: 'Profilo', icon: <User size={18} /> },
   ];
 
   const handleBookingComplete = (newBookingCode: string, newRestaurantCode: string) => {
@@ -292,42 +291,6 @@ const RestaurantDetails: React.FC<RestaurantDetailsProps> = ({
               bookingCode={bookingCode}
               restaurantCode={restaurantCode}
             />
-          </div>
-        )}
-
-        {activeTab === 'profile' && (
-          <div className="space-y-4 animate-fade-in">
-            <h2 className="font-poppins font-semibold text-lg">Profilo Ristorante</h2>
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <div className="flex items-center space-x-4">
-                <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-200">
-                  <img 
-                    src={restaurant.coverImage} 
-                    alt={restaurant.name} 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div>
-                  <h3 className="font-medium">{restaurant.name}</h3>
-                  <p className="text-sm text-gray-600">
-                    {restaurant.hasGlutenFreeOptions ? 'Completamente senza glutine' : 'Con opzioni senza glutine'}
-                  </p>
-                </div>
-              </div>
-              <div className="mt-4 space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Recensioni:</span>
-                  <span className="font-medium">{restaurant.reviews}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Valutazione:</span>
-                  <div className="flex items-center">
-                    <StarRating rating={restaurant.rating} className="mr-1" />
-                    <span className="text-sm font-medium">{restaurant.rating}/5</span>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         )}
       </div>
