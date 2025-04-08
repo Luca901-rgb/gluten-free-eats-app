@@ -21,6 +21,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
+import jsPDF from 'jspdf';
 
 interface MenuItem {
   id: string;
@@ -136,37 +137,65 @@ const MenuViewer: React.FC<MenuViewerProps> = ({ isRestaurantOwner = false }) =>
   const handleDownloadMenu = () => {
     toast.info('Download del menu in corso...');
     
-    let menuText = `MENU - ${sampleMenu.restaurantName}\n\n`;
+    const doc = new jsPDF();
+    let yPos = 20;
+    
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`MENU - ${sampleMenu.restaurantName}`, 15, yPos);
+    yPos += 15;
     
     sampleMenu.categories.forEach(category => {
-      menuText += `=== ${category.toUpperCase()} ===\n\n`;
+      if (yPos > 250) {
+        doc.addPage();
+        yPos = 20;
+      }
+      
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`${category.toUpperCase()}`, 15, yPos);
+      yPos += 10;
       
       const itemsInCategory = sampleMenu.menuItems.filter(item => item.category === category);
       
       itemsInCategory.forEach(item => {
-        menuText += `${item.name} - €${item.price}\n`;
-        menuText += `${item.description}\n`;
-        if (item.glutenFree) menuText += "✓ Senza Glutine\n";
-        if (item.allergens && item.allergens.length > 0) {
-          menuText += `⚠️ Allergeni: ${item.allergens.join(', ')}\n`;
+        if (yPos > 250) {
+          doc.addPage();
+          yPos = 20;
         }
-        menuText += '\n';
+        
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`${item.name} - €${item.price}`, 15, yPos);
+        yPos += 6;
+        
+        const descLines = doc.splitTextToSize(item.description, 180);
+        doc.text(descLines, 15, yPos);
+        yPos += descLines.length * 5;
+        
+        if (item.glutenFree) {
+          doc.text("✓ Senza Glutine", 15, yPos);
+          yPos += 5;
+        }
+        
+        if (item.allergens && item.allergens.length > 0) {
+          doc.text(`⚠️ Allergeni: ${item.allergens.join(', ')}`, 15, yPos);
+          yPos += 5;
+        }
+        
+        yPos += 8;
       });
       
-      menuText += '\n';
+      yPos += 10;
     });
     
-    const blob = new Blob([menuText], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `menu-${sampleMenu.restaurantName.toLowerCase().replace(/\s+/g, '-')}.txt`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    const date = new Date().toLocaleDateString('it-IT');
+    doc.setFontSize(8);
+    doc.text(`Generato il ${date}. Prezzi soggetti a variazioni.`, 15, 285);
     
-    toast.success('Menu scaricato con successo');
+    doc.save(`menu-${sampleMenu.restaurantName.toLowerCase().replace(/\s+/g, '-')}.pdf`);
+    
+    toast.success('Menu scaricato con successo in formato PDF');
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
