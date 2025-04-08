@@ -1,272 +1,261 @@
 
-import React from 'react';
-import Layout from '@/components/Layout';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Clock, MapPin, Phone, Mail, Globe, Save, LogOut } from 'lucide-react';
-import { toast } from 'sonner';
-import { logoutUser } from '@/lib/firebase';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { 
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { 
+  Mail, 
+  Phone, 
+  MapPin, 
+  Globe, 
+  Edit, 
+  Save, 
+  X,
+  UserRound,
+  Store
+} from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
 
 const RestaurantProfile = () => {
-  const navigate = useNavigate();
-  const [restaurant, setRestaurant] = React.useState({
-    name: 'Ristorante Senza Glutine',
-    address: 'Via Roma 123, Milano',
+  const [isEditing, setIsEditing] = useState(false);
+  
+  // Restaurant information - in a real app, this would come from an API
+  const [restaurantInfo, setRestaurantInfo] = useState({
+    name: 'La Trattoria Senza Glutine',
+    description: 'Ristorante 100% gluten free specializzato in cucina italiana tradizionale. Il nostro locale è certificato dall\'Associazione Italiana Celiachia e tutto il nostro menù è privo di glutine.',
+    address: 'Via Roma 123, Milano, 20100',
     phone: '+39 02 1234567',
-    email: 'info@ristorantesenzaglutine.it',
-    website: 'www.ristorantesenzaglutine.it',
-    description: 'Il nostro ristorante offre un\'ampia varietà di piatti senza glutine, preparati con ingredienti di alta qualità e con massima attenzione alla contaminazione. La nostra cucina è certificata AIC.',
-    openingHours: {
-      monday: { open: true, from: '12:00', to: '15:00', fromDinner: '19:00', toDinner: '23:00' },
-      tuesday: { open: true, from: '12:00', to: '15:00', fromDinner: '19:00', toDinner: '23:00' },
-      wednesday: { open: true, from: '12:00', to: '15:00', fromDinner: '19:00', toDinner: '23:00' },
-      thursday: { open: true, from: '12:00', to: '15:00', fromDinner: '19:00', toDinner: '23:00' },
-      friday: { open: true, from: '12:00', to: '15:00', fromDinner: '19:00', toDinner: '23:00' },
-      saturday: { open: true, from: '12:00', to: '15:00', fromDinner: '19:00', toDinner: '23:00' },
-      sunday: { open: false, from: '12:00', to: '15:00', fromDinner: '19:00', toDinner: '23:00' },
-    }
+    email: 'info@trattoriasenzaglutine.it',
+    website: 'www.trattoriasenzaglutine.it',
+    ownerName: 'Mario Rossi',
+    taxId: 'IT12345678901', // P.IVA
+    businessType: 'Ristorante', // Tipologia attività
+    foundationYear: '2010', // Anno fondazione
   });
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setRestaurant({ ...restaurant, [name]: value });
-  };
-
-  const handleOpeningHoursChange = (day: string, field: string, value: string | boolean) => {
-    setRestaurant({
-      ...restaurant,
-      openingHours: {
-        ...restaurant.openingHours,
-        [day]: {
-          ...restaurant.openingHours[day as keyof typeof restaurant.openingHours],
-          [field]: value
-        }
-      }
-    });
+  const handleEditToggle = () => {
+    setIsEditing(!isEditing);
   };
 
   const handleSave = () => {
-    // In a real app, this would send data to the server
-    toast.success('Profilo aggiornato con successo!');
+    // In a real app, we would save to an API
+    setIsEditing(false);
+    toast.success('Informazioni del ristorante aggiornate con successo');
   };
 
-  const handleLogout = async () => {
-    try {
-      await logoutUser();
-      toast.success('Logout effettuato con successo');
-      localStorage.removeItem('isAuthenticated');
-      localStorage.removeItem('userEmail');
-      localStorage.removeItem('userId');
-      localStorage.removeItem('userName');
-      localStorage.removeItem('userType');
-      navigate('/login');
-    } catch (error: any) {
-      toast.error(`Errore durante il logout: ${error.message}`);
-    }
+  const handleCancel = () => {
+    // Reset to original values - in a real app, we would fetch from API again
+    setIsEditing(false);
   };
 
-  const days = [
-    { id: 'monday', label: 'Lunedì' },
-    { id: 'tuesday', label: 'Martedì' },
-    { id: 'wednesday', label: 'Mercoledì' },
-    { id: 'thursday', label: 'Giovedì' },
-    { id: 'friday', label: 'Venerdì' },
-    { id: 'saturday', label: 'Sabato' },
-    { id: 'sunday', label: 'Domenica' },
-  ];
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setRestaurantInfo(prev => ({ ...prev, [name]: value }));
+  };
 
   return (
-    <Layout>
-      <div className="container mx-auto px-4 py-6">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-semibold">Profilo Ristorante</h1>
-          <div className="flex gap-2">
-            <Button 
-              variant="destructive" 
-              className="flex items-center gap-2"
-              onClick={handleLogout}
-            >
-              <LogOut size={16} />
-              <span>Esci</span>
-            </Button>
-            <Button onClick={handleSave} className="flex items-center gap-2">
-              <Save size={16} />
-              <span>Salva Modifiche</span>
-            </Button>
+    <div className="space-y-6">
+      <h1 className="text-2xl font-poppins font-bold text-primary">Profilo Ristorante</h1>
+      
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center space-x-4">
+            <div className="bg-primary h-16 w-16 rounded-full flex items-center justify-center text-white">
+              <Store size={32} />
+            </div>
+            <div>
+              <CardTitle>{restaurantInfo.name}</CardTitle>
+              <CardDescription>{restaurantInfo.email}</CardDescription>
+            </div>
           </div>
-        </div>
-        
-        <div className="bg-white rounded-lg shadow divide-y divide-gray-200">
-          <div className="p-6">
-            <h2 className="text-lg font-medium mb-4">Informazioni Generali</h2>
-            
+        </CardHeader>
+      </Card>
+
+      {/* Dati Ristorante */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <div>
+            <CardTitle className="text-lg">Dati Ristorante</CardTitle>
+            <CardDescription>Informazioni generali del ristorante</CardDescription>
+          </div>
+          {!isEditing ? (
+            <Button variant="ghost" size="sm" onClick={handleEditToggle}>
+              <Edit size={16} className="mr-2" />
+              Modifica
+            </Button>
+          ) : null}
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {isEditing ? (
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
+                <div className="space-y-2">
                   <Label htmlFor="name">Nome Ristorante</Label>
                   <Input 
-                    id="name"
+                    id="name" 
                     name="name"
-                    value={restaurant.name}
-                    onChange={handleInputChange}
+                    value={restaurantInfo.name}
+                    onChange={handleChange}
                   />
                 </div>
-                <div>
-                  <Label htmlFor="address">Indirizzo</Label>
-                  <div className="relative">
-                    <MapPin className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
-                    <Input 
-                      id="address"
-                      name="address"
-                      className="pl-8"
-                      value={restaurant.address}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <Label htmlFor="phone">Telefono</Label>
-                  <div className="relative">
-                    <Phone className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
-                    <Input 
-                      id="phone"
-                      name="phone"
-                      className="pl-8"
-                      value={restaurant.phone}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                </div>
-                <div>
+                <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
-                    <Input 
-                      id="email"
-                      name="email"
-                      type="email"
-                      className="pl-8"
-                      value={restaurant.email}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="website">Sito Web</Label>
-                  <div className="relative">
-                    <Globe className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
-                    <Input 
-                      id="website"
-                      name="website"
-                      className="pl-8"
-                      value={restaurant.website}
-                      onChange={handleInputChange}
-                    />
-                  </div>
+                  <Input 
+                    id="email" 
+                    name="email"
+                    value={restaurantInfo.email}
+                    onChange={handleChange}
+                  />
                 </div>
               </div>
-              
-              <div>
+              <div className="space-y-2">
                 <Label htmlFor="description">Descrizione</Label>
                 <Textarea 
-                  id="description"
+                  id="description" 
                   name="description"
-                  className="min-h-[120px]"
-                  value={restaurant.description}
-                  onChange={handleInputChange}
+                  value={restaurantInfo.description}
+                  onChange={handleChange}
+                  rows={3}
                 />
               </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Telefono</Label>
+                  <Input 
+                    id="phone" 
+                    name="phone"
+                    value={restaurantInfo.phone}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="website">Sito Web</Label>
+                  <Input 
+                    id="website" 
+                    name="website"
+                    value={restaurantInfo.website}
+                    onChange={handleChange}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="address">Indirizzo</Label>
+                <Input 
+                  id="address" 
+                  name="address"
+                  value={restaurantInfo.address}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="taxId">Partita IVA</Label>
+                  <Input 
+                    id="taxId" 
+                    name="taxId"
+                    value={restaurantInfo.taxId}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="businessType">Tipologia Attività</Label>
+                  <Input 
+                    id="businessType" 
+                    name="businessType"
+                    value={restaurantInfo.businessType}
+                    onChange={handleChange}
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="ownerName">Nome Titolare</Label>
+                  <Input 
+                    id="ownerName" 
+                    name="ownerName"
+                    value={restaurantInfo.ownerName}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="foundationYear">Anno Fondazione</Label>
+                  <Input 
+                    id="foundationYear" 
+                    name="foundationYear"
+                    value={restaurantInfo.foundationYear}
+                    onChange={handleChange}
+                  />
+                </div>
+              </div>
             </div>
-          </div>
-          
-          <div className="p-6">
-            <h2 className="text-lg font-medium mb-4">Orari di Apertura</h2>
-            
+          ) : (
             <div className="space-y-4">
-              {days.map((day) => {
-                const dayData = restaurant.openingHours[day.id as keyof typeof restaurant.openingHours];
-                return (
-                  <div key={day.id} className="flex flex-col md:flex-row md:items-center gap-4">
-                    <div className="md:w-1/6">
-                      <div className="flex items-center gap-2">
-                        <Switch
-                          id={`open-${day.id}`}
-                          checked={dayData.open}
-                          onCheckedChange={(checked) => handleOpeningHoursChange(day.id, 'open', checked)}
-                        />
-                        <Label htmlFor={`open-${day.id}`} className="cursor-pointer">{day.label}</Label>
-                      </div>
-                    </div>
-                    
-                    <div className="md:w-5/6">
-                      {dayData.open ? (
-                        <div className="flex flex-wrap items-center gap-2">
-                          <div className="flex items-center">
-                            <Clock className="h-4 w-4 mr-1 text-gray-500" />
-                            <span className="text-sm">Pranzo:</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Input
-                              type="time"
-                              className="w-24 text-sm"
-                              value={dayData.from}
-                              onChange={(e) => handleOpeningHoursChange(day.id, 'from', e.target.value)}
-                            />
-                            <span>-</span>
-                            <Input
-                              type="time"
-                              className="w-24 text-sm"
-                              value={dayData.to}
-                              onChange={(e) => handleOpeningHoursChange(day.id, 'to', e.target.value)}
-                            />
-                          </div>
-                          
-                          <div className="flex items-center ml-4">
-                            <Clock className="h-4 w-4 mr-1 text-gray-500" />
-                            <span className="text-sm">Cena:</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Input
-                              type="time"
-                              className="w-24 text-sm"
-                              value={dayData.fromDinner}
-                              onChange={(e) => handleOpeningHoursChange(day.id, 'fromDinner', e.target.value)}
-                            />
-                            <span>-</span>
-                            <Input
-                              type="time"
-                              className="w-24 text-sm"
-                              value={dayData.toDinner}
-                              onChange={(e) => handleOpeningHoursChange(day.id, 'toDinner', e.target.value)}
-                            />
-                          </div>
-                        </div>
-                      ) : (
-                        <span className="text-sm text-gray-500 italic">Chiuso</span>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
+              <div className="space-y-2">
+                <p className="text-sm text-gray-500">Descrizione</p>
+                <p>{restaurantInfo.description}</p>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Mail className="h-4 w-4 text-muted-foreground" />
+                <span>{restaurantInfo.email}</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Phone className="h-4 w-4 text-muted-foreground" />
+                <span>{restaurantInfo.phone}</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <MapPin className="h-4 w-4 text-muted-foreground" />
+                <span>{restaurantInfo.address}</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Globe className="h-4 w-4 text-muted-foreground" />
+                <span>{restaurantInfo.website}</span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-gray-500">Partita IVA</p>
+                  <p>{restaurantInfo.taxId}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Tipologia Attività</p>
+                  <p>{restaurantInfo.businessType}</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-gray-500">Nome Titolare</p>
+                  <p>{restaurantInfo.ownerName}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Anno Fondazione</p>
+                  <p>{restaurantInfo.foundationYear}</p>
+                </div>
+              </div>
             </div>
-          </div>
-          
-          <div className="p-6 flex justify-end">
-            <Button onClick={handleSave} className="flex items-center gap-2">
-              <Save size={16} />
-              <span>Salva Modifiche</span>
+          )}
+        </CardContent>
+        {isEditing && (
+          <CardFooter className="flex justify-end space-x-2">
+            <Button variant="outline" size="sm" onClick={handleCancel}>
+              <X size={16} className="mr-2" />
+              Annulla
             </Button>
-          </div>
-        </div>
-      </div>
-    </Layout>
+            <Button size="sm" onClick={handleSave}>
+              <Save size={16} className="mr-2" />
+              Salva
+            </Button>
+          </CardFooter>
+        )}
+      </Card>
+    </div>
   );
 };
 

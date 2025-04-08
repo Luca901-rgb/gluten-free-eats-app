@@ -2,7 +2,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Home, Search, Heart, Calendar, CameraIcon, ChefHat, UserCog } from 'lucide-react';
+import { Home, Search, Heart, Calendar, CameraIcon, ChefHat, UserRound } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { buttonVariants } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -12,12 +12,13 @@ interface LayoutProps {
   hideNavigation?: boolean;
 }
 
-// Rimuoviamo il profilo dalla navigazione
+// Aggiungiamo il profilo alla navigazione
 const navigationItems = [
   { path: '/', icon: <Home size={24} />, label: 'Home' },
   { path: '/search', icon: <Search size={24} />, label: 'Ricerca' },
   { path: '/favorites', icon: <Heart size={24} />, label: 'Preferiti' },
   { path: '/bookings', icon: <Calendar size={24} />, label: 'Prenotazioni' },
+  { path: '/profile', icon: <UserRound size={24} />, label: 'Profilo' },
 ];
 
 const Layout: React.FC<LayoutProps> = ({ children, hideNavigation = false }) => {
