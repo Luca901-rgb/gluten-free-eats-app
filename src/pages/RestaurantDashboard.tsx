@@ -1,10 +1,12 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Layout from '@/components/Layout';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileText, Image, MessageCircle, Settings, CalendarRange, Clock, MapPin, Phone, Mail, Globe, VideoIcon, Home, Menu, Star, User } from 'lucide-react';
+import { 
+  FileText, Image, MessageCircle, Settings, CalendarRange, 
+  Clock, MapPin, Phone, Mail, Globe, VideoIcon, Home, 
+  Menu, Star, User, ChevronLeft, ChevronRight 
+} from 'lucide-react';
 import RestaurantBookings from './restaurant/RestaurantBookings';
 import RestaurantReviews from './restaurant/RestaurantReviews';
 import RestaurantGallery from './restaurant/RestaurantGallery';
@@ -12,9 +14,17 @@ import RestaurantProfile from './restaurant/RestaurantProfile';
 import RestaurantVideos from './restaurant/RestaurantVideos';
 import MenuViewer from '@/components/Restaurant/MenuViewer';
 import { Button } from '@/components/ui/button';
+import { 
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
 const RestaurantDashboard = () => {
   const [activeTab, setActiveTab] = useState('home');
+  const tabsContainerRef = useRef<HTMLDivElement>(null);
   
   // Restaurant data
   const restaurantData = {
@@ -37,6 +47,14 @@ const RestaurantDashboard = () => {
 
   const navigateToTab = (tabId: string) => {
     setActiveTab(tabId);
+    
+    // Find the selected button and scroll it into view
+    if (tabsContainerRef.current) {
+      const selectedButton = tabsContainerRef.current.querySelector(`[data-tab="${tabId}"]`);
+      if (selectedButton) {
+        selectedButton.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      }
+    }
   };
 
   const navigationButtons = [
@@ -81,22 +99,34 @@ const RestaurantDashboard = () => {
           </div>
         </div>
 
-        {/* Navigation tabs */}
-        <div className="px-4 mt-2 overflow-x-auto bg-white shadow-sm">
-          <div className="flex space-x-2 py-3">
-            {navigationButtons.map((button) => (
-              <Button
-                key={button.id}
-                variant={activeTab === button.id ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => navigateToTab(button.id)}
-                className="flex items-center gap-1 whitespace-nowrap"
-              >
-                {button.icon}
-                <span>{button.label}</span>
-              </Button>
-            ))}
-          </div>
+        {/* Navigation tabs with improved scrolling */}
+        <div className="bg-white shadow-sm sticky top-0 z-10">
+          <Carousel
+            opts={{
+              align: "start",
+              dragFree: true,
+            }}
+            className="w-full"
+          >
+            <div className="flex items-center px-4 py-3">
+              <CarouselContent className="ml-0">
+                {navigationButtons.map((button) => (
+                  <CarouselItem key={button.id} className="basis-auto pl-0 mr-2 min-w-min">
+                    <Button
+                      variant={activeTab === button.id ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => navigateToTab(button.id)}
+                      className="flex items-center gap-1 whitespace-nowrap"
+                      data-tab={button.id}
+                    >
+                      {button.icon}
+                      <span>{button.label}</span>
+                    </Button>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+            </div>
+          </Carousel>
         </div>
 
         {/* Tab content */}
