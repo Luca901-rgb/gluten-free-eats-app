@@ -11,6 +11,7 @@ import RestaurantGallery from './restaurant/RestaurantGallery';
 import RestaurantProfile from './restaurant/RestaurantProfile';
 import RestaurantVideos from './restaurant/RestaurantVideos';
 import MenuViewer from '@/components/Restaurant/MenuViewer';
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 
 const RestaurantDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
@@ -44,120 +45,138 @@ const RestaurantDashboard = () => {
         </div>
         
         <div className="mb-6">
-          <ScrollArea className="w-full">
-            <div className="min-w-full pr-4">
-              <Tabs 
-                defaultValue="overview" 
-                value={activeTab} 
-                onValueChange={setActiveTab}
-                className="w-full"
-              >
-                <TabsList className="flex w-max mb-4 space-x-2 overflow-x-auto scrollbar-hide">
-                  <TabsTrigger value="overview" className="flex items-center">
-                    <Clock className="mr-2 h-4 w-4" />
-                    Informazioni
-                  </TabsTrigger>
-                  <TabsTrigger value="menu" className="flex items-center">
-                    <FileText className="mr-2 h-4 w-4" />
-                    Menu
-                  </TabsTrigger>
-                  <TabsTrigger value="videos" className="flex items-center">
-                    <VideoIcon className="mr-2 h-4 w-4" />
-                    Video Ricette
-                  </TabsTrigger>
-                  <TabsTrigger value="gallery" className="flex items-center">
-                    <Image className="mr-2 h-4 w-4" />
-                    Galleria
-                  </TabsTrigger>
-                  <TabsTrigger value="bookings" className="flex items-center">
-                    <CalendarRange className="mr-2 h-4 w-4" />
-                    Prenotazioni
-                  </TabsTrigger>
-                  <TabsTrigger value="reviews" className="flex items-center">
-                    <MessageCircle className="mr-2 h-4 w-4" />
-                    Recensioni
-                  </TabsTrigger>
-                  <TabsTrigger value="profile" className="flex items-center">
-                    <Settings className="mr-2 h-4 w-4" />
-                    Profilo
-                  </TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="overview" className="space-y-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Informazioni Ristorante</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div>
-                        <h3 className="font-medium text-lg mb-2">Descrizione</h3>
-                        <p className="text-gray-700">{restaurantData.description}</p>
-                      </div>
-                      
-                      <div>
-                        <h3 className="font-medium text-lg mb-2">Orari di apertura</h3>
-                        <div className="space-y-2">
-                          {restaurantData.openingHours.map((time, index) => (
-                            <div key={index} className="flex items-center">
-                              <Clock size={16} className="mr-2 text-gray-500" />
-                              <span className="text-gray-700 mr-2 w-24">{time.days}:</span>
-                              <span className="text-gray-700">{time.hours}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <h3 className="font-medium text-lg mb-2">Contatti</h3>
-                        <div className="space-y-2">
-                          <div className="flex items-center">
-                            <MapPin size={16} className="mr-2 text-gray-500" />
-                            <span className="text-gray-700">{restaurantData.address}</span>
-                          </div>
-                          <div className="flex items-center">
-                            <Phone size={16} className="mr-2 text-gray-500" />
-                            <span className="text-gray-700">{restaurantData.phone}</span>
-                          </div>
-                          <div className="flex items-center">
-                            <Mail size={16} className="mr-2 text-gray-500" />
-                            <span className="text-gray-700">{restaurantData.email}</span>
-                          </div>
-                          <div className="flex items-center">
-                            <Globe size={16} className="mr-2 text-gray-500" />
-                            <span className="text-gray-700">{restaurantData.website}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-                
-                <TabsContent value="menu">
-                  <MenuViewer isRestaurantOwner={true} />
-                </TabsContent>
-                
-                <TabsContent value="videos">
-                  <RestaurantVideos />
-                </TabsContent>
-                
-                <TabsContent value="gallery">
-                  <RestaurantGallery />
-                </TabsContent>
-                
-                <TabsContent value="bookings">
-                  <RestaurantBookings />
-                </TabsContent>
-                
-                <TabsContent value="reviews">
-                  <RestaurantReviews />
-                </TabsContent>
-                
-                <TabsContent value="profile">
-                  <RestaurantProfile />
-                </TabsContent>
-              </Tabs>
+          <Tabs 
+            defaultValue="overview" 
+            value={activeTab} 
+            onValueChange={setActiveTab}
+            className="w-full"
+          >
+            <div className="relative">
+              <Carousel className="w-full">
+                <CarouselContent className="-ml-1">
+                  <TabsList className="flex w-full h-auto p-1 bg-transparent mb-4">
+                    <CarouselItem className="pl-1 basis-auto min-w-fit">
+                      <TabsTrigger value="overview" className="flex items-center">
+                        <Clock className="mr-2 h-4 w-4" />
+                        Informazioni
+                      </TabsTrigger>
+                    </CarouselItem>
+                    <CarouselItem className="pl-1 basis-auto min-w-fit">
+                      <TabsTrigger value="menu" className="flex items-center">
+                        <FileText className="mr-2 h-4 w-4" />
+                        Menu
+                      </TabsTrigger>
+                    </CarouselItem>
+                    <CarouselItem className="pl-1 basis-auto min-w-fit">
+                      <TabsTrigger value="videos" className="flex items-center">
+                        <VideoIcon className="mr-2 h-4 w-4" />
+                        Video Ricette
+                      </TabsTrigger>
+                    </CarouselItem>
+                    <CarouselItem className="pl-1 basis-auto min-w-fit">
+                      <TabsTrigger value="gallery" className="flex items-center">
+                        <Image className="mr-2 h-4 w-4" />
+                        Galleria
+                      </TabsTrigger>
+                    </CarouselItem>
+                    <CarouselItem className="pl-1 basis-auto min-w-fit">
+                      <TabsTrigger value="bookings" className="flex items-center">
+                        <CalendarRange className="mr-2 h-4 w-4" />
+                        Prenotazioni
+                      </TabsTrigger>
+                    </CarouselItem>
+                    <CarouselItem className="pl-1 basis-auto min-w-fit">
+                      <TabsTrigger value="reviews" className="flex items-center">
+                        <MessageCircle className="mr-2 h-4 w-4" />
+                        Recensioni
+                      </TabsTrigger>
+                    </CarouselItem>
+                    <CarouselItem className="pl-1 basis-auto min-w-fit">
+                      <TabsTrigger value="profile" className="flex items-center">
+                        <Settings className="mr-2 h-4 w-4" />
+                        Profilo
+                      </TabsTrigger>
+                    </CarouselItem>
+                  </TabsList>
+                </CarouselContent>
+                <CarouselPrevious className="absolute -left-4 top-1/2 -translate-y-1/2 transform" />
+                <CarouselNext className="absolute -right-4 top-1/2 -translate-y-1/2 transform" />
+              </Carousel>
             </div>
-          </ScrollArea>
+
+            <TabsContent value="overview" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Informazioni Ristorante</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <h3 className="font-medium text-lg mb-2">Descrizione</h3>
+                    <p className="text-gray-700">{restaurantData.description}</p>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-medium text-lg mb-2">Orari di apertura</h3>
+                    <div className="space-y-2">
+                      {restaurantData.openingHours.map((time, index) => (
+                        <div key={index} className="flex items-center">
+                          <Clock size={16} className="mr-2 text-gray-500" />
+                          <span className="text-gray-700 mr-2 w-24">{time.days}:</span>
+                          <span className="text-gray-700">{time.hours}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-medium text-lg mb-2">Contatti</h3>
+                    <div className="space-y-2">
+                      <div className="flex items-center">
+                        <MapPin size={16} className="mr-2 text-gray-500" />
+                        <span className="text-gray-700">{restaurantData.address}</span>
+                      </div>
+                      <div className="flex items-center">
+                        <Phone size={16} className="mr-2 text-gray-500" />
+                        <span className="text-gray-700">{restaurantData.phone}</span>
+                      </div>
+                      <div className="flex items-center">
+                        <Mail size={16} className="mr-2 text-gray-500" />
+                        <span className="text-gray-700">{restaurantData.email}</span>
+                      </div>
+                      <div className="flex items-center">
+                        <Globe size={16} className="mr-2 text-gray-500" />
+                        <span className="text-gray-700">{restaurantData.website}</span>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="menu">
+              <MenuViewer isRestaurantOwner={true} />
+            </TabsContent>
+            
+            <TabsContent value="videos">
+              <RestaurantVideos />
+            </TabsContent>
+            
+            <TabsContent value="gallery">
+              <RestaurantGallery />
+            </TabsContent>
+            
+            <TabsContent value="bookings">
+              <RestaurantBookings />
+            </TabsContent>
+            
+            <TabsContent value="reviews">
+              <RestaurantReviews />
+            </TabsContent>
+            
+            <TabsContent value="profile">
+              <RestaurantProfile />
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </Layout>
