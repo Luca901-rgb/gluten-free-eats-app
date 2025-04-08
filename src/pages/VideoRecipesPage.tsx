@@ -15,10 +15,10 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogClose,
 } from "@/components/ui/dialog";
 import { toast } from 'sonner';
+import VideoPlayer from '@/components/Video/VideoPlayer';
 
 interface VideoRecipe {
   id: string;
@@ -42,7 +42,7 @@ const sampleVideos: VideoRecipe[] = [
     title: 'Pizza Senza Glutine Fatta in Casa',
     description: 'Impara a preparare una deliziosa pizza senza glutine con questo tutorial passo-passo del nostro chef. Scoprirai tutti i segreti per un impasto perfetto e croccante!',
     thumbnail: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-    videoUrl: 'https://example.com/video1.mp4',
+    videoUrl: 'https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4',
     duration: '12:45',
     restaurant: {
       id: '2',
@@ -56,7 +56,7 @@ const sampleVideos: VideoRecipe[] = [
     title: 'Pasta Fresca Senza Glutine',
     description: 'La pasta fresca fatta in casa è possibile anche senza glutine! In questo video imparerai a preparare tagliatelle, fettuccine e ravioli.',
     thumbnail: 'https://images.unsplash.com/photo-1603729362760-408f86a48177?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-    videoUrl: 'https://example.com/video2.mp4',
+    videoUrl: 'https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4',
     duration: '18:20',
     restaurant: {
       id: '3',
@@ -70,7 +70,7 @@ const sampleVideos: VideoRecipe[] = [
     title: 'Dolci Senza Glutine per Occasioni Speciali',
     description: 'I dolci sono spesso i più difficili da preparare senza glutine, ma con questi consigli potrai creare dessert incredibili per ogni occasione.',
     thumbnail: 'https://images.unsplash.com/photo-1586985289688-ca3cf47d3e6e?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-    videoUrl: 'https://example.com/video3.mp4',
+    videoUrl: 'https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4',
     duration: '15:10',
     restaurant: {
       id: '1',
@@ -84,7 +84,7 @@ const sampleVideos: VideoRecipe[] = [
     title: 'Pane Senza Glutine: Trucchi e Consigli',
     description: 'Il pane senza glutine può essere incredibilmente gustoso! Il nostro chef ti guiderà passo-passo alla preparazione di varie tipologie di pane.',
     thumbnail: 'https://images.unsplash.com/photo-1586444248879-9a421644b5b6?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-    videoUrl: 'https://example.com/video4.mp4',
+    videoUrl: 'https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4',
     duration: '22:30',
     restaurant: {
       id: '4',
@@ -137,58 +137,12 @@ const VideoRecipesPage = () => {
   const handlePlayVideo = (video: VideoRecipe) => {
     setSelectedVideo(video);
     setIsPlaying(true);
-    // In a real app, this would actually play the video
   };
 
   const handleDownloadRecipe = (video: VideoRecipe) => {
     toast.success(`Download ricetta "${video.title}" iniziato`);
     // In a real app, this would initiate a PDF download
   };
-
-  const VideoPlayer = ({ video }: { video: VideoRecipe }) => (
-    <div className="space-y-4">
-      <div className="aspect-video rounded-lg overflow-hidden bg-black relative">
-        <img 
-          src={video.thumbnail} 
-          alt={video.title} 
-          className="w-full h-full object-cover opacity-50"
-        />
-        <div className="absolute inset-0 flex items-center justify-center">
-          <p className="text-white text-center px-4">
-            In una vera app, qui ci sarebbe un player video. Per ora visualizziamo solo l'anteprima.
-          </p>
-        </div>
-      </div>
-      
-      <div className="space-y-2">
-        <h3 className="text-xl font-semibold">{video.title}</h3>
-        <div className="flex items-center text-sm text-gray-600 gap-4">
-          <span className="flex items-center">
-            <Clock size={14} className="mr-1" />
-            {video.duration}
-          </span>
-          <span>Da {video.restaurant.name}</span>
-        </div>
-        <p className="text-gray-700">{video.description}</p>
-      </div>
-      
-      <div className="flex gap-2">
-        {video.hasPdf && (
-          <Button variant="outline" onClick={() => handleDownloadRecipe(video)}>
-            <Download size={16} className="mr-2" />
-            Scarica ricetta in PDF
-          </Button>
-        )}
-        <Button 
-          variant={video.isFavorite ? "secondary" : "outline"} 
-          onClick={() => handleToggleFavorite(video.id)}
-        >
-          <Heart size={16} className={`mr-2 ${video.isFavorite ? 'fill-primary' : ''}`} />
-          {video.isFavorite ? 'Salvato' : 'Salva video'}
-        </Button>
-      </div>
-    </div>
-  );
 
   return (
     <Layout>
@@ -283,7 +237,46 @@ const VideoRecipesPage = () => {
               </div>
             </DialogHeader>
             <div className="p-4 sm:p-6">
-              <VideoPlayer video={selectedVideo} />
+              <VideoPlayer 
+                videoUrl={selectedVideo.videoUrl}
+                thumbnail={selectedVideo.thumbnail}
+                title={selectedVideo.title}
+                autoPlay={true}
+                onError={(error) => {
+                  console.error("Errore video:", error);
+                  toast.error("Errore nella riproduzione del video");
+                }}
+              />
+              
+              <div className="mt-4 space-y-4">
+                <div>
+                  <h3 className="text-xl font-semibold">{selectedVideo.title}</h3>
+                  <div className="flex items-center text-sm text-gray-600 gap-4 mt-1">
+                    <span className="flex items-center">
+                      <Clock size={14} className="mr-1" />
+                      {selectedVideo.duration}
+                    </span>
+                    <span>Da {selectedVideo.restaurant.name}</span>
+                  </div>
+                  <p className="text-gray-700 mt-2">{selectedVideo.description}</p>
+                </div>
+                
+                <div className="flex gap-2">
+                  {selectedVideo.hasPdf && (
+                    <Button variant="outline" onClick={() => handleDownloadRecipe(selectedVideo)}>
+                      <Download size={16} className="mr-2" />
+                      Scarica ricetta in PDF
+                    </Button>
+                  )}
+                  <Button 
+                    variant={selectedVideo.isFavorite ? "secondary" : "outline"} 
+                    onClick={() => handleToggleFavorite(selectedVideo.id)}
+                  >
+                    <Heart size={16} className={`mr-2 ${selectedVideo.isFavorite ? 'fill-primary' : ''}`} />
+                    {selectedVideo.isFavorite ? 'Salvato' : 'Salva video'}
+                  </Button>
+                </div>
+              </div>
             </div>
           </DialogContent>
         </Dialog>

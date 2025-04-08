@@ -7,6 +7,7 @@ import StarRating from '@/components/common/StarRating';
 import BookingForm from '../Booking/BookingForm';
 import MenuViewer from './MenuViewer';
 import ReviewForm from './ReviewForm';
+import RestaurantVideos from '@/pages/restaurant/RestaurantVideos';
 import { toast } from 'sonner';
 
 export interface RestaurantDetailProps {
@@ -212,13 +213,8 @@ const RestaurantDetails: React.FC<RestaurantDetailsProps> = ({
         )}
 
         {activeTab === 'videos' && (
-          <div className="space-y-4 animate-fade-in">
-            <h2 className="font-poppins font-semibold text-lg">Videoricette</h2>
-            <p className="text-gray-600">Le nostre migliori ricette in video, tutte senza glutine.</p>
-            <div className="p-8 border border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-center">
-              <Video size={48} className="text-gray-400 mb-2" />
-              <p className="text-gray-500">Presto disponibili le nostre videoricette!</p>
-            </div>
+          <div className="animate-fade-in">
+            <RestaurantVideos />
           </div>
         )}
 
