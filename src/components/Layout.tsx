@@ -25,7 +25,7 @@ const Layout: React.FC<LayoutProps> = ({ children, hideNavigation = false }) => 
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
-      <header className="flex items-center justify-between bg-white border-b h-16 px-4">
+      <header className="sticky top-0 z-10 flex items-center justify-between bg-white border-b h-16 px-4">
         <Link to="/" className="flex items-center gap-2">
           <CameraIcon size={24} className="text-primary" />
           <span className="font-poppins font-bold text-lg">GlutenFree</span>
@@ -44,11 +44,9 @@ const Layout: React.FC<LayoutProps> = ({ children, hideNavigation = false }) => 
         </div>
       </header>
       
-      <ScrollArea className="flex-1">
-        <main className="flex-1 pb-16">
-          {children}
-        </main>
-      </ScrollArea>
+      <div className="flex-1 overflow-y-auto pb-16">
+        {children}
+      </div>
       
       {!hideNavigation && (
         <nav className="fixed bottom-0 w-full bg-white border-t h-16 flex justify-around items-center z-10">

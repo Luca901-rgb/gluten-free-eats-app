@@ -1,11 +1,10 @@
 
 import React, { useState } from 'react';
 import Layout from '@/components/Layout';
-import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart, CalendarRange, Home, Image, MessageCircle, Settings, FileText, VideoIcon } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { FileText, Image, MessageCircle, Settings, CalendarRange, Clock, MapPin, Phone, Mail, Globe, VideoIcon } from 'lucide-react';
 import RestaurantBookings from './restaurant/RestaurantBookings';
 import RestaurantReviews from './restaurant/RestaurantReviews';
 import RestaurantGallery from './restaurant/RestaurantGallery';
@@ -16,25 +15,22 @@ import MenuViewer from '@/components/Restaurant/MenuViewer';
 const RestaurantDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   
-  // Sample restaurant data
+  // Restaurant data
   const restaurantData = {
     name: 'La Trattoria Senza Glutine',
+    description: 'Ristorante 100% gluten free specializzato in cucina italiana tradizionale. Il nostro locale è certificato dall\'Associazione Italiana Celiachia e tutto il nostro menù è privo di glutine. Dal pane alla pasta, dalle pizze ai dolci, offriamo un\'esperienza gastronomica completa senza compromessi sul gusto.',
     address: 'Via Roma 123, Milano',
     phone: '+39 02 1234567',
     email: 'info@trattoriasenzaglutine.it',
+    website: 'www.trattoriasenzaglutine.it',
+    openingHours: [
+      { days: 'Lunedì', hours: 'Chiuso' },
+      { days: 'Martedì-Venerdì', hours: '12:00-14:30, 19:00-22:30' },
+      { days: 'Sabato', hours: '12:00-15:00, 19:00-23:00' },
+      { days: 'Domenica', hours: '12:00-15:00, 19:00-22:00' },
+    ],
     rating: 4.7,
     totalReviews: 124,
-    bookings: {
-      today: 8,
-      tomorrow: 12,
-      thisWeek: 43,
-      nextWeek: 37,
-    },
-    revenue: {
-      today: 780,
-      thisWeek: 4250,
-      thisMonth: 18700,
-    }
   };
 
   return (
@@ -45,10 +41,6 @@ const RestaurantDashboard = () => {
             <h1 className="text-2xl font-poppins font-bold text-primary">{restaurantData.name}</h1>
             <p className="text-gray-600">{restaurantData.address}</p>
           </div>
-          <Button variant="outline" size="sm" onClick={() => setActiveTab('profile')}>
-            <Settings className="mr-2 h-4 w-4" />
-            Impostazioni
-          </Button>
         </div>
         
         <div className="mb-6">
@@ -62,20 +54,12 @@ const RestaurantDashboard = () => {
               >
                 <TabsList className="flex w-max mb-4 space-x-2 overflow-x-auto scrollbar-hide">
                   <TabsTrigger value="overview" className="flex items-center">
-                    <Home className="mr-2 h-4 w-4" />
-                    Dashboard
-                  </TabsTrigger>
-                  <TabsTrigger value="bookings" className="flex items-center">
-                    <CalendarRange className="mr-2 h-4 w-4" />
-                    Prenotazioni
+                    <Clock className="mr-2 h-4 w-4" />
+                    Informazioni
                   </TabsTrigger>
                   <TabsTrigger value="menu" className="flex items-center">
                     <FileText className="mr-2 h-4 w-4" />
                     Menu
-                  </TabsTrigger>
-                  <TabsTrigger value="reviews" className="flex items-center">
-                    <MessageCircle className="mr-2 h-4 w-4" />
-                    Recensioni
                   </TabsTrigger>
                   <TabsTrigger value="gallery" className="flex items-center">
                     <Image className="mr-2 h-4 w-4" />
@@ -85,9 +69,13 @@ const RestaurantDashboard = () => {
                     <VideoIcon className="mr-2 h-4 w-4" />
                     Video Ricette
                   </TabsTrigger>
-                  <TabsTrigger value="analytics" className="flex items-center">
-                    <BarChart className="mr-2 h-4 w-4" />
-                    Statistiche
+                  <TabsTrigger value="bookings" className="flex items-center">
+                    <CalendarRange className="mr-2 h-4 w-4" />
+                    Prenotazioni
+                  </TabsTrigger>
+                  <TabsTrigger value="reviews" className="flex items-center">
+                    <MessageCircle className="mr-2 h-4 w-4" />
+                    Recensioni
                   </TabsTrigger>
                   <TabsTrigger value="profile" className="flex items-center">
                     <Settings className="mr-2 h-4 w-4" />
@@ -96,123 +84,56 @@ const RestaurantDashboard = () => {
                 </TabsList>
 
                 <TabsContent value="overview" className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <Card>
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-lg">Prenotazioni di oggi</CardTitle>
-                        <CardDescription>Stato attuale</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-3xl font-bold">{restaurantData.bookings.today}</div>
-                        <p className="text-sm text-gray-500 mt-1">
-                          {restaurantData.bookings.today > 5 ? 'Giornata piena' : 'Disponibilità residua'}
-                        </p>
-                      </CardContent>
-                    </Card>
-                    
-                    <Card>
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-lg">Valutazione</CardTitle>
-                        <CardDescription>Media recensioni</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-3xl font-bold">{restaurantData.rating}</div>
-                        <p className="text-sm text-gray-500 mt-1">
-                          Basato su {restaurantData.totalReviews} recensioni
-                        </p>
-                      </CardContent>
-                    </Card>
-                    
-                    <Card>
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-lg">Incasso giornaliero</CardTitle>
-                        <CardDescription>Stima attuale</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-3xl font-bold">€{restaurantData.revenue.today}</div>
-                        <p className="text-sm text-gray-500 mt-1">
-                          +12% rispetto alla media
-                        </p>
-                      </CardContent>
-                    </Card>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Prenotazioni settimanali</CardTitle>
-                      </CardHeader>
-                      <CardContent className="h-80">
-                        <div className="flex items-center justify-center h-full text-center text-gray-500">
-                          [Grafico prenotazioni settimanali]
-                        </div>
-                      </CardContent>
-                    </Card>
-                    
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Ricavi mensili</CardTitle>
-                      </CardHeader>
-                      <CardContent className="h-80">
-                        <div className="flex items-center justify-center h-full text-center text-gray-500">
-                          [Grafico ricavi mensili]
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 gap-4">
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Ultime recensioni</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-4">
-                          <div className="flex justify-between items-start pb-4 border-b">
-                            <div>
-                              <h3 className="font-medium">Mario Rossi</h3>
-                              <p className="text-sm text-gray-600 mt-1">Ottimo ristorante senza glutine, finalmente ho potuto gustare una pizza davvero buona senza preoccuparmi!</p>
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Informazioni Ristorante</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <h3 className="font-medium text-lg mb-2">Descrizione</h3>
+                        <p className="text-gray-700">{restaurantData.description}</p>
+                      </div>
+                      
+                      <div>
+                        <h3 className="font-medium text-lg mb-2">Orari di apertura</h3>
+                        <div className="space-y-2">
+                          {restaurantData.openingHours.map((time, index) => (
+                            <div key={index} className="flex items-center">
+                              <Clock size={16} className="mr-2 text-gray-500" />
+                              <span className="text-gray-700 mr-2 w-24">{time.days}:</span>
+                              <span className="text-gray-700">{time.hours}</span>
                             </div>
-                            <div className="text-right">
-                              <div className="flex items-center text-yellow-400">
-                                ★★★★★
-                              </div>
-                              <p className="text-xs text-gray-500 mt-1">2 giorni fa</p>
-                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <h3 className="font-medium text-lg mb-2">Contatti</h3>
+                        <div className="space-y-2">
+                          <div className="flex items-center">
+                            <MapPin size={16} className="mr-2 text-gray-500" />
+                            <span className="text-gray-700">{restaurantData.address}</span>
                           </div>
-                          
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <h3 className="font-medium">Giulia Bianchi</h3>
-                              <p className="text-sm text-gray-600 mt-1">Ambiente accogliente e personale molto attento alle esigenze dei celiaci. Menu vario e gustoso.</p>
-                            </div>
-                            <div className="text-right">
-                              <div className="flex items-center text-yellow-400">
-                                ★★★★☆
-                              </div>
-                              <p className="text-xs text-gray-500 mt-1">5 giorni fa</p>
-                            </div>
+                          <div className="flex items-center">
+                            <Phone size={16} className="mr-2 text-gray-500" />
+                            <span className="text-gray-700">{restaurantData.phone}</span>
+                          </div>
+                          <div className="flex items-center">
+                            <Mail size={16} className="mr-2 text-gray-500" />
+                            <span className="text-gray-700">{restaurantData.email}</span>
+                          </div>
+                          <div className="flex items-center">
+                            <Globe size={16} className="mr-2 text-gray-500" />
+                            <span className="text-gray-700">{restaurantData.website}</span>
                           </div>
                         </div>
-                        
-                        <Button variant="outline" className="w-full mt-4" onClick={() => setActiveTab('reviews')}>
-                          Vedi tutte le recensioni
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  </div>
-                </TabsContent>
-                
-                <TabsContent value="bookings">
-                  <RestaurantBookings />
+                      </div>
+                    </CardContent>
+                  </Card>
                 </TabsContent>
                 
                 <TabsContent value="menu">
                   <MenuViewer isRestaurantOwner={true} />
-                </TabsContent>
-                
-                <TabsContent value="reviews">
-                  <RestaurantReviews />
                 </TabsContent>
                 
                 <TabsContent value="gallery">
@@ -223,50 +144,16 @@ const RestaurantDashboard = () => {
                   <RestaurantVideos />
                 </TabsContent>
                 
-                <TabsContent value="profile">
-                  <RestaurantProfile />
+                <TabsContent value="bookings">
+                  <RestaurantBookings />
                 </TabsContent>
                 
-                <TabsContent value="analytics">
-                  <div className="bg-white rounded-lg shadow p-6">
-                    <h2 className="font-poppins font-semibold text-lg mb-6">Statistiche e Analisi</h2>
-                    
-                    <div className="h-96 bg-gray-50 rounded-lg flex items-center justify-center mb-6">
-                      <span className="text-gray-400">Grafici statistiche</span>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <Card>
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-sm font-medium">Visite al profilo</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="text-2xl font-bold">1,245</div>
-                          <p className="text-xs text-green-600">+12% questa settimana</p>
-                        </CardContent>
-                      </Card>
-                      
-                      <Card>
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-sm font-medium">Conversione prenotazioni</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="text-2xl font-bold">15.8%</div>
-                          <p className="text-xs text-green-600">+2.3% rispetto al mese scorso</p>
-                        </CardContent>
-                      </Card>
-                      
-                      <Card>
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-sm font-medium">Clienti fidelizzati</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="text-2xl font-bold">42%</div>
-                          <p className="text-xs text-amber-600">-1% rispetto al mese scorso</p>
-                        </CardContent>
-                      </Card>
-                    </div>
-                  </div>
+                <TabsContent value="reviews">
+                  <RestaurantReviews />
+                </TabsContent>
+                
+                <TabsContent value="profile">
+                  <RestaurantProfile />
                 </TabsContent>
               </Tabs>
             </div>
