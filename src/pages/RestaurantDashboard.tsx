@@ -8,6 +8,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { BarChart, CalendarRange, Home, Image, MessageCircle, Settings, FileText, VideoIcon } from 'lucide-react';
 import RestaurantBookings from './restaurant/RestaurantBookings';
 import RestaurantReviews from './restaurant/RestaurantReviews';
+import RestaurantGallery from './restaurant/RestaurantGallery';
+import RestaurantProfile from './restaurant/RestaurantProfile';
+import RestaurantVideos from './restaurant/RestaurantVideos';
 import MenuViewer from '@/components/Restaurant/MenuViewer';
 
 const RestaurantDashboard = () => {
@@ -42,7 +45,7 @@ const RestaurantDashboard = () => {
             <h1 className="text-2xl font-poppins font-bold text-primary">{restaurantData.name}</h1>
             <p className="text-gray-600">{restaurantData.address}</p>
           </div>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={() => setActiveTab('profile')}>
             <Settings className="mr-2 h-4 w-4" />
             Impostazioni
           </Button>
@@ -57,7 +60,7 @@ const RestaurantDashboard = () => {
                 onValueChange={setActiveTab}
                 className="w-full"
               >
-                <TabsList className="flex w-max mb-4 space-x-2">
+                <TabsList className="flex w-max mb-4 space-x-2 overflow-x-auto scrollbar-hide">
                   <TabsTrigger value="overview" className="flex items-center">
                     <Home className="mr-2 h-4 w-4" />
                     Dashboard
@@ -85,6 +88,10 @@ const RestaurantDashboard = () => {
                   <TabsTrigger value="analytics" className="flex items-center">
                     <BarChart className="mr-2 h-4 w-4" />
                     Statistiche
+                  </TabsTrigger>
+                  <TabsTrigger value="profile" className="flex items-center">
+                    <Settings className="mr-2 h-4 w-4" />
+                    Profilo
                   </TabsTrigger>
                 </TabsList>
 
@@ -209,45 +216,15 @@ const RestaurantDashboard = () => {
                 </TabsContent>
                 
                 <TabsContent value="gallery">
-                  <div className="bg-white rounded-lg shadow p-6">
-                    <h2 className="font-poppins font-semibold text-lg mb-6">Galleria fotografica</h2>
-                    
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      {[1, 2, 3, 4, 5, 6].map((item) => (
-                        <div key={item} className="aspect-square bg-gray-100 rounded-md flex items-center justify-center">
-                          <span className="text-gray-400">Foto {item}</span>
-                        </div>
-                      ))}
-                    </div>
-                    
-                    <Button className="mt-6">
-                      <FileText className="mr-2 h-4 w-4" />
-                      Carica nuove foto
-                    </Button>
-                  </div>
+                  <RestaurantGallery />
                 </TabsContent>
                 
                 <TabsContent value="videos">
-                  <div className="bg-white rounded-lg shadow p-6">
-                    <h2 className="font-poppins font-semibold text-lg mb-6">Video Ricette</h2>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {[1, 2, 3, 4].map((item) => (
-                        <div key={item} className="bg-gray-100 rounded-md p-4">
-                          <div className="aspect-video bg-gray-200 mb-3 flex items-center justify-center">
-                            <span className="text-gray-400">Video {item}</span>
-                          </div>
-                          <h3 className="font-medium">Ricetta {item}</h3>
-                          <p className="text-sm text-gray-600 mt-1">Descrizione breve della ricetta senza glutine...</p>
-                        </div>
-                      ))}
-                    </div>
-                    
-                    <Button className="mt-6">
-                      <FileText className="mr-2 h-4 w-4" />
-                      Carica nuovo video
-                    </Button>
-                  </div>
+                  <RestaurantVideos />
+                </TabsContent>
+                
+                <TabsContent value="profile">
+                  <RestaurantProfile />
                 </TabsContent>
                 
                 <TabsContent value="analytics">
