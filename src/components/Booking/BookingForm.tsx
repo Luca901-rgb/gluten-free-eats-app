@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
@@ -38,6 +39,7 @@ interface BookingFormProps {
   restaurantId: string;
   restaurantName: string;
   restaurantImage?: string;
+  onBookingComplete?: (newBookingCode: string, newRestaurantCode: string) => void;
 }
 
 const generateAvailableTimes = () => {
@@ -62,7 +64,8 @@ const availableTimes = generateAvailableTimes();
 const BookingForm: React.FC<BookingFormProps> = ({ 
   restaurantId, 
   restaurantName, 
-  restaurantImage
+  restaurantImage,
+  onBookingComplete
 }) => {
   const navigate = useNavigate();
   const [date, setDate] = useState<Date | undefined>(undefined);
@@ -144,6 +147,11 @@ const BookingForm: React.FC<BookingFormProps> = ({
       setBookingData(newBooking);
       
       addBooking(newBooking);
+      
+      // Call the onBookingComplete callback if provided
+      if (onBookingComplete) {
+        onBookingComplete(newBooking.bookingCode, newBooking.restaurantReviewCode || '');
+      }
       
       setShowConfirmation(true);
     } catch (error) {
