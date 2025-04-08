@@ -25,7 +25,11 @@ interface Video {
   videoUrl: string;
 }
 
-const RestaurantVideos = () => {
+interface RestaurantVideosProps {
+  isRestaurantOwner?: boolean;
+}
+
+const RestaurantVideos: React.FC<RestaurantVideosProps> = ({ isRestaurantOwner = true }) => {
   // Mock videos data
   const [videos, setVideos] = useState<Video[]>([
     {
@@ -163,10 +167,12 @@ const RestaurantVideos = () => {
     <div className="container mx-auto px-4">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold">Video Ricette</h1>
-        <Button onClick={handleAddVideo} className="flex items-center gap-2">
-          <Plus size={16} />
-          <span>Carica Nuovo</span>
-        </Button>
+        {isRestaurantOwner && (
+          <Button onClick={handleAddVideo} className="flex items-center gap-2">
+            <Plus size={16} />
+            <span>Carica Nuovo</span>
+          </Button>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -191,37 +197,41 @@ const RestaurantVideos = () => {
               <h3 className="font-medium text-lg">{video.title}</h3>
               <p className="text-sm text-gray-600 mt-1 mb-4">{video.description}</p>
               
-              <div className="flex justify-end space-x-2">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => handleEditVideo(video.id)}
-                  className="flex items-center gap-1"
-                >
-                  <Edit size={14} />
-                  <span>Modifica</span>
-                </Button>
-                <Button 
-                  variant="destructive" 
-                  size="sm"
-                  onClick={() => handleDeleteVideo(video.id)}
-                  className="flex items-center gap-1"
-                >
-                  <Trash size={14} />
-                  <span>Elimina</span>
-                </Button>
-              </div>
+              {isRestaurantOwner && (
+                <div className="flex justify-end space-x-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleEditVideo(video.id)}
+                    className="flex items-center gap-1"
+                  >
+                    <Edit size={14} />
+                    <span>Modifica</span>
+                  </Button>
+                  <Button 
+                    variant="destructive" 
+                    size="sm"
+                    onClick={() => handleDeleteVideo(video.id)}
+                    className="flex items-center gap-1"
+                  >
+                    <Trash size={14} />
+                    <span>Elimina</span>
+                  </Button>
+                </div>
+              )}
             </div>
           </Card>
         ))}
 
-        <div 
-          className="border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center p-8 cursor-pointer hover:bg-gray-50 transition-colors aspect-video"
-          onClick={handleAddVideo}
-        >
-          <VideoIcon className="h-12 w-12 text-gray-400 mb-2" />
-          <span className="text-sm text-gray-500">Aggiungi una nuova video ricetta</span>
-        </div>
+        {isRestaurantOwner && (
+          <div 
+            className="border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center p-8 cursor-pointer hover:bg-gray-50 transition-colors aspect-video"
+            onClick={handleAddVideo}
+          >
+            <VideoIcon className="h-12 w-12 text-gray-400 mb-2" />
+            <span className="text-sm text-gray-500">Aggiungi una nuova video ricetta</span>
+          </div>
+        )}
       </div>
 
       {/* Video Player Dialog */}
@@ -250,147 +260,149 @@ const RestaurantVideos = () => {
         </Dialog>
       )}
 
-      {/* Add/Edit Video Dialog */}
-      <Dialog open={isAddVideoOpen} onOpenChange={setIsAddVideoOpen}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>
-              {selectedVideo ? 'Modifica Video' : 'Aggiungi Nuovo Video'}
-            </DialogTitle>
-          </DialogHeader>
-          
-          <div className="space-y-4 mt-2">
-            <div className="space-y-2">
-              <Label htmlFor="title">Titolo</Label>
-              <Input
-                id="title"
-                value={newTitle}
-                onChange={(e) => setNewTitle(e.target.value)}
-                placeholder="Titolo del video"
-              />
-            </div>
+      {/* Add/Edit Video Dialog - Solo per proprietari ristorante */}
+      {isRestaurantOwner && (
+        <Dialog open={isAddVideoOpen} onOpenChange={setIsAddVideoOpen}>
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>
+                {selectedVideo ? 'Modifica Video' : 'Aggiungi Nuovo Video'}
+              </DialogTitle>
+            </DialogHeader>
             
-            <div className="space-y-2">
-              <Label htmlFor="description">Descrizione</Label>
-              <Textarea
-                id="description"
-                value={newDescription}
-                onChange={(e) => setNewDescription(e.target.value)}
-                placeholder="Descrizione del video"
-                rows={3}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label>Video</Label>
-              <div className="flex space-x-2 mb-2">
-                <Button
-                  type="button"
-                  variant={videoInputMethod === 'url' ? 'default' : 'outline'}
-                  onClick={() => setVideoInputMethod('url')}
-                  className="flex items-center gap-1"
-                >
-                  <Link size={14} />
-                  <span>URL</span>
-                </Button>
-                <Button
-                  type="button"
-                  variant={videoInputMethod === 'file' ? 'default' : 'outline'}
-                  onClick={() => setVideoInputMethod('file')}
-                  className="flex items-center gap-1"
-                >
-                  <File size={14} />
-                  <span>File</span>
-                </Button>
+            <div className="space-y-4 mt-2">
+              <div className="space-y-2">
+                <Label htmlFor="title">Titolo</Label>
+                <Input
+                  id="title"
+                  value={newTitle}
+                  onChange={(e) => setNewTitle(e.target.value)}
+                  placeholder="Titolo del video"
+                />
               </div>
               
-              {videoInputMethod === 'url' ? (
-                <Input
-                  id="videoUrl"
-                  value={newVideoUrl}
-                  onChange={(e) => setNewVideoUrl(e.target.value)}
-                  placeholder="Inserisci URL del video"
+              <div className="space-y-2">
+                <Label htmlFor="description">Descrizione</Label>
+                <Textarea
+                  id="description"
+                  value={newDescription}
+                  onChange={(e) => setNewDescription(e.target.value)}
+                  placeholder="Descrizione del video"
+                  rows={3}
                 />
-              ) : (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Video</Label>
+                <div className="flex space-x-2 mb-2">
+                  <Button
+                    type="button"
+                    variant={videoInputMethod === 'url' ? 'default' : 'outline'}
+                    onClick={() => setVideoInputMethod('url')}
+                    className="flex items-center gap-1"
+                  >
+                    <Link size={14} />
+                    <span>URL</span>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={videoInputMethod === 'file' ? 'default' : 'outline'}
+                    onClick={() => setVideoInputMethod('file')}
+                    className="flex items-center gap-1"
+                  >
+                    <File size={14} />
+                    <span>File</span>
+                  </Button>
+                </div>
+                
+                {videoInputMethod === 'url' ? (
+                  <Input
+                    id="videoUrl"
+                    value={newVideoUrl}
+                    onChange={(e) => setNewVideoUrl(e.target.value)}
+                    placeholder="Inserisci URL del video"
+                  />
+                ) : (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Button 
+                        type="button" 
+                        onClick={handleBrowseVideoClick}
+                        variant="outline"
+                        className="flex items-center gap-1"
+                      >
+                        <Upload size={14} />
+                        <span>Seleziona file</span>
+                      </Button>
+                      {videoFile && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm truncate max-w-[150px]">{videoFile.name}</span>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => {
+                              setVideoFile(null);
+                              setNewVideoUrl('');
+                            }}
+                            className="h-6 w-6"
+                          >
+                            <X size={14} />
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleVideoFileChange}
+                      accept="video/*"
+                      className="hidden"
+                    />
+                  </div>
+                )}
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Miniatura</Label>
+                <div className="flex items-center space-x-4">
+                  <div className="w-24 h-24 bg-gray-100 rounded overflow-hidden">
+                    <img 
+                      src={newThumbnail} 
+                      alt="Miniatura" 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div>
                     <Button 
                       type="button" 
-                      onClick={handleBrowseVideoClick}
-                      variant="outline"
+                      variant="outline" 
+                      onClick={handleBrowseThumbnailClick}
                       className="flex items-center gap-1"
                     >
                       <Upload size={14} />
-                      <span>Seleziona file</span>
+                      <span>Carica immagine</span>
                     </Button>
-                    {videoFile && (
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm truncate max-w-[150px]">{videoFile.name}</span>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          onClick={() => {
-                            setVideoFile(null);
-                            setNewVideoUrl('');
-                          }}
-                          className="h-6 w-6"
-                        >
-                          <X size={14} />
-                        </Button>
-                      </div>
-                    )}
+                    <input
+                      type="file"
+                      ref={thumbnailInputRef}
+                      onChange={handleThumbnailFileChange}
+                      accept="image/*"
+                      className="hidden"
+                    />
                   </div>
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleVideoFileChange}
-                    accept="video/*"
-                    className="hidden"
-                  />
-                </div>
-              )}
-            </div>
-            
-            <div className="space-y-2">
-              <Label>Miniatura</Label>
-              <div className="flex items-center space-x-4">
-                <div className="w-24 h-24 bg-gray-100 rounded overflow-hidden">
-                  <img 
-                    src={newThumbnail} 
-                    alt="Miniatura" 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div>
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={handleBrowseThumbnailClick}
-                    className="flex items-center gap-1"
-                  >
-                    <Upload size={14} />
-                    <span>Carica immagine</span>
-                  </Button>
-                  <input
-                    type="file"
-                    ref={thumbnailInputRef}
-                    onChange={handleThumbnailFileChange}
-                    accept="image/*"
-                    className="hidden"
-                  />
                 </div>
               </div>
             </div>
-          </div>
-          
-          <div className="flex justify-end gap-2 mt-4">
-            <DialogClose asChild>
-              <Button variant="outline">Annulla</Button>
-            </DialogClose>
-            <Button onClick={handleSaveVideo}>Salva</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+            
+            <div className="flex justify-end gap-2 mt-4">
+              <DialogClose asChild>
+                <Button variant="outline">Annulla</Button>
+              </DialogClose>
+              <Button onClick={handleSaveVideo}>Salva</Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };

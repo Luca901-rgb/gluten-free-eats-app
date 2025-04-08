@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -44,6 +43,10 @@ const RestaurantDashboard = () => {
     totalReviews: 128,
     coverImage: '/placeholder.svg'
   };
+
+  // Determina se l'utente è il proprietario del ristorante
+  // In un'applicazione reale, questo valore verrebbe determinato dall'autenticazione dell'utente
+  const isRestaurantOwner = true;
 
   const navigateToTab = (tabId: string) => {
     setActiveTab(tabId);
@@ -177,13 +180,13 @@ const RestaurantDashboard = () => {
 
           {activeTab === 'menu' && (
             <div className="animate-fade-in">
-              <MenuViewer isRestaurantOwner={true} />
+              <MenuViewer isRestaurantOwner={isRestaurantOwner} />
             </div>
           )}
           
           {activeTab === 'videos' && (
             <div className="animate-fade-in">
-              <RestaurantVideos />
+              <RestaurantVideos isRestaurantOwner={isRestaurantOwner} />
             </div>
           )}
           
