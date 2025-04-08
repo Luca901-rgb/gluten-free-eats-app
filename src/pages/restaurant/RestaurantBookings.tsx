@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
@@ -60,10 +59,8 @@ const RestaurantBookings = () => {
     // Chiudiamo il dialog
     setShowReviewCodeDialog(false);
     
-    // Redirectiamo direttamente alla pagina delle recensioni con i codici già inseriti
-    setTimeout(() => {
-      navigate(`/restaurant/${restaurantId}?tab=reviews&bookingCode=${bookingCode}&restaurantCode=${restaurantCode}`);
-    }, 300);
+    // Redirectiamo alla pagina delle recensioni con i codici già inseriti
+    navigate(`/restaurant/${restaurantId}?tab=reviews&bookingCode=${bookingCode}&restaurantCode=${restaurantCode}`);
   };
 
   const getStatusBadge = (status: string) => {
@@ -224,7 +221,7 @@ const RestaurantBookings = () => {
               </div>
               <p className="mt-4 text-sm text-gray-600">
                 Questo codice è stato automaticamente associato alla prenotazione. 
-                Quando il cliente accederà alla sezione recensioni, il codice sarà già inserito.
+                Quando il cliente accederà alla sezione recensioni del ristorante, potrà utilizzare questo codice.
               </p>
             </div>
             <DialogFooter>

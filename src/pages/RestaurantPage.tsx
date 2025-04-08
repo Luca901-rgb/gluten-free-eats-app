@@ -42,7 +42,7 @@ const RestaurantPage = () => {
   const navigate = useNavigate();
   const { getBookingByCode } = useBookings();
   
-  // Check if we have a booking or restaurant code in the URL
+  // Check if we have a booking code in the URL
   const searchParams = new URLSearchParams(location.search);
   const bookingCode = searchParams.get('bookingCode');
   const restaurantCode = searchParams.get('restaurantCode');
