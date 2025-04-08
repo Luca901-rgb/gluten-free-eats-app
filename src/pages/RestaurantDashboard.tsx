@@ -2,944 +2,299 @@
 import React, { useState } from 'react';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  CalendarDays,
-  Clock,
-  Users,
-  Star,
-  MessageSquare,
-  ChevronDown,
-  Eye,
-  Video,
-  Camera,
-  Copy,
-  Check,
-  Home,
-  Image,
-  User,
-  Calendar,
-  Phone,
-  MapPin,
-  Menu,
-  FileText,
-} from 'lucide-react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { toast } from 'sonner';
-import { format, parseISO } from 'date-fns';
-import { it } from 'date-fns/locale';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useBookings } from '@/context/BookingContext';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { BarChart, CalendarRange, Home, Image, MessageCircle, Settings, FileText, VideoIcon } from 'lucide-react';
+import RestaurantBookings from './restaurant/RestaurantBookings';
+import RestaurantReviews from './restaurant/RestaurantReviews';
 import MenuViewer from '@/components/Restaurant/MenuViewer';
 
-const restaurant = {
-  id: '1',
-  name: 'La Trattoria Senza Glutine',
-  address: 'Via Roma 123, Milano, 20100',
-  phone: '+39 02 1234567',
-  email: 'info@trattoriasenzaglutine.it',
-  logo: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80',
-};
-
-const reviews = [
-  {
-    id: 'r1',
-    customerName: 'Giovanni Verdi',
-    rating: 4,
-    date: '2023-11-21',
-    text: 'Ottimo ristorante, cibo delizioso e personale gentilissimo. La pasta era davvero eccellente e il tiramisù fantastico. Torneremo sicuramente!',
-    response: 'Grazie per la recensione positiva! Siamo felici che ti sia piaciuto il nostro ristorante e speriamo di rivederti presto.',
-    photos: [
-      'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80',
-    ],
-  },
-  {
-    id: 'r2',
-    customerName: 'Elisa Russo',
-    rating: 5,
-    date: '2023-11-15',
-    text: 'Finalmente un ristorante dove posso mangiare tranquillamente senza preoccuparmi del glutine! La pizza era croccante e saporita, sembrava una normale pizza con glutine. Complimenti!',
-    response: '',
-    photos: [
-      'https://images.unsplash.com/photo-1513104890138-7c749659a591?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80',
-      'https://images.unsplash.com/photo-1571407970349-bc81e7e96d47?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80',
-    ],
-  },
-  {
-    id: 'r3',
-    customerName: 'Marco Blu',
-    rating: 3,
-    date: '2023-11-10',
-    text: "Il cibo era buono ma il servizio un po' lento. Abbiamo aspettato quasi un'ora per i primi piatti. Spero migliorerà in futuro perché la qualità del cibo è comunque alta.",
-    response: "Ci scusiamo per l'attesa. Stiamo lavorando per migliorare i tempi di servizio. Grazie per il feedback costruttivo!",
-    photos: [],
-  },
-];
-
-const statistics = {
-  dailyBookings: 8,
-  weeklyBookings: 42,
-  averageRating: 4.3,
-  totalReviews: 27,
-  profileViews: 156,
-};
-
-const videos = [
-  {
-    id: 'v1',
-    title: 'Pizza Senza Glutine Fatta in Casa',
-    thumbnail: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80',
-    views: 245,
-    duration: '12:45',
-    uploadDate: '2023-10-15',
-  },
-  {
-    id: 'v2',
-    title: 'Pasta Fresca Senza Glutine',
-    thumbnail: 'https://images.unsplash.com/photo-1603729362760-408f86a48177?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80',
-    views: 187,
-    duration: '18:20',
-    uploadDate: '2023-09-28',
-  },
-];
-
-const formatDate = (dateString: string) => {
-  try {
-    const date = parseISO(dateString);
-    return format(date, "d MMMM yyyy 'alle' HH:mm", { locale: it });
-  } catch (error) {
-    return dateString;
-  }
-};
-
 const RestaurantDashboard = () => {
-  const [activeTab, setActiveTab] = useState('home');
-  const [reviewsList, setReviewsList] = useState(reviews);
-  const [selectedBooking, setSelectedBooking] = useState<any | null>(null);
-  const [selectedReview, setSelectedReview] = useState<any | null>(null);
-  const [responseText, setResponseText] = useState('');
+  const [activeTab, setActiveTab] = useState('overview');
   
-  const { bookings, updateBooking, generateReviewCode } = useBookings();
-  
-  const restaurantBookings = bookings.filter(booking => 
-    booking.restaurantId === restaurant.id
-  );
-
-  const handleCopyCode = (code: string) => {
-    navigator.clipboard.writeText(code);
-    toast.success('Codice copiato negli appunti');
-  };
-
-  const handleStatusChange = (bookingId: string, status: 'confirmed' | 'pending' | 'completed' | 'cancelled') => {
-    updateBooking(bookingId, { status });
-    toast.success(`Stato della prenotazione aggiornato a: ${status}`);
-  };
-
-  const handleGenerateReviewCode = (bookingId: string) => {
-    const reviewCode = generateReviewCode(bookingId);
-    toast.success('Codice recensione generato con successo');
-    return reviewCode;
-  };
-
-  const submitReviewResponse = (reviewId: string) => {
-    if (!responseText.trim()) {
-      toast.error('Inserisci una risposta alla recensione');
-      return;
+  // Sample restaurant data
+  const restaurantData = {
+    name: 'La Trattoria Senza Glutine',
+    address: 'Via Roma 123, Milano',
+    phone: '+39 02 1234567',
+    email: 'info@trattoriasenzaglutine.it',
+    rating: 4.7,
+    totalReviews: 124,
+    bookings: {
+      today: 8,
+      tomorrow: 12,
+      thisWeek: 43,
+      nextWeek: 37,
+    },
+    revenue: {
+      today: 780,
+      thisWeek: 4250,
+      thisMonth: 18700,
     }
-    
-    setReviewsList(reviewsList.map(review => 
-      review.id === reviewId ? { ...review, response: responseText } : review
-    ));
-    
-    toast.success('Risposta alla recensione inviata con successo');
-    setResponseText('');
   };
 
   return (
-    <Layout>
-      <div className="p-4 space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <img
-              src={restaurant.logo}
-              alt={restaurant.name}
-              className="w-12 h-12 rounded-full object-cover"
-            />
-            <div>
-              <h1 className="text-2xl font-poppins font-bold text-primary">
-                Dashboard Ristorante
-              </h1>
-              <p className="text-gray-600 text-sm">{restaurant.name}</p>
-            </div>
+    <Layout hideNavigation>
+      <div className="container mx-auto px-4 py-6">
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-2xl font-poppins font-bold text-primary">{restaurantData.name}</h1>
+            <p className="text-gray-600">{restaurantData.address}</p>
           </div>
-          <Button variant="outline" size="sm" onClick={() => {
-            toast.info('Funzionalità di modifica profilo in arrivo');
-          }}>
-            Modifica profilo
+          <Button variant="outline" size="sm">
+            <Settings className="mr-2 h-4 w-4" />
+            Impostazioni
           </Button>
         </div>
+        
+        <div className="mb-6">
+          <ScrollArea className="w-full">
+            <div className="min-w-full pr-4">
+              <Tabs 
+                defaultValue="overview" 
+                value={activeTab} 
+                onValueChange={setActiveTab}
+                className="w-full"
+              >
+                <TabsList className="flex w-max mb-4 space-x-2">
+                  <TabsTrigger value="overview" className="flex items-center">
+                    <Home className="mr-2 h-4 w-4" />
+                    Dashboard
+                  </TabsTrigger>
+                  <TabsTrigger value="bookings" className="flex items-center">
+                    <CalendarRange className="mr-2 h-4 w-4" />
+                    Prenotazioni
+                  </TabsTrigger>
+                  <TabsTrigger value="menu" className="flex items-center">
+                    <FileText className="mr-2 h-4 w-4" />
+                    Menu
+                  </TabsTrigger>
+                  <TabsTrigger value="reviews" className="flex items-center">
+                    <MessageCircle className="mr-2 h-4 w-4" />
+                    Recensioni
+                  </TabsTrigger>
+                  <TabsTrigger value="gallery" className="flex items-center">
+                    <Image className="mr-2 h-4 w-4" />
+                    Galleria
+                  </TabsTrigger>
+                  <TabsTrigger value="videos" className="flex items-center">
+                    <VideoIcon className="mr-2 h-4 w-4" />
+                    Video Ricette
+                  </TabsTrigger>
+                  <TabsTrigger value="analytics" className="flex items-center">
+                    <BarChart className="mr-2 h-4 w-4" />
+                    Statistiche
+                  </TabsTrigger>
+                </TabsList>
 
-        <Tabs defaultValue="home" value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-7">
-            <TabsTrigger value="home">
-              <Home size={18} className="mr-1" /> Home
-            </TabsTrigger>
-            <TabsTrigger value="menu">
-              <Menu size={18} className="mr-1" /> Menu
-            </TabsTrigger>
-            <TabsTrigger value="gallery">
-              <Image size={18} className="mr-1" /> Galleria
-            </TabsTrigger>
-            <TabsTrigger value="videos">
-              <Video size={18} className="mr-1" /> Videoricette
-            </TabsTrigger>
-            <TabsTrigger value="bookings">
-              <Calendar size={18} className="mr-1" /> Prenotazioni
-            </TabsTrigger>
-            <TabsTrigger value="reviews">
-              <Star size={18} className="mr-1" /> Recensioni
-            </TabsTrigger>
-            <TabsTrigger value="profile">
-              <User size={18} className="mr-1" /> Profilo
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="home" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base font-medium">Prenotazioni</CardTitle>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <p className="text-2xl font-bold">{restaurantBookings.length}</p>
-                      <p className="text-xs text-gray-500">Totali</p>
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold">{restaurantBookings.filter(b => b.status === 'pending').length}</p>
-                      <p className="text-xs text-gray-500">In attesa</p>
-                    </div>
+                <TabsContent value="overview" className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-lg">Prenotazioni di oggi</CardTitle>
+                        <CardDescription>Stato attuale</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-3xl font-bold">{restaurantData.bookings.today}</div>
+                        <p className="text-sm text-gray-500 mt-1">
+                          {restaurantData.bookings.today > 5 ? 'Giornata piena' : 'Disponibilità residua'}
+                        </p>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-lg">Valutazione</CardTitle>
+                        <CardDescription>Media recensioni</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-3xl font-bold">{restaurantData.rating}</div>
+                        <p className="text-sm text-gray-500 mt-1">
+                          Basato su {restaurantData.totalReviews} recensioni
+                        </p>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-lg">Incasso giornaliero</CardTitle>
+                        <CardDescription>Stima attuale</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-3xl font-bold">€{restaurantData.revenue.today}</div>
+                        <p className="text-sm text-gray-500 mt-1">
+                          +12% rispetto alla media
+                        </p>
+                      </CardContent>
+                    </Card>
                   </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base font-medium">Valutazioni</CardTitle>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="flex items-center gap-2">
-                    <p className="text-2xl font-bold">{statistics.averageRating}</p>
-                    <div className="flex text-yellow-400">
-                      {[...Array(5)].map((_, i) => (
-                        <Star
-                          key={i}
-                          size={16}
-                          className={i < Math.floor(statistics.averageRating) ? "fill-yellow-400" : ""}
-                        />
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Prenotazioni settimanali</CardTitle>
+                      </CardHeader>
+                      <CardContent className="h-80">
+                        <div className="flex items-center justify-center h-full text-center text-gray-500">
+                          [Grafico prenotazioni settimanali]
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Ricavi mensili</CardTitle>
+                      </CardHeader>
+                      <CardContent className="h-80">
+                        <div className="flex items-center justify-center h-full text-center text-gray-500">
+                          [Grafico ricavi mensili]
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 gap-4">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Ultime recensioni</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          <div className="flex justify-between items-start pb-4 border-b">
+                            <div>
+                              <h3 className="font-medium">Mario Rossi</h3>
+                              <p className="text-sm text-gray-600 mt-1">Ottimo ristorante senza glutine, finalmente ho potuto gustare una pizza davvero buona senza preoccuparmi!</p>
+                            </div>
+                            <div className="text-right">
+                              <div className="flex items-center text-yellow-400">
+                                ★★★★★
+                              </div>
+                              <p className="text-xs text-gray-500 mt-1">2 giorni fa</p>
+                            </div>
+                          </div>
+                          
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h3 className="font-medium">Giulia Bianchi</h3>
+                              <p className="text-sm text-gray-600 mt-1">Ambiente accogliente e personale molto attento alle esigenze dei celiaci. Menu vario e gustoso.</p>
+                            </div>
+                            <div className="text-right">
+                              <div className="flex items-center text-yellow-400">
+                                ★★★★☆
+                              </div>
+                              <p className="text-xs text-gray-500 mt-1">5 giorni fa</p>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <Button variant="outline" className="w-full mt-4" onClick={() => setActiveTab('reviews')}>
+                          Vedi tutte le recensioni
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="bookings">
+                  <RestaurantBookings />
+                </TabsContent>
+                
+                <TabsContent value="menu">
+                  <MenuViewer isRestaurantOwner={true} />
+                </TabsContent>
+                
+                <TabsContent value="reviews">
+                  <RestaurantReviews />
+                </TabsContent>
+                
+                <TabsContent value="gallery">
+                  <div className="bg-white rounded-lg shadow p-6">
+                    <h2 className="font-poppins font-semibold text-lg mb-6">Galleria fotografica</h2>
+                    
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      {[1, 2, 3, 4, 5, 6].map((item) => (
+                        <div key={item} className="aspect-square bg-gray-100 rounded-md flex items-center justify-center">
+                          <span className="text-gray-400">Foto {item}</span>
+                        </div>
                       ))}
                     </div>
+                    
+                    <Button className="mt-6">
+                      <FileText className="mr-2 h-4 w-4" />
+                      Carica nuove foto
+                    </Button>
                   </div>
-                  <p className="text-xs text-gray-500">{statistics.totalReviews} recensioni totali</p>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base font-medium">Visualizzazioni profilo</CardTitle>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <p className="text-2xl font-bold">{statistics.profileViews}</p>
-                  <p className="text-xs text-gray-500">Ultimi 30 giorni</p>
-                </CardContent>
-              </Card>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Prenotazioni recenti</CardTitle>
-                  <CardDescription>Ultime 5 prenotazioni</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Cliente</TableHead>
-                        <TableHead>Data</TableHead>
-                        <TableHead>Persone</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {restaurantBookings.slice(0, 5).map(booking => (
-                        <TableRow key={booking.id}>
-                          <TableCell>{booking.customerName}</TableCell>
-                          <TableCell>{format(parseISO(booking.date), "dd/MM HH:mm")}</TableCell>
-                          <TableCell>{booking.people}</TableCell>
-                        </TableRow>
+                </TabsContent>
+                
+                <TabsContent value="videos">
+                  <div className="bg-white rounded-lg shadow p-6">
+                    <h2 className="font-poppins font-semibold text-lg mb-6">Video Ricette</h2>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {[1, 2, 3, 4].map((item) => (
+                        <div key={item} className="bg-gray-100 rounded-md p-4">
+                          <div className="aspect-video bg-gray-200 mb-3 flex items-center justify-center">
+                            <span className="text-gray-400">Video {item}</span>
+                          </div>
+                          <h3 className="font-medium">Ricetta {item}</h3>
+                          <p className="text-sm text-gray-600 mt-1">Descrizione breve della ricetta senza glutine...</p>
+                        </div>
                       ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-                <CardFooter>
-                  <Button variant="ghost" size="sm" onClick={() => setActiveTab('bookings')}>
-                    Vedi tutte le prenotazioni
-                  </Button>
-                </CardFooter>
-              </Card>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Recensioni recenti</CardTitle>
-                  <CardDescription>Ultime 3 recensioni</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {reviewsList.slice(0, 3).map(review => (
-                    <div key={review.id} className="border-b pb-3 last:border-0">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="font-medium">{review.customerName}</span>
-                        <div className="flex">
-                          {[...Array(5)].map((_, i) => (
-                            <Star
-                              key={i}
-                              size={14}
-                              className={i < review.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                      <p className="text-sm text-gray-600 line-clamp-2">{review.text}</p>
                     </div>
-                  ))}
-                </CardContent>
-                <CardFooter>
-                  <Button variant="ghost" size="sm" onClick={() => setActiveTab('reviews')}>
-                    Vedi tutte le recensioni
-                  </Button>
-                </CardFooter>
-              </Card>
+                    
+                    <Button className="mt-6">
+                      <FileText className="mr-2 h-4 w-4" />
+                      Carica nuovo video
+                    </Button>
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="analytics">
+                  <div className="bg-white rounded-lg shadow p-6">
+                    <h2 className="font-poppins font-semibold text-lg mb-6">Statistiche e Analisi</h2>
+                    
+                    <div className="h-96 bg-gray-50 rounded-lg flex items-center justify-center mb-6">
+                      <span className="text-gray-400">Grafici statistiche</span>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm font-medium">Visite al profilo</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="text-2xl font-bold">1,245</div>
+                          <p className="text-xs text-green-600">+12% questa settimana</p>
+                        </CardContent>
+                      </Card>
+                      
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm font-medium">Conversione prenotazioni</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="text-2xl font-bold">15.8%</div>
+                          <p className="text-xs text-green-600">+2.3% rispetto al mese scorso</p>
+                        </CardContent>
+                      </Card>
+                      
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm font-medium">Clienti fidelizzati</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="text-2xl font-bold">42%</div>
+                          <p className="text-xs text-amber-600">-1% rispetto al mese scorso</p>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </div>
+                </TabsContent>
+              </Tabs>
             </div>
-          </TabsContent>
-          
-          <TabsContent value="menu" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Menu del Ristorante</CardTitle>
-                <CardDescription>Gestisci il menu interattivo e in formato PDF del tuo ristorante</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <MenuViewer />
-              </CardContent>
-              <CardFooter className="flex justify-between">
-                <Button variant="outline" onClick={() => toast.info('Modifica menu in arrivo')}>
-                  Modifica menu
-                </Button>
-                <Button onClick={() => toast.info('Aggiunta piatto in arrivo')}>
-                  Aggiungi piatto
-                </Button>
-              </CardFooter>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="gallery" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Galleria Immagini</CardTitle>
-                <CardDescription>Gestisci le foto del tuo ristorante e dei piatti</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-3 gap-3">
-                  <img
-                    src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80"
-                    alt="Restaurant"
-                    className="rounded-md aspect-square object-cover"
-                  />
-                  <img
-                    src="https://images.unsplash.com/photo-1458644267420-66bc8a5f21e4?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80"
-                    alt="Food"
-                    className="rounded-md aspect-square object-cover"
-                  />
-                  <img
-                    src="https://images.unsplash.com/photo-1513104890138-7c749659a591?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80"
-                    alt="Pizza"
-                    className="rounded-md aspect-square object-cover"
-                  />
-                  <img
-                    src="https://images.unsplash.com/photo-1515669097368-22e68427d265?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80"
-                    alt="Interior"
-                    className="rounded-md aspect-square object-cover"
-                  />
-                  <div className="rounded-md aspect-square border border-dashed flex items-center justify-center">
-                    <input
-                      type="file"
-                      id="photo-upload"
-                      className="hidden"
-                      accept="image/*"
-                      onChange={() => toast.info('Caricamento foto in arrivo')}
-                    />
-                    <label htmlFor="photo-upload" className="cursor-pointer flex flex-col items-center">
-                      <Camera size={24} className="text-gray-400 mb-1" />
-                      <span className="text-xs text-gray-500">Aggiungi foto</span>
-                    </label>
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button variant="outline" size="sm" className="ml-auto">
-                  Gestisci galleria
-                </Button>
-              </CardFooter>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="videos" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Videoricette</CardTitle>
-                <CardDescription>Gestisci i video delle ricette del tuo ristorante</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {videos.map(video => (
-                  <div key={video.id} className="border rounded-lg p-3 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-16 h-12 rounded overflow-hidden">
-                        <img src={video.thumbnail} alt={video.title} className="w-full h-full object-cover" />
-                      </div>
-                      <div>
-                        <p className="font-medium line-clamp-1">{video.title}</p>
-                        <div className="flex items-center gap-4 text-xs text-gray-500">
-                          <span className="flex items-center gap-1">
-                            <Clock size={12} />
-                            {video.duration}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Eye size={12} />
-                            {video.views} visualizzazioni
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <ChevronDown size={16} />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => toast.info('Modifica video in arrivo')}>
-                          Modifica
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => toast.info('Anteprima video in arrivo')}>
-                          Anteprima
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => toast.info('Statistiche video in arrivo')}>
-                          Statistiche
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                ))}
-                
-                <div className="border border-dashed rounded-lg p-8 text-center">
-                  <input
-                    type="file"
-                    id="video-upload"
-                    className="hidden"
-                    accept="video/*"
-                    onChange={() => toast.info('Caricamento video in arrivo')}
-                  />
-                  <label htmlFor="video-upload" className="cursor-pointer">
-                    <Video size={32} className="mx-auto text-gray-400 mb-2" />
-                    <p className="font-medium text-gray-700">Carica nuova videoricetta</p>
-                    <p className="text-sm text-gray-500 mt-1">Massimo 500MB per video</p>
-                    <Button variant="outline" className="mt-4">
-                      Seleziona file
-                    </Button>
-                  </label>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="bookings" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Gestione Prenotazioni</CardTitle>
-                <CardDescription>Visualizza e gestisci le prenotazioni dei tuoi clienti</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Cliente</TableHead>
-                      <TableHead>Data</TableHead>
-                      <TableHead>Persone</TableHead>
-                      <TableHead>Stato</TableHead>
-                      <TableHead>Codice</TableHead>
-                      <TableHead>Azioni</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {restaurantBookings.map(booking => (
-                      <TableRow key={booking.id}>
-                        <TableCell>{booking.customerName}</TableCell>
-                        <TableCell>{format(parseISO(booking.date), "dd/MM/yyyy HH:mm")}</TableCell>
-                        <TableCell>{booking.people}</TableCell>
-                        <TableCell>
-                          <Badge variant={
-                            booking.status === 'confirmed' ? 'default' :
-                            booking.status === 'pending' ? 'secondary' :
-                            booking.status === 'completed' ? 'outline' : 'destructive'
-                          }>
-                            {booking.status === 'confirmed' ? 'Confermata' :
-                             booking.status === 'pending' ? 'In attesa' :
-                             booking.status === 'completed' ? 'Completata' : 'Cancellata'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center space-x-2">
-                            <span className="text-sm font-mono">{booking.bookingCode}</span>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7"
-                              onClick={() => handleCopyCode(booking.bookingCode)}
-                            >
-                              <Copy size={14} />
-                            </Button>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex space-x-2">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => setSelectedBooking(booking)}
-                            >
-                              <Eye size={16} />
-                            </Button>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon">
-                                  <ChevronDown size={16} />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                {booking.status === 'pending' && (
-                                  <DropdownMenuItem onClick={() => handleStatusChange(booking.id, 'confirmed')}>
-                                    Conferma prenotazione
-                                  </DropdownMenuItem>
-                                )}
-                                {(booking.status === 'confirmed' || booking.status === 'pending') && (
-                                  <DropdownMenuItem onClick={() => handleStatusChange(booking.id, 'completed')}>
-                                    Segna come completata
-                                  </DropdownMenuItem>
-                                )}
-                                {booking.status === 'completed' && !booking.reviewCode && (
-                                  <DropdownMenuItem onClick={() => handleGenerateReviewCode(booking.id)}>
-                                    Genera codice recensione
-                                  </DropdownMenuItem>
-                                )}
-                                {booking.reviewCode && (
-                                  <DropdownMenuItem onClick={() => handleCopyCode(booking.reviewCode!)}>
-                                    Copia codice recensione
-                                  </DropdownMenuItem>
-                                )}
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-            
-            {selectedBooking && (
-              <Dialog open={!!selectedBooking} onOpenChange={(open) => !open && setSelectedBooking(null)}>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Dettagli Prenotazione</DialogTitle>
-                    <DialogDescription>Prenotazione #{selectedBooking.bookingCode}</DialogDescription>
-                  </DialogHeader>
-                  
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-sm text-gray-500 mb-1">Cliente</p>
-                        <p className="font-medium">{selectedBooking.customerName}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500 mb-1">Stato</p>
-                        <Badge variant={
-                          selectedBooking.status === 'confirmed' ? 'default' :
-                          selectedBooking.status === 'pending' ? 'secondary' :
-                          selectedBooking.status === 'completed' ? 'outline' : 'destructive'
-                        }>
-                          {selectedBooking.status === 'confirmed' ? 'Confermata' :
-                           selectedBooking.status === 'pending' ? 'In attesa' :
-                           selectedBooking.status === 'completed' ? 'Completata' : 'Cancellata'}
-                        </Badge>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500 mb-1">Data e ora</p>
-                        <p className="font-medium">{formatDate(selectedBooking.date)}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500 mb-1">Numero di persone</p>
-                        <p className="font-medium">{selectedBooking.people}</p>
-                      </div>
-                      <div className="col-span-2">
-                        <p className="text-sm text-gray-500 mb-1">Note</p>
-                        <p>{selectedBooking.notes || '(Nessuna nota)'}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500 mb-1">Codice prenotazione</p>
-                        <div className="flex items-center space-x-2">
-                          <p className="font-mono">{selectedBooking.bookingCode}</p>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7"
-                            onClick={() => handleCopyCode(selectedBooking.bookingCode)}
-                          >
-                            <Copy size={14} />
-                          </Button>
-                        </div>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500 mb-1">Codice recensione</p>
-                        {selectedBooking.reviewCode ? (
-                          <div className="flex items-center space-x-2">
-                            <p className="font-mono">{selectedBooking.reviewCode}</p>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7"
-                              onClick={() => handleCopyCode(selectedBooking.reviewCode!)}
-                            >
-                              <Copy size={14} />
-                            </Button>
-                          </div>
-                        ) : (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            disabled={selectedBooking.status !== 'completed'}
-                            onClick={() => {
-                              const code = handleGenerateReviewCode(selectedBooking.id);
-                              if (code) {
-                                setSelectedBooking({...selectedBooking, reviewCode: code});
-                              }
-                            }}
-                          >
-                            Genera codice
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <DialogFooter className="gap-2 sm:gap-0">
-                    <div className="grid grid-cols-2 gap-2 w-full">
-                      {selectedBooking.status === 'pending' && (
-                        <Button
-                          variant="default"
-                          onClick={() => {
-                            handleStatusChange(selectedBooking.id, 'confirmed');
-                            setSelectedBooking({...selectedBooking, status: 'confirmed'});
-                          }}
-                        >
-                          <Check size={16} className="mr-2" />
-                          Conferma prenotazione
-                        </Button>
-                      )}
-                      {(selectedBooking.status === 'confirmed' || selectedBooking.status === 'pending') && (
-                        <Button
-                          variant="outline"
-                          onClick={() => {
-                            handleStatusChange(selectedBooking.id, 'completed');
-                            setSelectedBooking({...selectedBooking, status: 'completed'});
-                          }}
-                        >
-                          Segna come completata
-                        </Button>
-                      )}
-                    </div>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            )}
-          </TabsContent>
-          
-          <TabsContent value="reviews" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Gestione Recensioni</CardTitle>
-                <CardDescription>Visualizza e rispondi alle recensioni dei tuoi clienti</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {reviewsList.map(review => (
-                  <div
-                    key={review.id}
-                    className="border rounded-lg p-4"
-                  >
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <div className="flex items-center">
-                          <span className="font-medium mr-2">{review.customerName}</span>
-                          <div className="flex">
-                            {[...Array(5)].map((_, i) => (
-                              <Star
-                                key={i}
-                                size={14}
-                                className={i < review.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}
-                              />
-                            ))}
-                          </div>
-                        </div>
-                        <p className="text-xs text-gray-500">{review.date}</p>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setSelectedReview(review)}
-                      >
-                        Rispondi
-                      </Button>
-                    </div>
-                    <p className="text-sm mb-3">{review.text}</p>
-                    
-                    {review.photos.length > 0 && (
-                      <div className="flex gap-2 mb-3">
-                        {review.photos.map((photo, idx) => (
-                          <img
-                            key={idx}
-                            src={photo}
-                            alt={`Review photo ${idx + 1}`}
-                            className="w-16 h-16 rounded object-cover"
-                          />
-                        ))}
-                      </div>
-                    )}
-                    
-                    {review.response && (
-                      <div className="bg-gray-50 p-3 rounded-md mt-2">
-                        <p className="text-xs font-medium text-gray-700 mb-1">La tua risposta:</p>
-                        <p className="text-sm text-gray-600">{review.response}</p>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-            
-            {selectedReview && (
-              <Dialog open={!!selectedReview} onOpenChange={(open) => !open && setSelectedReview(null)}>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Rispondi alla recensione</DialogTitle>
-                    <DialogDescription>
-                      La tua risposta sarà visibile a tutti gli utenti
-                    </DialogDescription>
-                  </DialogHeader>
-                  
-                  <div className="bg-gray-50 p-3 rounded-md mb-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-medium">{selectedReview.customerName}</span>
-                      <div className="flex">
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            size={14}
-                            className={i < selectedReview.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                    <p className="text-sm text-gray-700">{selectedReview.text}</p>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="response">La tua risposta</Label>
-                      <Textarea
-                        id="response"
-                        placeholder="Scrivi una risposta alla recensione..."
-                        value={responseText || selectedReview.response}
-                        onChange={(e) => setResponseText(e.target.value)}
-                        rows={4}
-                      />
-                    </div>
-                  </div>
-                  
-                  <DialogFooter>
-                    <Button
-                      type="submit"
-                      disabled={!responseText?.trim() && !selectedReview.response}
-                      onClick={() => {
-                        submitReviewResponse(selectedReview.id);
-                        setSelectedReview(null);
-                      }}
-                    >
-                      {selectedReview.response ? 'Aggiorna risposta' : 'Pubblica risposta'}
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            )}
-          </TabsContent>
-          
-          <TabsContent value="profile" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Profilo Ristorante</CardTitle>
-                <CardDescription>Gestisci le informazioni del tuo ristorante</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
-                  <div className="w-16 h-16 rounded-full overflow-hidden">
-                    <img src={restaurant.logo} alt={restaurant.name} className="w-full h-full object-cover" />
-                  </div>
-                  <div>
-                    <h3 className="font-medium text-lg">{restaurant.name}</h3>
-                    <p className="text-sm text-gray-600">{restaurant.address}</p>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <h3 className="font-medium mb-2">Informazioni di contatto</h3>
-                    <div className="space-y-2">
-                      <p className="flex items-center">
-                        <Phone size={16} className="mr-2 text-gray-500" />
-                        <span>{restaurant.phone}</span>
-                      </p>
-                      <p className="flex items-center">
-                        <MessageSquare size={16} className="mr-2 text-gray-500" />
-                        <span>{restaurant.email}</span>
-                      </p>
-                      <p className="flex items-center">
-                        <MapPin size={16} className="mr-2 text-gray-500" />
-                        <span>{restaurant.address}</span>
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <h3 className="font-medium mb-2">Statistiche</h3>
-                    <div className="space-y-2">
-                      <p className="flex items-center justify-between">
-                        <span className="flex items-center">
-                          <Star size={16} className="mr-2 text-yellow-500" />
-                          Valutazione media
-                        </span>
-                        <span className="font-medium">{statistics.averageRating}/5</span>
-                      </p>
-                      <p className="flex items-center justify-between">
-                        <span className="flex items-center">
-                          <MessageSquare size={16} className="mr-2 text-gray-500" />
-                          Recensioni totali
-                        </span>
-                        <span className="font-medium">{statistics.totalReviews}</span>
-                      </p>
-                      <p className="flex items-center justify-between">
-                        <span className="flex items-center">
-                          <Eye size={16} className="mr-2 text-gray-500" />
-                          Visualizzazioni profilo
-                        </span>
-                        <span className="font-medium">{statistics.profileViews}</span>
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="pt-4 flex justify-end">
-                  <Button onClick={() => toast.info('Funzionalità di modifica profilo in arrivo')}>
-                    Modifica profilo
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Gestione Menu</CardTitle>
-                <CardDescription>Carica e gestisci il menu del tuo ristorante</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="border rounded-lg p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <FileText size={24} className="text-gray-400" />
-                    <div>
-                      <p className="font-medium">Menu.pdf</p>
-                      <p className="text-xs text-gray-500">Caricato il 15/10/2023</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm">
-                      Sostituisci
-                    </Button>
-                    <Button variant="ghost" size="sm">
-                      Anteprima
-                    </Button>
-                  </div>
-                </div>
-                
-                <div className="border border-dashed rounded-lg p-8 text-center">
-                  <input
-                    type="file"
-                    id="menu-pdf"
-                    className="hidden"
-                    accept=".pdf"
-                    onChange={() => toast.info('Caricamento menu in arrivo')}
-                  />
-                  <label htmlFor="menu-pdf" className="cursor-pointer">
-                    <FileText size={32} className="mx-auto text-gray-400 mb-2" />
-                    <p className="font-medium text-gray-700">Carica menu interattivo</p>
-                    <p className="text-sm text-gray-500 mt-1">Trascina qui il file o clicca per caricare</p>
-                    <Button variant="outline" className="mt-4">
-                      Seleziona file
-                    </Button>
-                  </label>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+          </ScrollArea>
+        </div>
       </div>
     </Layout>
   );

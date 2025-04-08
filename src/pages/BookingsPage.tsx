@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
@@ -83,10 +82,9 @@ const BookingsPage = () => {
     toast.success('Codice recensione verificato!');
     setShowCodeDialog(false);
     
-    // Naviga alla pagina delle recensioni passando i codici come parametri di query
     setTimeout(() => {
       navigate(`/restaurant/${selectedBooking.restaurantId}?tab=reviews&bookingCode=${selectedBooking.bookingCode}&restaurantCode=${restaurantCode}`);
-    }, 1000);
+    }, 500);
   };
 
   const BookingCard = ({ booking }: { booking: any }) => {
@@ -180,16 +178,29 @@ const BookingsPage = () => {
           {canBeReviewed && (
             <div className="w-full">
               {booking.attendance === 'confirmed' && (
-                <Button 
-                  className="w-full" 
-                  onClick={() => {
-                    setSelectedBooking(booking);
-                    setRestaurantCode('');
-                    setShowCodeDialog(true);
-                  }}
-                >
-                  Lascia una recensione
-                </Button>
+                <>
+                  {booking.restaurantReviewCode ? (
+                    <Button 
+                      className="w-full" 
+                      onClick={() => {
+                        navigate(`/restaurant/${booking.restaurantId}?tab=reviews&bookingCode=${booking.bookingCode}&restaurantCode=${booking.restaurantReviewCode}`);
+                      }}
+                    >
+                      Lascia una recensione
+                    </Button>
+                  ) : (
+                    <Button 
+                      className="w-full" 
+                      onClick={() => {
+                        setSelectedBooking(booking);
+                        setRestaurantCode('');
+                        setShowCodeDialog(true);
+                      }}
+                    >
+                      Lascia una recensione
+                    </Button>
+                  )}
+                </>
               )}
               
               {booking.attendance !== 'confirmed' && (
@@ -239,7 +250,6 @@ const BookingsPage = () => {
                 <Calendar size={32} className="mx-auto mb-3 text-primary" />
                 <p className="text-gray-700 mb-2">Non hai prenotazioni in programma</p>
                 <Button variant="outline" onClick={() => {
-                  // In a real app, this would navigate to the search page
                   toast.info('Vai alla pagina di ricerca ristoranti');
                 }}>
                   Trova un ristorante
@@ -293,7 +303,6 @@ const BookingsPage = () => {
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-mono"
                     value={restaurantCode}
                     onChange={(e) => {
-                      // Accetta solo numeri e limita a 4 caratteri
                       const value = e.target.value.replace(/\D/g, '').slice(0, 4);
                       setRestaurantCode(value);
                     }}

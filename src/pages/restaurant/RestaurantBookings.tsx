@@ -57,7 +57,13 @@ const RestaurantBookings = () => {
   };
   
   const redirectToReviews = (bookingCode: string, restaurantCode: string) => {
-    navigate(`/restaurant/${restaurantId}?tab=reviews&bookingCode=${bookingCode}&restaurantCode=${restaurantCode}`);
+    // Chiudiamo il dialog
+    setShowReviewCodeDialog(false);
+    
+    // Redirectiamo direttamente alla pagina delle recensioni con i codici già inseriti
+    setTimeout(() => {
+      navigate(`/restaurant/${restaurantId}?tab=reviews&bookingCode=${bookingCode}&restaurantCode=${restaurantCode}`);
+    }, 300);
   };
 
   const getStatusBadge = (status: string) => {
@@ -223,7 +229,6 @@ const RestaurantBookings = () => {
             </div>
             <DialogFooter>
               <Button onClick={() => {
-                setShowReviewCodeDialog(false);
                 const currentBooking = allBookings.find(b => b.id === currentBookingId);
                 if (currentBooking) {
                   redirectToReviews(currentBooking.bookingCode, generatedReviewCode);

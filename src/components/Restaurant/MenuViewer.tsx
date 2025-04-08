@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -39,6 +38,10 @@ interface MenuProps {
   menuPdfUrl?: string;
   menuItems: MenuItem[];
   categories: string[];
+}
+
+interface MenuViewerProps {
+  isRestaurantOwner?: boolean;
 }
 
 const sampleMenu: MenuProps = {
@@ -124,7 +127,7 @@ const sampleMenu: MenuProps = {
   ]
 };
 
-const MenuViewer: React.FC = () => {
+const MenuViewer: React.FC<MenuViewerProps> = ({ isRestaurantOwner = false }) => {
   const [activeCategory, setActiveCategory] = useState<string>(sampleMenu.categories[0]);
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [menuPdfFile, setMenuPdfFile] = useState<File | null>(null);
@@ -164,10 +167,12 @@ const MenuViewer: React.FC = () => {
       <div className="flex justify-between items-center">
         <h2 className="font-poppins font-semibold text-lg">{sampleMenu.restaurantName} - Menu</h2>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => setShowPdfUpload(true)} className="flex gap-1">
-            <Upload size={16} />
-            <span className="hidden sm:inline">Carica PDF</span>
-          </Button>
+          {isRestaurantOwner && (
+            <Button variant="outline" size="sm" onClick={() => setShowPdfUpload(true)} className="flex gap-1">
+              <Upload size={16} />
+              <span className="hidden sm:inline">Carica PDF</span>
+            </Button>
+          )}
           <Button variant="outline" size="sm" onClick={handleDownloadMenu} className="flex gap-1">
             <Download size={16} />
             <span className="hidden sm:inline">Scarica PDF</span>
@@ -175,7 +180,7 @@ const MenuViewer: React.FC = () => {
         </div>
       </div>
 
-      {showPdfUpload && (
+      {showPdfUpload && isRestaurantOwner && (
         <div className="border border-dashed rounded-lg p-6 text-center">
           <FileText size={32} className="mx-auto text-gray-400 mb-2" />
           <p className="font-medium text-gray-700 mb-2">Carica il menu in formato PDF</p>
