@@ -29,7 +29,7 @@ interface RestaurantVideosProps {
   isRestaurantOwner?: boolean;
 }
 
-const RestaurantVideos: React.FC<RestaurantVideosProps> = ({ isRestaurantOwner = true }) => {
+const RestaurantVideos: React.FC<RestaurantVideosProps> = ({ isRestaurantOwner = false }) => {
   // Mock videos data
   const [videos, setVideos] = useState<Video[]>([
     {

@@ -214,7 +214,7 @@ const RestaurantDetails: React.FC<RestaurantDetailsProps> = ({
 
         {activeTab === 'videos' && (
           <div className="animate-fade-in">
-            <RestaurantVideos />
+            <RestaurantVideos isRestaurantOwner={false} />
           </div>
         )}
 
