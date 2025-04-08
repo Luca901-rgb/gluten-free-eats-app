@@ -1,8 +1,13 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
-import { Upload, ImagePlus, Trash2 } from 'lucide-react';
+import { Upload, ImagePlus, Trash2, X } from 'lucide-react';
+import { 
+  Dialog, 
+  DialogContent,
+  DialogClose 
+} from '@/components/ui/dialog';
 
 const RestaurantGallery = () => {
   // Mock gallery data
@@ -12,6 +17,9 @@ const RestaurantGallery = () => {
     '/placeholder.svg',
     '/placeholder.svg'
   ]);
+
+  // State for the image viewer modal
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const handleAddImage = () => {
     // In a real app, this would open a file picker
@@ -24,6 +32,14 @@ const RestaurantGallery = () => {
     const newImages = [...images];
     newImages.splice(index, 1);
     setImages(newImages);
+  };
+
+  const openImageViewer = (image: string) => {
+    setSelectedImage(image);
+  };
+
+  const closeImageViewer = () => {
+    setSelectedImage(null);
   };
 
   return (
@@ -43,7 +59,8 @@ const RestaurantGallery = () => {
               <img 
                 src={image} 
                 alt={`Gallery image ${index + 1}`} 
-                className="w-full aspect-square object-cover rounded-lg border border-gray-200"
+                className="w-full aspect-square object-cover rounded-lg border border-gray-200 cursor-pointer"
+                onClick={() => openImageViewer(image)}
               />
               <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 flex items-center justify-center opacity-0 group-hover:opacity-100 rounded-lg">
                 <Button 
@@ -67,6 +84,24 @@ const RestaurantGallery = () => {
             <span className="text-sm text-gray-500">Aggiungi immagine</span>
           </div>
         </div>
+
+        {/* Image Viewer Modal */}
+        <Dialog open={selectedImage !== null} onOpenChange={closeImageViewer}>
+          <DialogContent className="max-w-4xl p-0 bg-transparent border-none">
+            <div className="relative w-full">
+              <DialogClose className="absolute right-2 top-2 z-10 bg-black/50 text-white rounded-full p-2 hover:bg-black/70">
+                <X className="h-5 w-5" />
+              </DialogClose>
+              {selectedImage && (
+                <img 
+                  src={selectedImage} 
+                  alt="Enlarged view" 
+                  className="w-full h-auto max-h-[80vh] object-contain rounded-lg"
+                />
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </Layout>
   );
