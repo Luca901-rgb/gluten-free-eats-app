@@ -18,6 +18,9 @@ import VideoRecipesPage from "./pages/VideoRecipesPage";
 import PaymentsPage from "./pages/PaymentsPage";
 import RestaurantDashboard from "./pages/RestaurantDashboard";
 import { BookingProvider } from "./context/BookingContext";
+import { AdminProvider } from "./context/AdminContext";
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminLogin from "./pages/AdminLogin";
 
 // Create a new QueryClient instance
 const queryClient = new QueryClient();
@@ -26,29 +29,33 @@ const App = () => (
   // Fix the order of providers - React Router must be outside QueryClient
   <BrowserRouter>
     <QueryClientProvider client={queryClient}>
-      <BookingProvider>
-        <TooltipProvider>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/restaurant/:id" element={<RestaurantPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/search" element={<SearchPage />} />
-            <Route path="/bookings" element={<BookingsPage />} />
-            <Route path="/favorites" element={<FavoritesPage />} />
-            <Route path="/videos" element={<VideoRecipesPage />} />
-            <Route path="/payments" element={<PaymentsPage />} />
-            <Route path="/restaurant-dashboard" element={<RestaurantDashboard />} />
-            
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-          <Toaster />
-          <Sonner />
-        </TooltipProvider>
-      </BookingProvider>
+      <AdminProvider>
+        <BookingProvider>
+          <TooltipProvider>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/restaurant/:id" element={<RestaurantPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/search" element={<SearchPage />} />
+              <Route path="/bookings" element={<BookingsPage />} />
+              <Route path="/favorites" element={<FavoritesPage />} />
+              <Route path="/videos" element={<VideoRecipesPage />} />
+              <Route path="/payments" element={<PaymentsPage />} />
+              <Route path="/restaurant-dashboard" element={<RestaurantDashboard />} />
+              <Route path="/admin-login" element={<AdminLogin />} />
+              <Route path="/admin-dashboard" element={<AdminDashboard />} />
+              
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+            <Toaster />
+            <Sonner />
+          </TooltipProvider>
+        </BookingProvider>
+      </AdminProvider>
     </QueryClientProvider>
   </BrowserRouter>
 );
