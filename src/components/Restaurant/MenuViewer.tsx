@@ -135,7 +135,38 @@ const MenuViewer: React.FC<MenuViewerProps> = ({ isRestaurantOwner = false }) =>
 
   const handleDownloadMenu = () => {
     toast.info('Download del menu in corso...');
-    // In a real app, this would initiate a download
+    
+    let menuText = `MENU - ${sampleMenu.restaurantName}\n\n`;
+    
+    sampleMenu.categories.forEach(category => {
+      menuText += `=== ${category.toUpperCase()} ===\n\n`;
+      
+      const itemsInCategory = sampleMenu.menuItems.filter(item => item.category === category);
+      
+      itemsInCategory.forEach(item => {
+        menuText += `${item.name} - €${item.price}\n`;
+        menuText += `${item.description}\n`;
+        if (item.glutenFree) menuText += "✓ Senza Glutine\n";
+        if (item.allergens && item.allergens.length > 0) {
+          menuText += `⚠️ Allergeni: ${item.allergens.join(', ')}\n`;
+        }
+        menuText += '\n';
+      });
+      
+      menuText += '\n';
+    });
+    
+    const blob = new Blob([menuText], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `menu-${sampleMenu.restaurantName.toLowerCase().replace(/\s+/g, '-')}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    toast.success('Menu scaricato con successo');
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -152,7 +183,6 @@ const MenuViewer: React.FC<MenuViewerProps> = ({ isRestaurantOwner = false }) =>
 
   const handlePdfUpload = () => {
     if (menuPdfFile) {
-      // In a real app, this would upload the file to a server
       toast.success('Menu PDF caricato con successo');
       setShowPdfUpload(false);
     } else {
