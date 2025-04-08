@@ -150,7 +150,9 @@ const BookingForm: React.FC<BookingFormProps> = ({
       
       // Call the onBookingComplete callback if provided
       if (onBookingComplete) {
-        onBookingComplete(newBooking.bookingCode, newBooking.restaurantReviewCode || '');
+        // Pass only the booking code, since restaurantReviewCode doesn't exist yet
+        // The restaurant code will be generated later when the restaurant confirms attendance
+        onBookingComplete(newBooking.bookingCode, '');
       }
       
       setShowConfirmation(true);
