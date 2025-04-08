@@ -12,7 +12,6 @@ interface LayoutProps {
   hideNavigation?: boolean;
 }
 
-// Aggiungiamo il profilo alla navigazione
 const navigationItems = [
   { path: '/', icon: <Home size={24} />, label: 'Home' },
   { path: '/search', icon: <Search size={24} />, label: 'Ricerca' },
