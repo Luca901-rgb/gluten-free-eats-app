@@ -28,7 +28,7 @@ const Layout: React.FC<LayoutProps> = ({ children, hideNavigation = false }) => 
       <header className="sticky top-0 z-10 flex items-center justify-between bg-white border-b h-16 px-4">
         <Link to="/" className="flex items-center gap-2">
           <CameraIcon size={24} className="text-primary" />
-          <span className="font-poppins font-bold text-lg">GlutenFree</span>
+          <span className="font-poppins font-bold text-lg">GlutenFree App</span>
         </Link>
         
         <div className="flex gap-2">
