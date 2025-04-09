@@ -36,7 +36,7 @@ const AttendanceDialog = ({
             Conferma presenza clienti
           </DialogTitle>
           <DialogDescription>
-            Le seguenti prenotazioni sono passate da più di un'ora e necessitano di verifica presenza.
+            Le seguenti prenotazioni sono passate da più di un&apos;ora e necessitano di verifica presenza.
           </DialogDescription>
         </DialogHeader>
         <div className="py-4">
