@@ -1,258 +1,54 @@
 
-import React, { useState, useEffect } from 'react';
-import { Search, MapPin, Info, Store } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
+import React from 'react';
 import Layout from '@/components/Layout';
-import RestaurantCard, { Restaurant } from '@/components/Restaurant/RestaurantCard';
-import { Link } from 'react-router-dom';
-import { toast } from 'sonner';
-import { checkUserRegion } from '@/utils/geolocation';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-
-const sampleRestaurants: Restaurant[] = [
-  {
-    id: '1',
-    name: 'La Trattoria Senza Glutine',
-    image: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-    rating: 4.7,
-    reviews: 128,
-    cuisine: 'Italiana',
-    distance: '0.8 km',
-    isFavorite: false,
-  },
-  {
-    id: '2',
-    name: 'Pizzeria Gluten Free',
-    image: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-    rating: 4.5,
-    reviews: 95,
-    cuisine: 'Pizzeria',
-    distance: '1.2 km',
-    isFavorite: true,
-  },
-  {
-    id: '3',
-    name: 'Pasta & Risotti',
-    image: 'https://images.unsplash.com/photo-1458644267420-66bc8a5f21e4?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-    rating: 4.3,
-    reviews: 72,
-    cuisine: 'Italiana',
-    distance: '2.5 km',
-    isFavorite: false,
-  },
-  {
-    id: '4',
-    name: 'La Celiachia',
-    image: 'https://images.unsplash.com/photo-1515669097368-22e68427d265?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-    rating: 4.8,
-    reviews: 103,
-    cuisine: 'Bistro',
-    distance: '3.1 km',
-    isFavorite: false,
-  },
-  {
-    id: '5',
-    name: 'Beato Te',
-    image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-    rating: 4.2,
-    reviews: 85,
-    cuisine: 'Mediterranea',
-    distance: '3.7 km',
-    isFavorite: true,
-  },
-];
+import WelcomeHeader from '@/components/Home/WelcomeHeader';
+import RestaurateurAccess from '@/components/Home/RestaurateurAccess';
+import RegionAlert from '@/components/Home/RegionAlert';
+import SearchBar from '@/components/Home/SearchBar';
+import RestaurantList from '@/components/Home/RestaurantList';
+import NavigationButtons from '@/components/Home/NavigationButtons';
+import { useRestaurantList } from '@/hooks/useRestaurantList';
 
 const Index = () => {
-  const [restaurants, setRestaurants] = useState<Restaurant[]>(sampleRestaurants);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
-  const [regionStatus, setRegionStatus] = useState<{
-    checked: boolean;
-    inRegion: boolean;
-    regionName?: string;
-    error?: string;
-  }>({
-    checked: false,
-    inRegion: false
-  });
-
-  useEffect(() => {
-    // Aggiunta di un toast di debug per verificare che la pagina sta caricando correttamente
-    toast.info("Benvenuto nell'app Gluten Free Eats!");
-    
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1000);
-
-    // Verifica la regione dell'utente
-    const verifyRegion = async () => {
-      try {
-        const result = await checkUserRegion();
-        setRegionStatus({
-          checked: true,
-          inRegion: result.inRegion,
-          regionName: result.regionName,
-          error: result.error
-        });
-
-        if (result.inRegion) {
-          toast.success(`Benvenuto! Il servizio è disponibile nella tua regione: ${result.regionName}`);
-        } else if (result.error) {
-          toast.error(result.error);
-        } else {
-          toast.warning("Il servizio è attualmente disponibile solo in Campania durante la fase pilota.");
-        }
-      } catch (error) {
-        console.error("Errore durante la verifica della regione:", error);
-        setRegionStatus({
-          checked: true,
-          inRegion: false,
-          error: "Si è verificato un errore durante la verifica della tua posizione."
-        });
-        toast.error("Si è verificato un errore durante la verifica della tua posizione.");
-      }
-    };
-
-    verifyRegion();
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    const filtered = sampleRestaurants.filter(restaurant => 
-      restaurant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      restaurant.cuisine.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    setRestaurants(filtered);
-  };
-
-  const handleToggleFavorite = (id: string) => {
-    setRestaurants(restaurants.map(restaurant => 
-      restaurant.id === id 
-        ? { ...restaurant, isFavorite: !restaurant.isFavorite } 
-        : restaurant
-    ));
-  };
+  const {
+    restaurants,
+    searchTerm,
+    setSearchTerm,
+    isLoading,
+    regionStatus,
+    handleSearch,
+    handleToggleFavorite
+  } = useRestaurantList();
 
   return (
     <Layout>
       <div className="px-4 py-6 space-y-6">
-        <div className="space-y-2">
-          <h1 className="text-3xl font-poppins font-bold text-primary">Gluten Free Eats</h1>
-          <p className="text-gray-600">Scopri i ristoranti gluten free vicino a te</p>
-        </div>
+        <WelcomeHeader />
+        <RestaurateurAccess />
+        
+        {/* Region alerts */}
+        <RegionAlert regionStatus={regionStatus} />
+        
+        {/* Search functionality */}
+        <SearchBar 
+          searchTerm={searchTerm} 
+          setSearchTerm={setSearchTerm} 
+          onSubmit={handleSearch} 
+        />
 
-        {/* Accesso rapido alla gestione ristorante */}
-        <div className="bg-accent/10 p-4 rounded-lg border border-accent/20">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="font-semibold flex items-center">
-              <Store className="mr-2 h-4 w-4" />
-              Accesso Ristoratori
-            </h3>
-            <Button variant="outline" size="sm" asChild>
-              <Link to="/restaurant/1">
-                Accedi al ristorante demo
-              </Link>
-            </Button>
-          </div>
-          <p className="text-sm text-gray-600">
-            Visualizza tutte le funzionalità di gestione disponibili per i ristoranti
-          </p>
-        </div>
-
-        {/* Avviso di regione */}
-        {regionStatus.checked && !regionStatus.inRegion && !regionStatus.error && (
-          <Alert variant="warning" className="bg-amber-50 border-amber-200">
-            <MapPin className="h-4 w-4 text-amber-600" />
-            <AlertTitle className="text-amber-800">Programma Pilota: Area Limitata</AlertTitle>
-            <AlertDescription className="text-amber-700">
-              Al momento, il nostro servizio è disponibile solo in Campania durante la fase pilota.
-              Grazie per la comprensione.
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {/* Errore di geolocalizzazione */}
-        {regionStatus.error && (
-          <Alert variant="destructive" className="bg-red-50 border-red-200">
-            <Info className="h-4 w-4 text-red-600" />
-            <AlertTitle className="text-red-800">Posizione non disponibile</AlertTitle>
-            <AlertDescription className="text-red-700">
-              {regionStatus.error}
-            </AlertDescription>
-          </Alert>
-        )}
-
-        <form onSubmit={handleSearch} className="flex gap-2">
-          <div className="relative flex-grow">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-            <Input 
-              type="text"
-              placeholder="Cerca ristoranti o cucina..."
-              className="pl-10"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          <Button type="submit" className="bg-primary hover:bg-primary/90">
-            Cerca
-          </Button>
-        </form>
-
+        {/* Restaurant listings */}
         <div className="space-y-2">
           <h2 className="text-xl font-poppins font-semibold">Ristoranti in evidenza</h2>
-          {isLoading ? (
-            <div className="space-y-4">
-              {[...Array(3)].map((_, i) => (
-                <div 
-                  key={i} 
-                  className="h-48 bg-gray-200 animate-pulse rounded-lg"
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-4">
-              {regionStatus.inRegion ? (
-                restaurants.map(restaurant => (
-                  <RestaurantCard 
-                    key={restaurant.id} 
-                    restaurant={restaurant} 
-                    onToggleFavorite={handleToggleFavorite}
-                  />
-                ))
-              ) : (
-                <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
-                  <MapPin className="mx-auto h-12 w-12 text-gray-400 mb-3" />
-                  <h3 className="text-lg font-medium text-gray-800 mb-1">Servizio disponibile solo in Campania</h3>
-                  <p className="text-gray-600 max-w-md mx-auto">
-                    Durante la fase pilota, il nostro servizio è disponibile esclusivamente nella regione Campania.
-                    Stiamo lavorando per espandere il servizio ad altre regioni presto.
-                  </p>
-                </div>
-              )}
-              
-              {regionStatus.inRegion && restaurants.length === 0 && (
-                <div className="text-center py-8">
-                  <p className="text-gray-500">Nessun ristorante trovato</p>
-                </div>
-              )}
-            </div>
-          )}
+          <RestaurantList 
+            restaurants={restaurants}
+            isLoading={isLoading}
+            regionStatus={regionStatus}
+            onToggleFavorite={handleToggleFavorite}
+          />
         </div>
 
-        <div className="flex flex-wrap gap-4 mt-8">
-          <Button size="lg" asChild className="bg-blue-500 hover:bg-blue-600" disabled={!regionStatus.inRegion}>
-            <Link to="/search">Trova Ristoranti</Link>
-          </Button>
-          <Button size="lg" variant="outline" asChild>
-            <Link to="/videos">Scopri Ricette</Link>
-          </Button>
-          <Button size="lg" variant="secondary" asChild>
-            <Link to="/dashboard">Gestione Tavoli</Link>
-          </Button>
-        </div>
+        {/* Navigation buttons */}
+        <NavigationButtons isRegionAvailable={regionStatus.inRegion} />
       </div>
     </Layout>
   );
