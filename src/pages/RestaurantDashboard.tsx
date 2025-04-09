@@ -12,6 +12,7 @@ import RestaurantGallery from './restaurant/RestaurantGallery';
 import RestaurantVideos from './restaurant/RestaurantVideos';
 import MenuViewer from '@/components/Restaurant/MenuViewer';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import { 
   Carousel,
   CarouselContent,
@@ -24,7 +25,6 @@ const RestaurantDashboard = () => {
   const [activeTab, setActiveTab] = useState('home');
   const tabsContainerRef = useRef<HTMLDivElement>(null);
   
-  // Restaurant data
   const restaurantData = {
     name: 'La Trattoria Senza Glutine',
     description: 'Ristorante 100% gluten free specializzato in cucina italiana tradizionale. Il nostro locale è certificato dall\'Associazione Italiana Celiachia e tutto il nostro menù è privo di glutine. Dal pane alla pasta, dalle pizze ai dolci, offriamo un\'esperienza gastronomica completa senza compromessi sul gusto.',
@@ -43,14 +43,11 @@ const RestaurantDashboard = () => {
     coverImage: '/placeholder.svg'
   };
 
-  // Determina se l'utente è il proprietario del ristorante
-  // In un'applicazione reale, questo valore verrebbe determinato dall'autenticazione dell'utente
   const isRestaurantOwner = true;
 
   const navigateToTab = (tabId: string) => {
     setActiveTab(tabId);
     
-    // Find the selected button and scroll it into view
     if (tabsContainerRef.current) {
       const selectedButton = tabsContainerRef.current.querySelector(`[data-tab="${tabId}"]`);
       if (selectedButton) {
@@ -59,7 +56,6 @@ const RestaurantDashboard = () => {
     }
   };
 
-  // Rimuovo la tab profilo dall'array di pulsanti di navigazione nella sezione ristorante
   const navigationButtons = [
     { id: 'home', label: 'Home', icon: <Home size={18} /> },
     { id: 'menu', label: 'Menu', icon: <Menu size={18} /> },
@@ -72,7 +68,6 @@ const RestaurantDashboard = () => {
   return (
     <Layout>
       <div className="relative">
-        {/* Cover image section */}
         <div className="relative h-56 md:h-72">
           <img 
             src={restaurantData.coverImage} 
@@ -101,7 +96,6 @@ const RestaurantDashboard = () => {
           </div>
         </div>
 
-        {/* Navigation tabs with improved scrolling */}
         <div className="bg-white shadow-sm sticky top-0 z-10">
           <Carousel
             opts={{
@@ -131,7 +125,6 @@ const RestaurantDashboard = () => {
           </Carousel>
         </div>
 
-        {/* Tab content */}
         <div className="px-4 py-4">
           {activeTab === 'home' && (
             <div className="space-y-6 animate-fade-in">
