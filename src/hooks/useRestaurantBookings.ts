@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react';
 import { useBookings, Booking } from '@/context/BookingContext';
 import { toast } from 'sonner';
-import { Bell, AlertCircle } from 'lucide-react';
 import { checkAttendanceConfirmationNeeded } from '@/components/Bookings/BookingUtils';
 
 export const useRestaurantBookings = (restaurantId: string) => {
@@ -28,24 +27,14 @@ export const useRestaurantBookings = (restaurantId: string) => {
       setNotificationBookings(pendingBookings);
       
       if (pendingBookings.length > 0) {
-        toast.info(
-          <div className="flex items-center gap-2">
-            <Bell className="h-5 w-5 text-primary animate-pulse" />
-            <div>
-              <div className="font-semibold">
-                {pendingBookings.length} {pendingBookings.length === 1 ? 'nuova prenotazione' : 'nuove prenotazioni'}
-              </div>
-              <div className="text-sm">Clicca per visualizzare</div>
-            </div>
-          </div>,
-          {
-            duration: 5000,
-            action: {
-              label: "Visualizza",
-              onClick: () => setShowNotificationDialog(true)
-            }
-          }
-        );
+        toast.info(`${pendingBookings.length} ${pendingBookings.length === 1 ? 'nuova prenotazione' : 'nuove prenotazioni'} da confermare`, {
+          duration: 5000,
+          action: {
+            label: "Visualizza",
+            onClick: () => setShowNotificationDialog(true)
+          },
+          description: "Clicca per visualizzare"
+        });
       }
     }
     
@@ -68,24 +57,14 @@ export const useRestaurantBookings = (restaurantId: string) => {
       setAttendanceBookings(needsAttendanceConfirmation);
       
       // Mostra notifica per conferma presenza
-      toast.info(
-        <div className="flex items-center gap-2">
-          <AlertCircle className="h-5 w-5 text-amber-500" />
-          <div>
-            <div className="font-semibold">
-              {needsAttendanceConfirmation.length} {needsAttendanceConfirmation.length === 1 ? 'prenotazione' : 'prenotazioni'} necessitano di conferma presenza
-            </div>
-            <div className="text-sm">Clicca per confermare</div>
-          </div>
-        </div>,
-        {
-          duration: 0, // Non scade
-          action: {
-            label: "Verifica ora",
-            onClick: () => setShowAttendanceDialog(true)
-          }
-        }
-      );
+      toast.info(`${needsAttendanceConfirmation.length} ${needsAttendanceConfirmation.length === 1 ? 'prenotazione' : 'prenotazioni'} necessitano di conferma presenza`, {
+        duration: 0, // Non scade
+        action: {
+          label: "Verifica ora",
+          onClick: () => setShowAttendanceDialog(true)
+        },
+        description: "Clicca per confermare"
+      });
     }
   };
   
