@@ -2,6 +2,7 @@
 import React from 'react';
 import RestaurantInfo from './RestaurantInfo';
 import MenuViewer from './MenuViewer';
+import TableManagement from './TableManagement';
 import RestaurantVideos from '@/pages/restaurant/RestaurantVideos';
 import RestaurantGallery from '@/pages/restaurant/RestaurantGallery';
 import RestaurantBookings from '@/pages/restaurant/RestaurantBookings';
@@ -23,6 +24,12 @@ const DashboardContent = ({ restaurantData, isRestaurantOwner }: DashboardConten
       {activeTab === 'menu' && (
         <div className="animate-fade-in">
           <MenuViewer isRestaurantOwner={isRestaurantOwner} />
+        </div>
+      )}
+      
+      {activeTab === 'tables' && (
+        <div className="animate-fade-in">
+          <TableManagement restaurantId={restaurantData.id || '1'} />
         </div>
       )}
       

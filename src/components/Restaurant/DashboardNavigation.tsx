@@ -2,7 +2,7 @@
 import React, { useRef } from 'react';
 import { 
   Home, Menu, VideoIcon, Image, 
-  CalendarRange, Star 
+  CalendarRange, Star, Table
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { 
@@ -26,6 +26,7 @@ const DashboardNavigation = () => {
   const navigationButtons: NavigationButton[] = [
     { id: 'home', label: 'Home', icon: <Home size={18} /> },
     { id: 'menu', label: 'Menu', icon: <Menu size={18} /> },
+    { id: 'tables', label: 'Tavoli', icon: <Table size={18} /> },
     { id: 'videos', label: 'Videoricette', icon: <VideoIcon size={18} /> },
     { id: 'gallery', label: 'Galleria', icon: <Image size={18} /> },
     { id: 'bookings', label: 'Prenotazioni', icon: <CalendarRange size={18} /> },
