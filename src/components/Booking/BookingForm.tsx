@@ -75,7 +75,7 @@ const BookingForm: React.FC<BookingFormProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [bookingData, setBookingData] = useState<any>(null);
-  const [showGuaranteeDialog, setShowGuaranteeDialog] = useState(true);
+  const [showGuaranteeDialog, setShowGuaranteeDialog] = useState(false);
 
   const [highChair, setHighChair] = useState(false);
   const [accessibility, setAccessibility] = useState(false);

@@ -20,6 +20,16 @@ const GuaranteeRulesDialog: React.FC<GuaranteeRulesDialogProps> = ({
   open, 
   onOpenChange 
 }) => {
+  // Auto-dismiss after component mounts (to simulate hidden state)
+  React.useEffect(() => {
+    // Auto-close the dialog after it mounts
+    const timer = setTimeout(() => {
+      onOpenChange(false);
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, [onOpenChange]);
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
