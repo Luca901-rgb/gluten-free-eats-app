@@ -1,14 +1,15 @@
 
 import React, { useState, useEffect } from 'react';
-import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Calendar, Clock, Users, CheckCircle, XCircle, CreditCard, Copy, CheckCheck, Bell, AlertCircle } from 'lucide-react';
+import { Bell, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { useBookings } from '@/context/BookingContext';
 import { useNavigate } from 'react-router-dom';
-import { cn } from '@/lib/utils';
+import BookingsByDate from '@/components/Bookings/BookingsByDate';
+import NotificationDialog from '@/components/Bookings/NotificationDialog';
+import AttendanceDialog from '@/components/Bookings/AttendanceDialog';
+import ReviewCodeDialog from '@/components/Bookings/ReviewCodeDialog';
+import { checkAttendanceConfirmationNeeded } from '@/components/Bookings/BookingUtils';
 
 const RestaurantBookings = () => {
   const { bookings: allBookings, updateBooking, generateRestaurantReviewCode } = useBookings();
@@ -25,7 +26,6 @@ const RestaurantBookings = () => {
   const [showReviewCodeDialog, setShowReviewCodeDialog] = useState(false);
   const [generatedReviewCode, setGeneratedReviewCode] = useState<string>('');
   
-  // Nuova aggiunta: stato per il dialogo di conferma presenza
   const [showAttendanceDialog, setShowAttendanceDialog] = useState(false);
   const [attendanceBookings, setAttendanceBookings] = useState<typeof bookings>([]);
 
@@ -58,31 +58,20 @@ const RestaurantBookings = () => {
       }
     }
     
-    // Nuova aggiunta: verifica delle prenotazioni che necessitano di conferma presenza
-    checkAttendanceConfirmationNeeded();
+    // Verifica delle prenotazioni che necessitano di conferma presenza
+    checkAttendanceConfirmations();
     
     // Imposta un intervallo per controllare periodicamente (ogni minuto)
     const attendanceInterval = setInterval(() => {
-      checkAttendanceConfirmationNeeded();
+      checkAttendanceConfirmations();
     }, 60000);
     
     return () => clearInterval(attendanceInterval);
   }, [bookings]);
   
-  // Nuova funzione: verifica prenotazioni che necessitano di conferma presenza
-  const checkAttendanceConfirmationNeeded = () => {
-    const now = new Date();
-    const oneHourAgo = new Date(now.getTime() - (60 * 60 * 1000));
-    
-    // Filtra prenotazioni confermate con data di oltre un'ora fa ma senza conferma presenza
-    const needsAttendanceConfirmation = bookings.filter(booking => {
-      const bookingDate = new Date(booking.date);
-      return (
-        booking.status === 'confirmed' && 
-        booking.attendance === null && 
-        bookingDate < oneHourAgo
-      );
-    });
+  // Verifica prenotazioni che necessitano di conferma presenza
+  const checkAttendanceConfirmations = () => {
+    const needsAttendanceConfirmation = checkAttendanceConfirmationNeeded(bookings);
     
     if (needsAttendanceConfirmation.length > 0) {
       setAttendanceBookings(needsAttendanceConfirmation);
@@ -113,6 +102,7 @@ const RestaurantBookings = () => {
     updateBooking(id, { status: 'confirmed' });
     toast.success('Prenotazione confermata con successo');
     setUnreadBookings(prev => prev.filter(bookingId => bookingId !== id));
+    setNotificationBookings(prev => prev.filter(b => b.id !== id));
   };
 
   const handleCancelBooking = (id: string) => {
@@ -148,36 +138,15 @@ const RestaurantBookings = () => {
     toast.success('Codice copiato negli appunti');
   };
   
-  const redirectToReviews = (bookingCode: string, restaurantCode: string) => {
-    setShowReviewCodeDialog(false);
-    navigate(`/restaurant/${restaurantId}?tab=reviews&bookingCode=${bookingCode}&restaurantCode=${restaurantCode}`);
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch(status) {
-      case 'confirmed':
-        return <Badge className="bg-green-500">Confermata</Badge>;
-      case 'pending':
-        return <Badge className="bg-yellow-500">In attesa</Badge>;
-      case 'cancelled':
-        return <Badge className="bg-red-500">Cancellata</Badge>;
-      default:
-        return null;
+  const redirectToReviews = () => {
+    const currentBooking = allBookings.find(b => b.id === currentBookingId);
+    if (currentBooking) {
+      setShowReviewCodeDialog(false);
+      navigate(`/restaurant/${restaurantId}?tab=reviews&bookingCode=${currentBooking.bookingCode}&restaurantCode=${generatedReviewCode}`);
     }
   };
 
-  const getAttendanceBadge = (attendance: string | null) => {
-    if (!attendance) return null;
-    switch(attendance) {
-      case 'confirmed':
-        return <Badge className="bg-green-500">Presenza confermata</Badge>;
-      case 'no-show':
-        return <Badge className="bg-red-500">No-show</Badge>;
-      default:
-        return null;
-    }
-  };
-
+  // Organizza le prenotazioni per data
   const bookingsByDate = bookings.reduce((acc, booking) => {
     if (!acc[booking.date]) {
       acc[booking.date] = [];
@@ -211,105 +180,17 @@ const RestaurantBookings = () => {
       )}
       
       {Object.entries(bookingsByDate).map(([date, dateBookings]) => (
-        <div key={date} className="mb-6">
-          <h2 className="text-lg font-medium mb-3 flex items-center">
-            <Calendar className="mr-2 h-5 w-5" />
-            {new Date(date).toLocaleDateString('it-IT', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-          </h2>
-          
-          <div className="space-y-3">
-            {dateBookings.map((booking) => (
-              <div 
-                key={booking.id} 
-                className={cn(
-                  "bg-white rounded-lg shadow p-4",
-                  unreadBookings.includes(booking.id) && booking.status === 'pending' && "border-2 border-primary",
-                  attendanceBookings.some(b => b.id === booking.id) && "border-2 border-amber-500"
-                )}
-              >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="font-medium">{booking.customerName}</h3>
-                    <div className="text-sm text-gray-500 mt-1 space-y-1">
-                      <div className="flex items-center">
-                        <Clock className="mr-2 h-4 w-4" />
-                        {new Date(booking.date).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}
-                      </div>
-                      <div className="flex items-center">
-                        <Users className="mr-2 h-4 w-4" />
-                        {booking.people} {booking.people === 1 ? 'persona' : 'persone'}
-                      </div>
-                      <div>
-                        <span className="text-primary">Codice prenotazione: {booking.bookingCode}</span>
-                      </div>
-                      {booking.hasGuarantee && (
-                        <div className="flex items-center text-green-600">
-                          <CreditCard className="mr-2 h-4 w-4" />
-                          Carta di garanzia registrata
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="text-right flex flex-col gap-2">
-                    {getStatusBadge(booking.status)}
-                    {getAttendanceBadge(booking.attendance)}
-                    
-                    {booking.restaurantReviewCode && (
-                      <div className="text-xs text-green-700 flex items-center">
-                        <CheckCheck className="h-3 w-3 mr-1" />
-                        Codice recensione generato
-                      </div>
-                    )}
-                  </div>
-                </div>
-                
-                {booking.status === 'pending' && (
-                  <div className="mt-4 flex justify-end space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="border-red-500 text-red-500 hover:bg-red-50"
-                      onClick={() => handleCancelBooking(booking.id)}
-                    >
-                      <XCircle className="mr-1 h-4 w-4" />
-                      Rifiuta
-                    </Button>
-                    <Button
-                      size="sm"
-                      className="bg-green-600 hover:bg-green-700"
-                      onClick={() => handleConfirmBooking(booking.id)}
-                    >
-                      <CheckCircle className="mr-1 h-4 w-4" />
-                      Conferma
-                    </Button>
-                  </div>
-                )}
-
-                {booking.status === 'confirmed' && booking.attendance === null && (
-                  <div className="mt-4 flex justify-end space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="border-red-500 text-red-500 hover:bg-red-50"
-                      onClick={() => handleNoShow(booking.id)}
-                    >
-                      <XCircle className="mr-1 h-4 w-4" />
-                      Segna No-Show
-                    </Button>
-                    <Button
-                      size="sm"
-                      className="bg-green-600 hover:bg-green-700"
-                      onClick={() => handleConfirmAttendance(booking.id)}
-                    >
-                      <CheckCircle className="mr-1 h-4 w-4" />
-                      Conferma Presenza
-                    </Button>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
+        <BookingsByDate
+          key={date}
+          date={date}
+          bookings={dateBookings}
+          unreadBookings={unreadBookings}
+          attendanceBookings={attendanceBookings}
+          onConfirmBooking={handleConfirmBooking}
+          onCancelBooking={handleCancelBooking}
+          onConfirmAttendance={handleConfirmAttendance}
+          onNoShow={handleNoShow}
+        />
       ))}
       
       {bookings.length === 0 && (
@@ -318,159 +199,28 @@ const RestaurantBookings = () => {
         </div>
       )}
       
-      <Dialog open={showNotificationDialog} onOpenChange={setShowNotificationDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center">
-              <Bell className="h-5 w-5 mr-2 text-primary" />
-              Nuove prenotazioni in attesa
-            </DialogTitle>
-          </DialogHeader>
-          <div className="py-4">
-            <div className="space-y-3 max-h-[300px] overflow-y-auto">
-              {notificationBookings.map(booking => (
-                <div key={booking.id} className="border rounded-md p-3">
-                  <div className="flex justify-between">
-                    <div>
-                      <p className="font-medium">{booking.customerName}</p>
-                      <p className="text-sm text-gray-600">
-                        {new Date(booking.date).toLocaleDateString('it-IT')} alle{' '}
-                        {new Date(booking.date).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}
-                      </p>
-                      <p className="text-sm">{booking.people} {booking.people === 1 ? 'persona' : 'persone'}</p>
-                    </div>
-                    <div>
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
-                        className="text-xs border-green-500 text-green-600 hover:bg-green-50"
-                        onClick={() => {
-                          handleConfirmBooking(booking.id);
-                          setNotificationBookings(prev => prev.filter(b => b.id !== booking.id));
-                          if (notificationBookings.length === 1) {
-                            setShowNotificationDialog(false);
-                          }
-                        }}
-                      >
-                        <CheckCircle className="h-3 w-3 mr-1" />
-                        Conferma
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-          <DialogFooter>
-            <Button onClick={() => setShowNotificationDialog(false)}>
-              Chiudi
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <NotificationDialog
+        open={showNotificationDialog}
+        onOpenChange={setShowNotificationDialog}
+        bookings={notificationBookings}
+        onConfirmBooking={handleConfirmBooking}
+      />
       
-      {/* Nuovo dialog per la conferma della presenza */}
-      <Dialog open={showAttendanceDialog} onOpenChange={setShowAttendanceDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center">
-              <AlertCircle className="h-5 w-5 mr-2 text-amber-500" />
-              Conferma presenza clienti
-            </DialogTitle>
-            <DialogDescription>
-              Le seguenti prenotazioni sono passate da più di un'ora e necessitano di verifica presenza.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4">
-            <div className="space-y-3 max-h-[300px] overflow-y-auto">
-              {attendanceBookings.map(booking => (
-                <div key={booking.id} className="border rounded-md p-3">
-                  <div className="flex justify-between">
-                    <div>
-                      <p className="font-medium">{booking.customerName}</p>
-                      <p className="text-sm text-gray-600">
-                        {new Date(booking.date).toLocaleDateString('it-IT')} alle{' '}
-                        {new Date(booking.date).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}
-                      </p>
-                      <p className="text-sm">{booking.people} {booking.people === 1 ? 'persona' : 'persone'}</p>
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
-                        className="text-xs border-red-500 text-red-600 hover:bg-red-50"
-                        onClick={() => {
-                          handleNoShow(booking.id);
-                          if (attendanceBookings.length === 1) {
-                            setShowAttendanceDialog(false);
-                          }
-                        }}
-                      >
-                        <XCircle className="h-3 w-3 mr-1" />
-                        No Show
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        className="text-xs bg-green-600"
-                        onClick={() => {
-                          handleConfirmAttendance(booking.id);
-                          if (attendanceBookings.length === 1) {
-                            setShowAttendanceDialog(false);
-                          }
-                        }}
-                      >
-                        <CheckCircle className="h-3 w-3 mr-1" />
-                        Presente
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-          <DialogFooter>
-            <Button onClick={() => setShowAttendanceDialog(false)}>
-              Verifica più tardi
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <AttendanceDialog
+        open={showAttendanceDialog}
+        onOpenChange={setShowAttendanceDialog}
+        bookings={attendanceBookings}
+        onConfirmAttendance={handleConfirmAttendance}
+        onNoShow={handleNoShow}
+      />
       
-      <Dialog open={showReviewCodeDialog} onOpenChange={(open) => {
-        if (!open) setShowReviewCodeDialog(false);
-      }}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Codice recensione generato</DialogTitle>
-          </DialogHeader>
-          <div className="py-4">
-            <p className="text-sm text-gray-600 mb-4">
-              Questo è il codice che il cliente dovrà inserire per lasciare una recensione verificata:
-            </p>
-            <div className="flex items-center justify-between bg-gray-100 p-3 rounded-md">
-              <span className="font-mono text-lg font-semibold">{generatedReviewCode}</span>
-              <Button variant="outline" size="sm" onClick={handleCopyCode}>
-                <Copy className="h-4 w-4 mr-1" /> Copia
-              </Button>
-            </div>
-            <p className="mt-4 text-sm text-gray-600">
-              Questo codice è stato automaticamente associato alla prenotazione. 
-              Quando il cliente accederà alla sezione recensioni del ristorante, 
-              potrà utilizzare questo codice che verrà automaticamente inserito nel form.
-            </p>
-          </div>
-          <DialogFooter>
-            <Button onClick={() => {
-              const currentBooking = allBookings.find(b => b.id === currentBookingId);
-              if (currentBooking) {
-                redirectToReviews(currentBooking.bookingCode, generatedReviewCode);
-              }
-            }}>
-              Visualizza in sezione recensioni
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ReviewCodeDialog
+        open={showReviewCodeDialog}
+        onOpenChange={setShowReviewCodeDialog}
+        reviewCode={generatedReviewCode}
+        onCopyCode={handleCopyCode}
+        onViewReviews={redirectToReviews}
+      />
     </div>
   );
 };
