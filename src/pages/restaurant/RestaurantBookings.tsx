@@ -7,16 +7,15 @@ import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useBookings } from '@/context/BookingContext';
 import { useNavigate } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 
 const RestaurantBookings = () => {
   const { bookings: allBookings, updateBooking, generateRestaurantReviewCode } = useBookings();
   const navigate = useNavigate();
 
-  // Filtraggio delle prenotazioni per questo ristorante (simulato con ID '1')
-  const restaurantId = '1'; // In un'app reale, questo verrebbe dal contesto dell'autenticazione
+  const restaurantId = '1';
   const bookings = allBookings.filter(booking => booking.restaurantId === restaurantId);
   
-  // Stato per tenere traccia delle notifiche non lette
   const [unreadBookings, setUnreadBookings] = useState<string[]>([]);
   const [showNotificationDialog, setShowNotificationDialog] = useState(false);
   const [notificationBookings, setNotificationBookings] = useState<typeof bookings>([]);
@@ -25,7 +24,6 @@ const RestaurantBookings = () => {
   const [showReviewCodeDialog, setShowReviewCodeDialog] = useState(false);
   const [generatedReviewCode, setGeneratedReviewCode] = useState<string>('');
 
-  // Verifica delle nuove prenotazioni (in un'app reale, questo verrebbe fatto con WebSockets o push notifications)
   useEffect(() => {
     const pendingBookings = bookings.filter(b => b.status === 'pending' && !unreadBookings.includes(b.id));
     
@@ -33,7 +31,6 @@ const RestaurantBookings = () => {
       setUnreadBookings(prev => [...prev, ...pendingBookings.map(b => b.id)]);
       setNotificationBookings(pendingBookings);
       
-      // Mostra la notifica solo se ci sono nuove prenotazioni in attesa
       if (pendingBookings.length > 0) {
         toast.info(
           <div className="flex items-center gap-2">
@@ -60,29 +57,24 @@ const RestaurantBookings = () => {
   const handleConfirmBooking = (id: string) => {
     updateBooking(id, { status: 'confirmed' });
     toast.success('Prenotazione confermata con successo');
-    // Rimuovi la prenotazione dalle non lette
     setUnreadBookings(prev => prev.filter(bookingId => bookingId !== id));
   };
 
   const handleCancelBooking = (id: string) => {
     updateBooking(id, { status: 'cancelled' });
     toast.error('Prenotazione cancellata');
-    // Rimuovi la prenotazione dalle non lette
     setUnreadBookings(prev => prev.filter(bookingId => bookingId !== id));
   };
 
   const handleConfirmAttendance = (id: string) => {
-    // Generiamo il codice recensione per il ristorante
     const code = generateRestaurantReviewCode(id);
     updateBooking(id, { attendance: 'confirmed' });
     setGeneratedReviewCode(code);
     setCurrentBookingId(id);
     setShowReviewCodeDialog(true);
     
-    // Recuperiamo il booking che è stato appena aggiornato
     const updatedBooking = allBookings.find(b => b.id === id);
     
-    // Notifica che il codice verrà usato automaticamente nella recensione
     toast.success('Presenza confermata e codice generato per la recensione');
   };
 
@@ -97,10 +89,7 @@ const RestaurantBookings = () => {
   };
   
   const redirectToReviews = (bookingCode: string, restaurantCode: string) => {
-    // Chiudiamo il dialog
     setShowReviewCodeDialog(false);
-    
-    // Redirectiamo alla pagina delle recensioni con i codici già inseriti
     navigate(`/restaurant/${restaurantId}?tab=reviews&bookingCode=${bookingCode}&restaurantCode=${restaurantCode}`);
   };
 
@@ -141,7 +130,6 @@ const RestaurantBookings = () => {
     <div className="container mx-auto px-4 py-6">
       <h1 className="text-2xl font-semibold mb-6">Prenotazioni</h1>
       
-      {/* Button to show pending bookings notification */}
       {unreadBookings.length > 0 && (
         <Button 
           onClick={() => setShowNotificationDialog(true)}
@@ -259,7 +247,6 @@ const RestaurantBookings = () => {
         </div>
       )}
       
-      {/* Dialog di notifiche prenotazioni in attesa */}
       <Dialog open={showNotificationDialog} onOpenChange={setShowNotificationDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -311,7 +298,6 @@ const RestaurantBookings = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Dialog per il codice recensione */}
       <Dialog open={showReviewCodeDialog} onOpenChange={(open) => {
         if (!open) setShowReviewCodeDialog(false);
       }}>
