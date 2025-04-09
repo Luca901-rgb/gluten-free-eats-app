@@ -8,6 +8,7 @@ import RestaurantPage from './pages/RestaurantPage';
 import Index from './pages/Index';
 import SearchPage from './pages/SearchPage';
 import ProfilePage from './pages/ProfilePage';
+import BookingsPage from './pages/BookingsPage';
 import './App.css';
 
 function App() {
@@ -22,6 +23,7 @@ function App() {
             <Route path="/restaurant-dashboard" element={<RestaurantDashboard />} />
             <Route path="/dashboard" element={<RestaurantDashboard />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/bookings" element={<BookingsPage />} />
           </Routes>
           <Toaster />
         </TableProvider>
