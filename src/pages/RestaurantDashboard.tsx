@@ -1,25 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react';
+
+import React, { useState, useRef } from 'react';
 import Layout from '@/components/Layout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { 
-  FileText, Image, MessageCircle, Settings, CalendarRange, 
-  Clock, MapPin, Phone, Mail, Globe, VideoIcon, Home, 
-  Menu, Star
-} from 'lucide-react';
-import RestaurantBookings from './restaurant/RestaurantBookings';
-import RestaurantReviews from './restaurant/RestaurantReviews';
-import RestaurantGallery from './restaurant/RestaurantGallery';
-import RestaurantVideos from './restaurant/RestaurantVideos';
-import MenuViewer from '@/components/Restaurant/MenuViewer';
-import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { 
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
+import DashboardHeader from '@/components/Restaurant/DashboardHeader';
+import DashboardNavigation from '@/components/Restaurant/DashboardNavigation';
+import DashboardContent from '@/components/Restaurant/DashboardContent';
 
 const RestaurantDashboard = () => {
   const [activeTab, setActiveTab] = useState('home');
@@ -56,150 +41,16 @@ const RestaurantDashboard = () => {
     }
   };
 
-  const navigationButtons = [
-    { id: 'home', label: 'Home', icon: <Home size={18} /> },
-    { id: 'menu', label: 'Menu', icon: <Menu size={18} /> },
-    { id: 'videos', label: 'Videoricette', icon: <VideoIcon size={18} /> },
-    { id: 'gallery', label: 'Galleria', icon: <Image size={18} /> },
-    { id: 'bookings', label: 'Prenotazioni', icon: <CalendarRange size={18} /> },
-    { id: 'reviews', label: 'Recensioni', icon: <Star size={18} /> },
-  ];
-
   return (
     <Layout>
       <div className="relative">
-        <div className="relative h-56 md:h-72">
-          <img 
-            src={restaurantData.coverImage} 
-            alt={restaurantData.name} 
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-4">
-            <div className="text-white">
-              <h1 className="font-poppins font-bold text-2xl mb-1">{restaurantData.name}</h1>
-              <div className="flex items-center mb-1">
-                <div className="flex">
-                  {[...Array(5)].map((_, i) => (
-                    <Star 
-                      key={i} 
-                      className={`w-4 h-4 ${i < Math.floor(restaurantData.rating) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} 
-                    />
-                  ))}
-                </div>
-                <span className="text-sm ml-2">{restaurantData.totalReviews} recensioni</span>
-              </div>
-              <div className="flex items-center text-sm">
-                <MapPin size={14} className="mr-1" />
-                <span>{restaurantData.address}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white shadow-sm sticky top-0 z-10">
-          <Carousel
-            opts={{
-              align: "start",
-              dragFree: true,
-            }}
-            className="w-full"
-          >
-            <div className="flex items-center px-4 py-3">
-              <CarouselContent className="ml-0">
-                {navigationButtons.map((button) => (
-                  <CarouselItem key={button.id} className="basis-auto pl-0 mr-2 min-w-min">
-                    <Button
-                      variant={activeTab === button.id ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => navigateToTab(button.id)}
-                      className="flex items-center gap-1 whitespace-nowrap"
-                      data-tab={button.id}
-                    >
-                      {button.icon}
-                      <span>{button.label}</span>
-                    </Button>
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-            </div>
-          </Carousel>
-        </div>
-
-        <div className="px-4 py-4">
-          {activeTab === 'home' && (
-            <div className="space-y-6 animate-fade-in">
-              <div>
-                <h2 className="font-poppins font-semibold text-lg mb-2">Informazioni</h2>
-                <p className="text-gray-700">{restaurantData.description}</p>
-              </div>
-              
-              <div>
-                <h2 className="font-poppins font-semibold text-lg mb-2">Orari di apertura</h2>
-                <div className="space-y-2">
-                  {restaurantData.openingHours.map((time, index) => (
-                    <div key={index} className="flex items-center">
-                      <Clock size={16} className="mr-2 text-gray-500" />
-                      <span className="text-gray-700 mr-2 w-24">{time.days}:</span>
-                      <span className="text-gray-700">{time.hours}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              
-              <div>
-                <h2 className="font-poppins font-semibold text-lg mb-2">Contatti</h2>
-                <div className="space-y-2">
-                  <div className="flex items-center">
-                    <MapPin size={16} className="mr-2 text-gray-500" />
-                    <span className="text-gray-700">{restaurantData.address}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <Phone size={16} className="mr-2 text-gray-500" />
-                    <span className="text-gray-700">{restaurantData.phone}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <Mail size={16} className="mr-2 text-gray-500" />
-                    <span className="text-gray-700">{restaurantData.email}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <Globe size={16} className="mr-2 text-gray-500" />
-                    <span className="text-gray-700">{restaurantData.website}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'menu' && (
-            <div className="animate-fade-in">
-              <MenuViewer isRestaurantOwner={isRestaurantOwner} />
-            </div>
-          )}
-          
-          {activeTab === 'videos' && (
-            <div className="animate-fade-in">
-              <RestaurantVideos isRestaurantOwner={isRestaurantOwner} />
-            </div>
-          )}
-          
-          {activeTab === 'gallery' && (
-            <div className="animate-fade-in">
-              <RestaurantGallery />
-            </div>
-          )}
-          
-          {activeTab === 'bookings' && (
-            <div className="animate-fade-in">
-              <RestaurantBookings />
-            </div>
-          )}
-          
-          {activeTab === 'reviews' && (
-            <div className="animate-fade-in">
-              <RestaurantReviews />
-            </div>
-          )}
-        </div>
+        <DashboardHeader restaurantData={restaurantData} />
+        <DashboardNavigation activeTab={activeTab} onNavigate={navigateToTab} />
+        <DashboardContent 
+          activeTab={activeTab} 
+          restaurantData={restaurantData} 
+          isRestaurantOwner={isRestaurantOwner} 
+        />
       </div>
     </Layout>
   );
