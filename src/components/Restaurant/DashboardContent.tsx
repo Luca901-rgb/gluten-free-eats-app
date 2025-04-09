@@ -6,14 +6,16 @@ import RestaurantVideos from '@/pages/restaurant/RestaurantVideos';
 import RestaurantGallery from '@/pages/restaurant/RestaurantGallery';
 import RestaurantBookings from '@/pages/restaurant/RestaurantBookings';
 import RestaurantReviews from '@/pages/restaurant/RestaurantReviews';
+import { useTab } from '@/context/TabContext';
 
 interface DashboardContentProps {
-  activeTab: string;
   restaurantData: any;
   isRestaurantOwner: boolean;
 }
 
-const DashboardContent = ({ activeTab, restaurantData, isRestaurantOwner }: DashboardContentProps) => {
+const DashboardContent = ({ restaurantData, isRestaurantOwner }: DashboardContentProps) => {
+  const { activeTab } = useTab();
+  
   return (
     <div className="px-4 py-4">
       {activeTab === 'home' && <RestaurantInfo restaurantData={restaurantData} />}

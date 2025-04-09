@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useRef } from 'react';
 import { 
   Home, Menu, VideoIcon, Image, 
   CalendarRange, Star 
@@ -10,6 +10,8 @@ import {
   CarouselContent,
   CarouselItem,
 } from "@/components/ui/carousel";
+import { useTab } from '@/context/TabContext';
+import { cn } from '@/lib/utils';
 
 interface NavigationButton {
   id: string;
@@ -17,12 +19,10 @@ interface NavigationButton {
   icon: React.ReactNode;
 }
 
-interface DashboardNavigationProps {
-  activeTab: string;
-  onNavigate: (tabId: string) => void;
-}
+const DashboardNavigation = () => {
+  const { activeTab, navigateToTab } = useTab();
+  const tabsContainerRef = useRef<HTMLDivElement>(null);
 
-const DashboardNavigation = ({ activeTab, onNavigate }: DashboardNavigationProps) => {
   const navigationButtons: NavigationButton[] = [
     { id: 'home', label: 'Home', icon: <Home size={18} /> },
     { id: 'menu', label: 'Menu', icon: <Menu size={18} /> },
@@ -33,7 +33,7 @@ const DashboardNavigation = ({ activeTab, onNavigate }: DashboardNavigationProps
   ];
 
   return (
-    <div className="bg-white shadow-sm sticky top-0 z-10">
+    <div className="bg-white shadow-sm sticky top-0 z-10" ref={tabsContainerRef}>
       <Carousel
         opts={{
           align: "start",
@@ -48,7 +48,7 @@ const DashboardNavigation = ({ activeTab, onNavigate }: DashboardNavigationProps
                 <Button
                   variant={activeTab === button.id ? 'default' : 'outline'}
                   size="sm"
-                  onClick={() => onNavigate(button.id)}
+                  onClick={() => navigateToTab(button.id)}
                   className="flex items-center gap-1 whitespace-nowrap"
                   data-tab={button.id}
                 >
