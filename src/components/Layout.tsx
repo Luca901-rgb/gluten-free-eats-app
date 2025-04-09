@@ -2,7 +2,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Home, Search, Heart, Calendar, Wheat, ChefHat, UserRound } from 'lucide-react';
+import { Home, Search, Heart, Calendar, Wheat, Utensils, UserRound } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { buttonVariants } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -27,10 +27,15 @@ const Layout: React.FC<LayoutProps> = ({ children, hideNavigation = false }) => 
     <div className="flex flex-col min-h-screen bg-gray-50">
       <header className="sticky top-0 z-10 flex items-center justify-between bg-white border-b h-16 px-4">
         <Link to="/" className="flex items-center gap-2">
-          <div className="p-1.5 bg-primary/10 rounded-full">
-            <Wheat size={18} className="text-primary" />
+          <div className="flex items-center justify-center p-1.5 rounded-full bg-gradient-to-br from-accent to-secondary shadow-sm">
+            <div className="relative">
+              <Wheat size={16} className="text-white" />
+              <Utensils size={12} className="text-white absolute -bottom-1 -right-1" />
+            </div>
           </div>
-          <span className="font-poppins font-bold text-lg">GlutenFree Eats</span>
+          <span className="font-poppins font-bold text-lg bg-gradient-to-r from-primary via-accent to-secondary bg-clip-text text-transparent">
+            GlutenFree Eats
+          </span>
         </Link>
         
         <div className="flex gap-2">
