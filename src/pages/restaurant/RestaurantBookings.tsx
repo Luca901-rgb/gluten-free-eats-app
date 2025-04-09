@@ -1,10 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Clock, Users, CheckCircle, XCircle, CreditCard, Copy, CheckCheck, Bell } from 'lucide-react';
+import { Calendar, Clock, Users, CheckCircle, XCircle, CreditCard, Copy, CheckCheck, Bell, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { useBookings } from '@/context/BookingContext';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -23,6 +24,10 @@ const RestaurantBookings = () => {
   const [currentBookingId, setCurrentBookingId] = useState<string | null>(null);
   const [showReviewCodeDialog, setShowReviewCodeDialog] = useState(false);
   const [generatedReviewCode, setGeneratedReviewCode] = useState<string>('');
+  
+  // Nuova aggiunta: stato per il dialogo di conferma presenza
+  const [showAttendanceDialog, setShowAttendanceDialog] = useState(false);
+  const [attendanceBookings, setAttendanceBookings] = useState<typeof bookings>([]);
 
   useEffect(() => {
     const pendingBookings = bookings.filter(b => b.status === 'pending' && !unreadBookings.includes(b.id));
@@ -52,7 +57,57 @@ const RestaurantBookings = () => {
         );
       }
     }
+    
+    // Nuova aggiunta: verifica delle prenotazioni che necessitano di conferma presenza
+    checkAttendanceConfirmationNeeded();
+    
+    // Imposta un intervallo per controllare periodicamente (ogni minuto)
+    const attendanceInterval = setInterval(() => {
+      checkAttendanceConfirmationNeeded();
+    }, 60000);
+    
+    return () => clearInterval(attendanceInterval);
   }, [bookings]);
+  
+  // Nuova funzione: verifica prenotazioni che necessitano di conferma presenza
+  const checkAttendanceConfirmationNeeded = () => {
+    const now = new Date();
+    const oneHourAgo = new Date(now.getTime() - (60 * 60 * 1000));
+    
+    // Filtra prenotazioni confermate con data di oltre un'ora fa ma senza conferma presenza
+    const needsAttendanceConfirmation = bookings.filter(booking => {
+      const bookingDate = new Date(booking.date);
+      return (
+        booking.status === 'confirmed' && 
+        booking.attendance === null && 
+        bookingDate < oneHourAgo
+      );
+    });
+    
+    if (needsAttendanceConfirmation.length > 0) {
+      setAttendanceBookings(needsAttendanceConfirmation);
+      
+      // Mostra notifica per conferma presenza
+      toast.info(
+        <div className="flex items-center gap-2">
+          <AlertCircle className="h-5 w-5 text-amber-500" />
+          <div>
+            <div className="font-semibold">
+              {needsAttendanceConfirmation.length} {needsAttendanceConfirmation.length === 1 ? 'prenotazione' : 'prenotazioni'} necessitano di conferma presenza
+            </div>
+            <div className="text-sm">Clicca per confermare</div>
+          </div>
+        </div>,
+        {
+          duration: 0, // Non scade
+          action: {
+            label: "Verifica ora",
+            onClick: () => setShowAttendanceDialog(true)
+          }
+        }
+      );
+    }
+  };
   
   const handleConfirmBooking = (id: string) => {
     updateBooking(id, { status: 'confirmed' });
@@ -73,13 +128,18 @@ const RestaurantBookings = () => {
     setCurrentBookingId(id);
     setShowReviewCodeDialog(true);
     
-    const updatedBooking = allBookings.find(b => b.id === id);
+    // Rimuovi dalla lista delle prenotazioni che necessitano di conferma presenza
+    setAttendanceBookings(prev => prev.filter(b => b.id !== id));
     
     toast.success('Presenza confermata e codice generato per la recensione');
   };
 
   const handleNoShow = (id: string) => {
     updateBooking(id, { attendance: 'no-show' });
+    
+    // Rimuovi dalla lista delle prenotazioni che necessitano di conferma presenza
+    setAttendanceBookings(prev => prev.filter(b => b.id !== id));
+    
     toast.error('Cliente segnato come no-show');
   };
 
@@ -140,6 +200,16 @@ const RestaurantBookings = () => {
         </Button>
       )}
       
+      {attendanceBookings.length > 0 && (
+        <Button 
+          onClick={() => setShowAttendanceDialog(true)}
+          className="mb-6 ml-2 bg-amber-500 hover:bg-amber-600 flex items-center"
+        >
+          <AlertCircle className="mr-2 h-4 w-4" />
+          {attendanceBookings.length} {attendanceBookings.length === 1 ? 'prenotazione' : 'prenotazioni'} da verificare
+        </Button>
+      )}
+      
       {Object.entries(bookingsByDate).map(([date, dateBookings]) => (
         <div key={date} className="mb-6">
           <h2 className="text-lg font-medium mb-3 flex items-center">
@@ -153,7 +223,8 @@ const RestaurantBookings = () => {
                 key={booking.id} 
                 className={cn(
                   "bg-white rounded-lg shadow p-4",
-                  unreadBookings.includes(booking.id) && booking.status === 'pending' && "border-2 border-primary"
+                  unreadBookings.includes(booking.id) && booking.status === 'pending' && "border-2 border-primary",
+                  attendanceBookings.some(b => b.id === booking.id) && "border-2 border-amber-500"
                 )}
               >
                 <div className="flex justify-between items-start">
@@ -293,6 +364,73 @@ const RestaurantBookings = () => {
           <DialogFooter>
             <Button onClick={() => setShowNotificationDialog(false)}>
               Chiudi
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Nuovo dialog per la conferma della presenza */}
+      <Dialog open={showAttendanceDialog} onOpenChange={setShowAttendanceDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center">
+              <AlertCircle className="h-5 w-5 mr-2 text-amber-500" />
+              Conferma presenza clienti
+            </DialogTitle>
+            <DialogDescription>
+              Le seguenti prenotazioni sono passate da più di un'ora e necessitano di verifica presenza.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <div className="space-y-3 max-h-[300px] overflow-y-auto">
+              {attendanceBookings.map(booking => (
+                <div key={booking.id} className="border rounded-md p-3">
+                  <div className="flex justify-between">
+                    <div>
+                      <p className="font-medium">{booking.customerName}</p>
+                      <p className="text-sm text-gray-600">
+                        {new Date(booking.date).toLocaleDateString('it-IT')} alle{' '}
+                        {new Date(booking.date).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                      <p className="text-sm">{booking.people} {booking.people === 1 ? 'persona' : 'persone'}</p>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="text-xs border-red-500 text-red-600 hover:bg-red-50"
+                        onClick={() => {
+                          handleNoShow(booking.id);
+                          if (attendanceBookings.length === 1) {
+                            setShowAttendanceDialog(false);
+                          }
+                        }}
+                      >
+                        <XCircle className="h-3 w-3 mr-1" />
+                        No Show
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        className="text-xs bg-green-600"
+                        onClick={() => {
+                          handleConfirmAttendance(booking.id);
+                          if (attendanceBookings.length === 1) {
+                            setShowAttendanceDialog(false);
+                          }
+                        }}
+                      >
+                        <CheckCircle className="h-3 w-3 mr-1" />
+                        Presente
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setShowAttendanceDialog(false)}>
+              Verifica più tardi
             </Button>
           </DialogFooter>
         </DialogContent>
