@@ -7,6 +7,7 @@ import RestaurantDashboard from './pages/RestaurantDashboard';
 import RestaurantPage from './pages/RestaurantPage';
 import Index from './pages/Index';
 import SearchPage from './pages/SearchPage';
+import ProfilePage from './pages/ProfilePage';
 import './App.css';
 
 function App() {
@@ -20,6 +21,7 @@ function App() {
             <Route path="/restaurant/:id" element={<RestaurantPage />} />
             <Route path="/restaurant-dashboard" element={<RestaurantDashboard />} />
             <Route path="/dashboard" element={<RestaurantDashboard />} />
+            <Route path="/profile" element={<ProfilePage />} />
           </Routes>
           <Toaster />
         </TableProvider>
