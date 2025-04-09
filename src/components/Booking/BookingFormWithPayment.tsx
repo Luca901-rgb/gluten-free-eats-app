@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
@@ -34,6 +33,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useBookings } from '@/context/BookingContext';
 import { addDays, format as dateFormat } from 'date-fns';
+import GuaranteeRulesDialog from './GuaranteeRulesDialog';
 
 interface BookingFormProps {
   restaurantId: string;
@@ -68,6 +68,7 @@ const BookingFormWithPayment: React.FC<BookingFormProps> = ({ restaurantId, rest
   const [isLoading, setIsLoading] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [bookingData, setBookingData] = useState<any>(null);
+  const [showGuaranteeDialog, setShowGuaranteeDialog] = useState(true);
 
   const [highChair, setHighChair] = useState(false);
   const [accessibility, setAccessibility] = useState(false);
@@ -238,6 +239,11 @@ const BookingFormWithPayment: React.FC<BookingFormProps> = ({ restaurantId, rest
 
   return (
     <>
+      <GuaranteeRulesDialog 
+        open={showGuaranteeDialog} 
+        onOpenChange={setShowGuaranteeDialog} 
+      />
+      
       <div className="space-y-6">
         <div>
           <h2 className="font-poppins font-semibold text-lg mb-2">

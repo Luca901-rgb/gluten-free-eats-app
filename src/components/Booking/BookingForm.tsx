@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { CalendarIcon, Clock, Users, Check, Info } from 'lucide-react';
@@ -34,6 +33,7 @@ import { toast } from 'sonner';
 import { useBookings } from '@/context/BookingContext';
 import { addDays, format as dateFormat } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
+import GuaranteeRulesDialog from './GuaranteeRulesDialog';
 
 interface BookingFormProps {
   restaurantId: string;
@@ -75,6 +75,7 @@ const BookingForm: React.FC<BookingFormProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [bookingData, setBookingData] = useState<any>(null);
+  const [showGuaranteeDialog, setShowGuaranteeDialog] = useState(true);
 
   const [highChair, setHighChair] = useState(false);
   const [accessibility, setAccessibility] = useState(false);
@@ -146,10 +147,8 @@ const BookingForm: React.FC<BookingFormProps> = ({
       
       setBookingData(newBooking);
       
-      // Add booking to context
       addBooking(newBooking);
       
-      // Display notification toast for restaurant
       toast.info(
         <div className="flex flex-col gap-1">
           <span className="font-semibold">Notifica inviata al ristorante</span>
@@ -158,10 +157,7 @@ const BookingForm: React.FC<BookingFormProps> = ({
         { duration: 5000 }
       );
       
-      // Call the onBookingComplete callback if provided
       if (onBookingComplete) {
-        // Pass only the booking code, since restaurantReviewCode doesn't exist yet
-        // The restaurant code will be generated later when the restaurant confirms attendance
         onBookingComplete(newBooking.bookingCode, '');
       }
       
@@ -274,6 +270,11 @@ const BookingForm: React.FC<BookingFormProps> = ({
 
   return (
     <div className="space-y-6">
+      <GuaranteeRulesDialog 
+        open={showGuaranteeDialog} 
+        onOpenChange={setShowGuaranteeDialog} 
+      />
+      
       <div>
         <h2 className="font-poppins font-semibold text-lg mb-2">
           Prenota un tavolo presso {restaurantName}
