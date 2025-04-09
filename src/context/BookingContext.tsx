@@ -19,17 +19,20 @@ export interface Booking {
   restaurantReviewCode?: string;
   hasGuarantee?: boolean;
   additionalOptions?: string[];
+  isNotificationSeen?: boolean;
 }
 
 interface BookingContextType {
   bookings: Booking[];
-  addBooking: (booking: Booking) => void;
+  addBooking: (booking: Booking) => Booking;
   updateBooking: (id: string, updates: Partial<Booking>) => void;
   cancelBooking: (id: string) => void;
   generateReviewCode: (bookingId: string) => string;
   generateRestaurantReviewCode: (bookingId: string) => string;
   getBookingByCode: (bookingCode: string) => Booking | undefined;
   getRestaurantReviewCode: (bookingId: string) => string | undefined;
+  getBookingsByRestaurantId: (restaurantId: string) => Booking[];
+  markNotificationSeen: (id: string) => void;
 }
 
 const BookingContext = createContext<BookingContextType | undefined>(undefined);
@@ -59,6 +62,7 @@ const initialBookings: Booking[] = [
     attendance: 'confirmed',
     restaurantReviewCode: '1234',
     hasGuarantee: false,
+    isNotificationSeen: true,
   },
   {
     id: 'b2',
@@ -73,6 +77,7 @@ const initialBookings: Booking[] = [
     restaurantImage: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
     attendance: null,
     hasGuarantee: false,
+    isNotificationSeen: false,
   },
   // ... altri booking di esempio
 ];
@@ -85,6 +90,7 @@ export function BookingProvider({ children }: { children: ReactNode }) {
     const newBooking: Booking = {
       ...booking,
       bookingCode: booking.bookingCode || generateRandomCode(6),
+      isNotificationSeen: false,
     };
     setBookings([...bookings, newBooking]);
     return newBooking;
@@ -99,6 +105,12 @@ export function BookingProvider({ children }: { children: ReactNode }) {
     
     setBookings(bookings.map(booking => 
       booking.id === id ? { ...booking, ...updates } : booking
+    ));
+  };
+
+  const markNotificationSeen = (id: string) => {
+    setBookings(bookings.map(booking =>
+      booking.id === id ? { ...booking, isNotificationSeen: true } : booking
     ));
   };
 
@@ -126,6 +138,10 @@ export function BookingProvider({ children }: { children: ReactNode }) {
     const booking = bookings.find(b => b.id === bookingId);
     return booking?.restaurantReviewCode;
   };
+  
+  const getBookingsByRestaurantId = (restaurantId: string): Booking[] => {
+    return bookings.filter(booking => booking.restaurantId === restaurantId);
+  };
 
   return (
     <BookingContext.Provider 
@@ -137,7 +153,9 @@ export function BookingProvider({ children }: { children: ReactNode }) {
         generateReviewCode,
         generateRestaurantReviewCode,
         getBookingByCode,
-        getRestaurantReviewCode
+        getRestaurantReviewCode,
+        getBookingsByRestaurantId,
+        markNotificationSeen
       }}
     >
       {children}

@@ -19,6 +19,7 @@ import {
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useLocation } from 'react-router-dom';
 
 interface ReviewFormProps {
   restaurantId: string;
@@ -83,12 +84,18 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
   const [isVerified, setIsVerified] = useState<boolean>(bookingCode && restaurantCode ? true : false);
   const [isVerifying, setIsVerifying] = useState<boolean>(false);
   const [timeLeft, setTimeLeft] = useState<number>(48 * 60); // 48h in minuti
+  const [autoFilledCodes, setAutoFilledCodes] = useState<boolean>(false);
+
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const urlBookingCode = searchParams.get('bookingCode');
+  const urlRestaurantCode = searchParams.get('restaurantCode');
 
   const form = useForm<z.infer<typeof reviewSchema>>({
     resolver: zodResolver(reviewSchema),
     defaultValues: {
-      customerCode: bookingCode || "",
-      restaurantCode: restaurantCode || "",
+      customerCode: bookingCode || urlBookingCode || "",
+      restaurantCode: restaurantCode || urlRestaurantCode || "",
       rating: 0,
       foodRating: 0,
       serviceRating: 0,
@@ -100,7 +107,23 @@ const ReviewForm: React.FC<ReviewFormProps> = ({
   });
 
   useEffect(() => {
-    if (bookingCode && restaurantCode && !isVerified) {
+    if ((urlBookingCode || bookingCode) && (urlRestaurantCode || restaurantCode) && !autoFilledCodes) {
+      form.setValue('customerCode', urlBookingCode || bookingCode || "");
+      form.setValue('restaurantCode', urlRestaurantCode || restaurantCode || "");
+      setAutoFilledCodes(true);
+      
+      setTimeout(() => {
+        verifyCode();
+        if (urlBookingCode && urlRestaurantCode) {
+          toast.success("Codici precompilati dalla tua prenotazione");
+        }
+      }, 500);
+    }
+  }, [urlBookingCode, urlRestaurantCode, bookingCode, restaurantCode, form]);
+
+  useEffect(() => {
+    if (bookingCode && restaurantCode && !isVerified && !autoFilledCodes) {
+      setAutoFilledCodes(true);
       verifyCode();
     }
   }, [bookingCode, restaurantCode]);

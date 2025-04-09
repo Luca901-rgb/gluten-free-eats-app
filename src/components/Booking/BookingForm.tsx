@@ -146,7 +146,17 @@ const BookingForm: React.FC<BookingFormProps> = ({
       
       setBookingData(newBooking);
       
+      // Add booking to context
       addBooking(newBooking);
+      
+      // Display notification toast for restaurant
+      toast.info(
+        <div className="flex flex-col gap-1">
+          <span className="font-semibold">Notifica inviata al ristorante</span>
+          <span className="text-sm">Il ristorante riceverà una notifica per confermare la tua prenotazione</span>
+        </div>,
+        { duration: 5000 }
+      );
       
       // Call the onBookingComplete callback if provided
       if (onBookingComplete) {
