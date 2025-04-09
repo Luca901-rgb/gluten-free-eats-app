@@ -1,7 +1,7 @@
 
 import React, { useEffect, FC } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
-import { MapPin, Navigation } from 'lucide-react';
+import { Navigation } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { Button } from '@/components/ui/button';
@@ -87,96 +87,56 @@ export const RestaurantMap: FC<RestaurantMapProps> = ({
 
   return (
     <div className="h-full w-full">
-      <h3 className="text-lg font-medium text-gray-900 mb-3">Ristoranti nelle vicinanze</h3>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 h-[70vh]">
-        {/* The map container */}
-        <div className="rounded-lg overflow-hidden border border-gray-200 shadow-sm h-full">
-          <MapContainer style={{ height: '100%', width: '100%' }} className="z-0">
-            <TileLayer
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              // @ts-ignore - attribution is valid but TypeScript doesn't recognize it
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            />
-            
-            {/* Dynamic center recalculation when userLocation changes */}
-            <SetMapView center={center} zoom={zoom} />
-            
-            {/* User location marker */}
-            {userLocation && (
-              <Marker 
-                position={[userLocation.lat, userLocation.lng]}
-                // @ts-ignore - icon is a valid prop but TypeScript doesn't recognize it properly
-                icon={userIcon}
-              >
-                <Popup>
-                  <div className="text-sm font-medium">La tua posizione</div>
-                </Popup>
-              </Marker>
-            )}
-            
-            {/* Restaurant markers */}
-            {restaurants.map(restaurant => (
-              <Marker 
-                key={restaurant.id} 
-                position={[restaurant.location.lat, restaurant.location.lng]}
-                // @ts-ignore - icon is a valid prop but TypeScript doesn't recognize it properly
-                icon={restaurantIcon}
-              >
-                <Popup>
-                  <div className="text-center">
-                    <h5 className="font-medium">{restaurant.name}</h5>
-                    <p className="text-sm text-gray-600">{restaurant.address}</p>
-                    <p className="text-sm font-medium text-primary">{restaurant.distance}</p>
-                    <Button 
-                      onClick={() => navigateToRestaurant(restaurant.id, restaurant.location.lat, restaurant.location.lng)}
-                      className="mt-2 w-full"
-                      size="sm"
-                    >
-                      <Navigation className="mr-1 h-4 w-4" /> Vai da qui
-                    </Button>
-                  </div>
-                </Popup>
-              </Marker>
-            ))}
-          </MapContainer>
-        </div>
-        
-        {/* List of restaurants */}
-        <div className="h-full border border-gray-200 rounded-lg shadow-sm overflow-hidden flex flex-col">
-          <div className="p-3 bg-gray-50 border-b">
-            <h4 className="font-medium">Lista Ristoranti</h4>
-          </div>
-          <div className="flex-1 overflow-auto p-2">
-            {restaurants.map(restaurant => (
-              <div 
-                key={restaurant.id} 
-                className="bg-white p-3 m-1 rounded-lg shadow-sm flex items-start gap-2 hover:bg-gray-50 cursor-pointer transition-colors"
-                onClick={() => navigateToRestaurant(restaurant.id, restaurant.location.lat, restaurant.location.lng)}
-              >
-                <MapPin className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                <div className="flex-1">
+      <div className="h-full rounded-lg overflow-hidden border border-gray-200 shadow-sm">
+        <MapContainer style={{ height: '100%', width: '100%' }} className="z-0">
+          <TileLayer
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            // @ts-ignore - attribution is valid but TypeScript doesn't recognize it
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          />
+          
+          {/* Dynamic center recalculation when userLocation changes */}
+          <SetMapView center={center} zoom={zoom} />
+          
+          {/* User location marker */}
+          {userLocation && (
+            <Marker 
+              position={[userLocation.lat, userLocation.lng]}
+              // @ts-ignore - icon is a valid prop but TypeScript doesn't recognize it properly
+              icon={userIcon}
+            >
+              <Popup>
+                <div className="text-sm font-medium">La tua posizione</div>
+              </Popup>
+            </Marker>
+          )}
+          
+          {/* Restaurant markers */}
+          {restaurants.map(restaurant => (
+            <Marker 
+              key={restaurant.id} 
+              position={[restaurant.location.lat, restaurant.location.lng]}
+              // @ts-ignore - icon is a valid prop but TypeScript doesn't recognize it properly
+              icon={restaurantIcon}
+            >
+              <Popup>
+                <div className="text-center">
                   <h5 className="font-medium">{restaurant.name}</h5>
                   <p className="text-sm text-gray-600">{restaurant.address}</p>
                   <p className="text-sm font-medium text-primary">{restaurant.distance}</p>
+                  <Button 
+                    onClick={() => navigateToRestaurant(restaurant.id, restaurant.location.lat, restaurant.location.lng)}
+                    className="mt-2 w-full"
+                    size="sm"
+                  >
+                    <Navigation className="mr-1 h-4 w-4" /> Vai da qui
+                  </Button>
                 </div>
-                <Button variant="outline" size="icon" className="h-8 w-8 flex-shrink-0">
-                  <Navigation className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
-          </div>
-        </div>
+              </Popup>
+            </Marker>
+          ))}
+        </MapContainer>
       </div>
-      
-      {userLocation && (
-        <div className="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-lg">
-          <p className="text-sm text-blue-700">
-            <span className="font-medium">La tua posizione attuale:</span> 
-            {' '}Lat: {userLocation.lat.toFixed(4)}, Lng: {userLocation.lng.toFixed(4)}
-          </p>
-        </div>
-      )}
     </div>
   );
 };

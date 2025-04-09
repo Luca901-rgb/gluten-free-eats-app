@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { Link } from 'react-router-dom';
@@ -145,7 +146,7 @@ const SearchPage = () => {
             <AlertTitle className="text-amber-800">Area non disponibile</AlertTitle>
             <AlertDescription className="text-amber-700">
               Il nostro servizio è attualmente disponibile solo in Campania durante la fase pilota.
-              La tua posizione attuale è al di fuori di quest'area.
+              La tua posizione attuale è al di fuori di quest&apos;area.
             </AlertDescription>
           </Alert>
         )}
@@ -174,13 +175,42 @@ const SearchPage = () => {
           )}
         </div>
         
-        {/* Map and List View */}
+        {/* Map and List View - Modified layout */}
         {inAvailableRegion ? (
-          <div className="h-[75vh] rounded-lg border overflow-hidden mb-4">
-            <RestaurantMap 
-              userLocation={userPosition}
-              restaurants={restaurants}
-            />
+          <div className="flex flex-col space-y-4">
+            {/* Map takes 50vh - half the screen height */}
+            <div className="h-[50vh] rounded-lg border overflow-hidden">
+              <RestaurantMap 
+                userLocation={userPosition}
+                restaurants={restaurants}
+              />
+            </div>
+            
+            {/* Restaurant list below the map */}
+            <div className="border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+              <div className="p-3 bg-gray-50 border-b">
+                <h4 className="font-medium">Lista Ristoranti</h4>
+              </div>
+              <div className="max-h-[40vh] overflow-y-auto">
+                {restaurants.map(restaurant => (
+                  <div 
+                    key={restaurant.id} 
+                    className="bg-white p-3 m-2 rounded-lg shadow-sm flex items-start gap-2 hover:bg-gray-50 cursor-pointer transition-colors"
+                    onClick={() => {/* Navigate to restaurant details */}}
+                  >
+                    <MapPin className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <h5 className="font-medium">{restaurant.name}</h5>
+                      <p className="text-sm text-gray-600">{restaurant.address}</p>
+                      <p className="text-sm font-medium text-primary">{restaurant.distance}</p>
+                    </div>
+                    <Button variant="outline" size="icon" className="h-8 w-8 flex-shrink-0">
+                      <Navigation className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         ) : (
           <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
@@ -189,6 +219,15 @@ const SearchPage = () => {
             <p className="text-gray-600 max-w-md mx-auto">
               Durante la fase pilota, il nostro servizio è disponibile esclusivamente nella regione Campania.
               Stiamo lavorando per espandere il servizio ad altre regioni presto.
+            </p>
+          </div>
+        )}
+        
+        {userPosition && (
+          <div className="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-lg">
+            <p className="text-sm text-blue-700">
+              <span className="font-medium">La tua posizione attuale:</span> 
+              {' '}Lat: {userPosition.lat.toFixed(4)}, Lng: {userPosition.lng.toFixed(4)}
             </p>
           </div>
         )}
