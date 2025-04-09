@@ -78,6 +78,9 @@ const Index = () => {
   });
 
   useEffect(() => {
+    // Aggiunta di un toast di debug per verificare che la pagina sta caricando correttamente
+    toast.info("Benvenuto nell'app Gluten Free Eats!");
+    
     const timer = setTimeout(() => {
       setIsLoading(false);
     }, 1000);
@@ -240,14 +243,14 @@ const Index = () => {
         </div>
 
         <div className="flex flex-wrap gap-4 mt-8">
-          <Button size="lg" asChild disabled={!regionStatus.inRegion}>
+          <Button size="lg" asChild className="bg-blue-500 hover:bg-blue-600" disabled={!regionStatus.inRegion}>
             <Link to="/search">Trova Ristoranti</Link>
           </Button>
           <Button size="lg" variant="outline" asChild>
             <Link to="/videos">Scopri Ricette</Link>
           </Button>
           <Button size="lg" variant="secondary" asChild>
-            <Link to="/payments">Sistema Pagamenti</Link>
+            <Link to="/dashboard">Gestione Tavoli</Link>
           </Button>
         </div>
       </div>
