@@ -61,7 +61,7 @@ const FavoritesPage = () => {
             reviews: data.reviews || 0,
             hasGlutenFreeOptions: data.hasGlutenFreeOptions || false,
             isFavorite: true,
-            cuisine: data.cuisine || 'Italiana' // Default cuisine
+            cuisine: data.cuisine || 'Italiana' // Adding cuisine with default value
           } as Restaurant;
         }
         return null;

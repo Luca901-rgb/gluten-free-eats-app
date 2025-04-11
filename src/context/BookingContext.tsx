@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, ReactNode } from 'react';
 
 // Define the booking type
@@ -7,6 +6,7 @@ export interface Booking {
   restaurantId: string;
   restaurantName: string;
   date: string;
+  time?: string; // Adding time as optional
   people: number;
   notes: string;
   status: 'confirmed' | 'pending' | 'completed' | 'cancelled';
@@ -20,6 +20,11 @@ export interface Booking {
   hasGuarantee?: boolean;
   additionalOptions?: string[];
   isNotificationSeen?: boolean;
+  // Adding fields that come from Firebase
+  userId?: string;
+  email?: string;
+  phone?: string;
+  createdAt?: any;
 }
 
 interface BookingContextType {
@@ -52,6 +57,7 @@ const initialBookings: Booking[] = [
     restaurantId: '1',
     restaurantName: 'La Trattoria Senza Glutine',
     date: '2023-11-25T19:30:00',
+    time: '19:30',
     people: 2,
     notes: 'Tavolo vicino alla finestra se possibile',
     status: 'confirmed',
@@ -69,6 +75,7 @@ const initialBookings: Booking[] = [
     restaurantId: '2',
     restaurantName: 'Pizzeria Gluten Free',
     date: '2023-11-28T20:00:00',
+    time: '20:00',
     people: 4,
     notes: '',
     status: 'pending',

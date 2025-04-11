@@ -98,8 +98,8 @@ export const useRestaurantList = () => {
           reviews: data.reviews || 0,
           hasGlutenFreeOptions: data.hasGlutenFreeOptions || false,
           isFavorite: userFavorites.includes(doc.id),
-          cuisine: data.cuisine || 'Italiana' // Default cuisine
-        };
+          cuisine: data.cuisine || 'Italiana' // Adding cuisine with default value
+        } as Restaurant;
       });
       
       setRestaurants(restaurantsData);
@@ -155,13 +155,13 @@ export const useRestaurantList = () => {
             reviews: data.reviews || 0,
             hasGlutenFreeOptions: data.hasGlutenFreeOptions || false,
             isFavorite: userFavorites.includes(doc.id),
-            cuisine: data.cuisine || 'Italiana' // Default cuisine
-          };
+            cuisine: data.cuisine || 'Italiana' // Adding cuisine with default value
+          } as Restaurant;
         })
         .filter(restaurant => 
           restaurant.name.toLowerCase().includes(normalizedSearchTerm) || 
-          restaurant.description.toLowerCase().includes(normalizedSearchTerm) ||
-          restaurant.address.toLowerCase().includes(normalizedSearchTerm)
+          (restaurant.description && restaurant.description.toLowerCase().includes(normalizedSearchTerm)) ||
+          (restaurant.address && restaurant.address.toLowerCase().includes(normalizedSearchTerm))
         );
       
       setRestaurants(filteredRestaurants);

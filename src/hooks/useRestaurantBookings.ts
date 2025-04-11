@@ -43,11 +43,13 @@ export const useRestaurantBookings = (restaurantId: string) => {
             
             bookingsFromFirestore = querySnapshot.docs.map(doc => {
               const data = doc.data();
+              // Map Firestore data to Booking type, ensuring all required fields are present
               return {
                 id: doc.id,
                 restaurantId: data.restaurantId,
                 restaurantName: data.restaurantName || 'Ristorante',
                 date: data.date,
+                time: data.time,
                 people: data.people || 1,
                 notes: data.specialRequests || '',
                 status: data.status || 'pending',
@@ -55,9 +57,10 @@ export const useRestaurantBookings = (restaurantId: string) => {
                 customerName: data.name || 'Cliente',
                 attendance: data.attendance,
                 userId: data.userId,
-                // Adding minimal required properties
                 hasReview: false,
                 restaurantImage: data.restaurantImage || '/placeholder.svg',
+                email: data.email,
+                phone: data.phone
               } as Booking;
             });
           }
@@ -92,11 +95,13 @@ export const useRestaurantBookings = (restaurantId: string) => {
       const unsubscribe = onSnapshot(q, (querySnapshot) => {
         const bookingsFromFirestore = querySnapshot.docs.map(doc => {
           const data = doc.data();
+          // Map Firestore data to Booking type with all required fields
           return {
             id: doc.id,
             restaurantId: data.restaurantId,
             restaurantName: data.restaurantName || 'Ristorante',
             date: data.date,
+            time: data.time,
             people: data.people || 1,
             notes: data.specialRequests || '',
             status: data.status || 'pending',
@@ -104,9 +109,10 @@ export const useRestaurantBookings = (restaurantId: string) => {
             customerName: data.name || 'Cliente',
             attendance: data.attendance,
             userId: data.userId,
-            // Adding minimal required properties
             hasReview: false,
             restaurantImage: data.restaurantImage || '/placeholder.svg',
+            email: data.email,
+            phone: data.phone
           } as Booking;
         });
         
