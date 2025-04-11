@@ -22,5 +22,13 @@
     }
   ],
   "orientation": "portrait",
-  "prefer_related_applications": false
+  "prefer_related_applications": false,
+  "related_applications": [
+    {
+      "platform": "play",
+      "url": "https://play.google.com/store/apps/details?id=app.lovable.0406988df72c4fb89c66f80fcfc8a946",
+      "id": "app.lovable.0406988df72c4fb89c66f80fcfc8a946"
+    }
+  ],
+  "categories": ["food", "health", "lifestyle"]
 }
