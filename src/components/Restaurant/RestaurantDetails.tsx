@@ -2,13 +2,14 @@
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Clock, MapPin, Phone, Calendar, Star, Award, Image, Home, Copy, Check, Menu } from 'lucide-react';
+import { Clock, MapPin, Phone, Calendar, Star, Award, Image, Home, Copy, Check, Menu, VideoIcon } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import StarRating from '@/components/common/StarRating';
 import BookingForm from '../Booking/BookingForm';
 import MenuViewer from './MenuViewer';
 import ReviewForm from './ReviewForm';
 import { toast } from 'sonner';
+import VideoPlayer from '@/components/Video/VideoPlayer';
 
 export interface RestaurantDetailProps {
   id: string;
@@ -51,6 +52,32 @@ const RestaurantDetails: React.FC<RestaurantDetailsProps> = ({
   const [copyIcon, setCopyIcon] = useState<'copy' | 'check'>('copy');
   const [bookingCode, setBookingCode] = useState<string>(initialBookingCode || bookingCodeFromUrl || '');
   const [restaurantCode, setRestaurantCode] = useState<string>(initialRestaurantCode || restaurantCodeFromUrl || '');
+  
+  // Videos data - in a real app this would be fetched from API
+  const [videos] = useState([
+    {
+      id: '1',
+      title: 'Come preparare la pasta senza glutine',
+      description: 'Tutti i segreti per una pasta senza glutine perfetta.',
+      thumbnailUrl: '/placeholder.svg',
+      videoUrl: 'https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4',
+    },
+    {
+      id: '2',
+      title: 'Pizza senza glutine fatta in casa',
+      description: 'Ricetta per una pizza croccante e gustosa completamente gluten-free.',
+      thumbnailUrl: '/placeholder.svg',
+      videoUrl: 'https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4',
+    }
+  ]);
+  
+  const [selectedVideo, setSelectedVideo] = useState<{
+    id: string;
+    title: string;
+    description: string;
+    thumbnailUrl: string;
+    videoUrl: string;
+  } | null>(null);
   
   useEffect(() => {
     if (tabFromUrl) {
@@ -97,6 +124,7 @@ const RestaurantDetails: React.FC<RestaurantDetailsProps> = ({
     { id: 'home', label: 'Home', icon: <Home size={18} /> },
     { id: 'menu', label: 'Menu', icon: <Menu size={18} /> },
     { id: 'gallery', label: 'Galleria', icon: <Image size={18} /> },
+    { id: 'videos', label: 'Videoricette', icon: <VideoIcon size={18} /> },
     { id: 'booking', label: 'Prenotazioni', icon: <Calendar size={18} /> },
     { id: 'reviews', label: 'Recensioni', icon: <Star size={18} /> },
   ];
@@ -105,6 +133,16 @@ const RestaurantDetails: React.FC<RestaurantDetailsProps> = ({
     setBookingCode(newBookingCode);
     setRestaurantCode(newRestaurantCode);
     navigateToTab('reviews');
+  };
+  
+  const handlePlayVideo = (video: {
+    id: string;
+    title: string;
+    description: string;
+    thumbnailUrl: string;
+    videoUrl: string;
+  }) => {
+    setSelectedVideo(video);
   };
   
   return (
@@ -220,6 +258,62 @@ const RestaurantDetails: React.FC<RestaurantDetailsProps> = ({
                 </div>
               ))}
             </div>
+          </div>
+        )}
+        
+        {activeTab === 'videos' && (
+          <div className="space-y-4 animate-fade-in">
+            <h2 className="font-poppins font-semibold text-lg">Videoricette</h2>
+            
+            {selectedVideo ? (
+              <div className="space-y-4">
+                <VideoPlayer 
+                  videoUrl={selectedVideo.videoUrl}
+                  thumbnail={selectedVideo.thumbnailUrl}
+                  title={selectedVideo.title}
+                  autoPlay={true}
+                />
+                <div className="mt-4">
+                  <h3 className="font-medium text-lg">{selectedVideo.title}</h3>
+                  <p className="text-sm text-gray-600 mt-1">{selectedVideo.description}</p>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setSelectedVideo(null)}
+                    className="mt-4"
+                  >
+                    Torna alla lista
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {videos.map((video) => (
+                  <div 
+                    key={video.id} 
+                    className="border rounded-lg overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
+                    onClick={() => handlePlayVideo(video)}
+                  >
+                    <div className="relative aspect-video bg-gray-100">
+                      <img 
+                        src={video.thumbnailUrl} 
+                        alt={video.title}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="bg-primary rounded-full p-3 opacity-90 hover:opacity-100 transition-opacity">
+                          <VideoIcon size={24} className="text-white" />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="p-3">
+                      <h3 className="font-medium">{video.title}</h3>
+                      <p className="text-sm text-gray-600 line-clamp-2 mt-1">{video.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
