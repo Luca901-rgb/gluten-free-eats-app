@@ -1,12 +1,13 @@
-
 import { useState, useEffect } from 'react';
 import { useBookings, Booking } from '@/context/BookingContext';
 import { toast } from 'sonner';
 import { checkAttendanceConfirmationNeeded } from '@/components/Bookings/BookingUtils';
+import { collection, doc, getDoc, getDocs, query, where, setDoc, updateDoc, onSnapshot } from 'firebase/firestore';
+import { db, auth } from '@/lib/firebase';
 
 export const useRestaurantBookings = (restaurantId: string) => {
-  const { bookings: allBookings, updateBooking, generateRestaurantReviewCode } = useBookings();
-  const bookings = allBookings.filter(booking => booking.restaurantId === restaurantId);
+  const { bookings: contextBookings, updateBooking, generateRestaurantReviewCode } = useBookings();
+  const [bookings, setBookings] = useState<Booking[]>([]);
   
   const [unreadBookings, setUnreadBookings] = useState<string[]>([]);
   const [showNotificationDialog, setShowNotificationDialog] = useState(false);
@@ -18,9 +19,110 @@ export const useRestaurantBookings = (restaurantId: string) => {
   
   const [showAttendanceDialog, setShowAttendanceDialog] = useState(false);
   const [attendanceBookings, setAttendanceBookings] = useState<Booking[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const pendingBookings = bookings.filter(b => b.status === 'pending' && !unreadBookings.includes(b.id));
+    const loadBookings = async () => {
+      setIsLoading(true);
+      
+      try {
+        // First check from context and then try to load from Firestore
+        let bookingsFromFirestore: Booking[] = [];
+        
+        try {
+          // We're keeping the context bookings integration for backward compatibility
+          const fromContext = contextBookings.filter(booking => booking.restaurantId === restaurantId);
+          if (fromContext.length > 0) {
+            bookingsFromFirestore = fromContext;
+          } else {
+            // If not in context, try loading from Firestore
+            const bookingsCollection = collection(db, "bookings");
+            const q = query(bookingsCollection, where("restaurantId", "==", restaurantId));
+            const querySnapshot = await getDocs(q);
+            
+            bookingsFromFirestore = querySnapshot.docs.map(doc => {
+              const data = doc.data();
+              return {
+                id: doc.id,
+                restaurantId: data.restaurantId,
+                userId: data.userId,
+                name: data.name,
+                email: data.email,
+                phone: data.phone,
+                date: data.date,
+                time: data.time,
+                people: data.people,
+                specialRequests: data.specialRequests,
+                status: data.status,
+                attendance: data.attendance,
+                createdAt: data.createdAt?.toDate() || new Date(),
+              } as Booking;
+            });
+          }
+          
+          setBookings(bookingsFromFirestore);
+          checkNewBookings(bookingsFromFirestore);
+          checkAttendanceConfirmations(bookingsFromFirestore);
+          
+        } catch (error) {
+          console.error("Error loading bookings from Firestore:", error);
+          // Use context bookings as fallback
+          const fromContext = contextBookings.filter(booking => booking.restaurantId === restaurantId);
+          setBookings(fromContext);
+          checkNewBookings(fromContext);
+          checkAttendanceConfirmations(fromContext);
+        }
+      } catch (error) {
+        console.error("Error in bookings setup:", error);
+        toast.error("Si è verificato un errore nel caricamento delle prenotazioni");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadBookings();
+    
+    // Set up a real-time listener for bookings if using Firestore
+    try {
+      const bookingsCollection = collection(db, "bookings");
+      const q = query(bookingsCollection, where("restaurantId", "==", restaurantId));
+      
+      const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const bookingsFromFirestore = querySnapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            restaurantId: data.restaurantId,
+            userId: data.userId,
+            name: data.name,
+            email: data.email,
+            phone: data.phone,
+            date: data.date,
+            time: data.time,
+            people: data.people,
+            specialRequests: data.specialRequests,
+            status: data.status,
+            attendance: data.attendance,
+            createdAt: data.createdAt?.toDate() || new Date(),
+          } as Booking;
+        });
+        
+        setBookings(bookingsFromFirestore);
+        checkNewBookings(bookingsFromFirestore);
+        checkAttendanceConfirmations(bookingsFromFirestore);
+      }, (error) => {
+        console.error("Error in bookings listener:", error);
+      });
+      
+      return () => unsubscribe();
+    } catch (error) {
+      console.error("Could not set up real-time listener:", error);
+      // If real-time fails, fallback to useEffect dependency on contextBookings
+    }
+  }, [restaurantId, contextBookings]);
+  
+  const checkNewBookings = (bookingsToCheck: Booking[]) => {
+    const pendingBookings = bookingsToCheck.filter(b => b.status === 'pending' && !unreadBookings.includes(b.id));
     
     if (pendingBookings.length > 0) {
       setUnreadBookings(prev => [...prev, ...pendingBookings.map(b => b.id)]);
@@ -37,21 +139,11 @@ export const useRestaurantBookings = (restaurantId: string) => {
         });
       }
     }
-    
-    // Verifica delle prenotazioni che necessitano di conferma presenza
-    checkAttendanceConfirmations();
-    
-    // Imposta un intervallo per controllare periodicamente (ogni minuto)
-    const attendanceInterval = setInterval(() => {
-      checkAttendanceConfirmations();
-    }, 60000);
-    
-    return () => clearInterval(attendanceInterval);
-  }, [bookings, unreadBookings]);
+  };
   
   // Verifica prenotazioni che necessitano di conferma presenza
-  const checkAttendanceConfirmations = () => {
-    const needsAttendanceConfirmation = checkAttendanceConfirmationNeeded(bookings);
+  const checkAttendanceConfirmations = (bookingsToCheck: Booking[]) => {
+    const needsAttendanceConfirmation = checkAttendanceConfirmationNeeded(bookingsToCheck);
     
     if (needsAttendanceConfirmation.length > 0) {
       setAttendanceBookings(needsAttendanceConfirmation);
@@ -68,39 +160,94 @@ export const useRestaurantBookings = (restaurantId: string) => {
     }
   };
   
-  const handleConfirmBooking = (id: string) => {
-    updateBooking(id, { status: 'confirmed' });
-    toast.success('Prenotazione confermata con successo');
-    setUnreadBookings(prev => prev.filter(bookingId => bookingId !== id));
-    setNotificationBookings(prev => prev.filter(b => b.id !== id));
+  const updateBookingStatus = async (id: string, updates: Partial<Booking>) => {
+    try {
+      // Update in context (backwards compatibility)
+      updateBooking(id, updates);
+      
+      // Update in Firestore
+      try {
+        const bookingRef = doc(db, "bookings", id);
+        await updateDoc(bookingRef, {
+          ...updates,
+          updatedAt: new Date()
+        });
+      } catch (error) {
+        console.error("Error updating booking in Firestore:", error);
+        // We already updated in context, so no need to throw
+        // This will allow the app to continue working with the context data
+      }
+    } catch (error) {
+      console.error("Error updating booking:", error);
+      throw error;
+    }
+  };
+  
+  const handleConfirmBooking = async (id: string) => {
+    try {
+      await updateBookingStatus(id, { status: 'confirmed' });
+      toast.success('Prenotazione confermata con successo');
+      setUnreadBookings(prev => prev.filter(bookingId => bookingId !== id));
+      setNotificationBookings(prev => prev.filter(b => b.id !== id));
+    } catch (error) {
+      toast.error('Errore durante la conferma della prenotazione');
+    }
   };
 
-  const handleCancelBooking = (id: string) => {
-    updateBooking(id, { status: 'cancelled' });
-    toast.error('Prenotazione cancellata');
-    setUnreadBookings(prev => prev.filter(bookingId => bookingId !== id));
+  const handleCancelBooking = async (id: string) => {
+    try {
+      await updateBookingStatus(id, { status: 'cancelled' });
+      toast.error('Prenotazione cancellata');
+      setUnreadBookings(prev => prev.filter(bookingId => bookingId !== id));
+      setNotificationBookings(prev => prev.filter(b => b.id !== id));
+    } catch (error) {
+      toast.error('Errore durante la cancellazione della prenotazione');
+    }
   };
 
-  const handleConfirmAttendance = (id: string) => {
-    const code = generateRestaurantReviewCode(id);
-    updateBooking(id, { attendance: 'confirmed' });
-    setGeneratedReviewCode(code);
-    setCurrentBookingId(id);
-    setShowReviewCodeDialog(true);
-    
-    // Rimuovi dalla lista delle prenotazioni che necessitano di conferma presenza
-    setAttendanceBookings(prev => prev.filter(b => b.id !== id));
-    
-    toast.success('Presenza confermata e codice generato per la recensione');
+  const handleConfirmAttendance = async (id: string) => {
+    try {
+      const code = generateRestaurantReviewCode(id);
+      await updateBookingStatus(id, { attendance: 'confirmed' });
+      
+      // Save the review code to Firestore
+      try {
+        const reviewCodesRef = doc(db, "reviewCodes", code);
+        await setDoc(reviewCodesRef, {
+          bookingId: id,
+          restaurantId,
+          code,
+          used: false,
+          createdAt: new Date()
+        });
+      } catch (error) {
+        console.error("Error saving review code to Firestore:", error);
+      }
+      
+      setGeneratedReviewCode(code);
+      setCurrentBookingId(id);
+      setShowReviewCodeDialog(true);
+      
+      // Rimuovi dalla lista delle prenotazioni che necessitano di conferma presenza
+      setAttendanceBookings(prev => prev.filter(b => b.id !== id));
+      
+      toast.success('Presenza confermata e codice generato per la recensione');
+    } catch (error) {
+      toast.error('Errore durante la conferma della presenza');
+    }
   };
 
-  const handleNoShow = (id: string) => {
-    updateBooking(id, { attendance: 'no-show' });
-    
-    // Rimuovi dalla lista delle prenotazioni che necessitano di conferma presenza
-    setAttendanceBookings(prev => prev.filter(b => b.id !== id));
-    
-    toast.error('Cliente segnato come no-show');
+  const handleNoShow = async (id: string) => {
+    try {
+      await updateBookingStatus(id, { attendance: 'no-show' });
+      
+      // Rimuovi dalla lista delle prenotazioni che necessitano di conferma presenza
+      setAttendanceBookings(prev => prev.filter(b => b.id !== id));
+      
+      toast.error('Cliente segnato come no-show');
+    } catch (error) {
+      toast.error('Errore durante la segnalazione di no-show');
+    }
   };
   
   // Organizza le prenotazioni per data
@@ -120,6 +267,7 @@ export const useRestaurantBookings = (restaurantId: string) => {
   return {
     bookings,
     bookingsByDate,
+    isLoading,
     unreadBookings,
     attendanceBookings,
     notificationBookings,
@@ -136,6 +284,6 @@ export const useRestaurantBookings = (restaurantId: string) => {
     handleConfirmAttendance,
     handleNoShow,
     handleCopyCode,
-    allBookings
+    allBookings: bookings // For compatibility with the original hook
   };
 };

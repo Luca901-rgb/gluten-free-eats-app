@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   User, 
   LogOut, 
@@ -28,30 +28,66 @@ import { Label } from '@/components/ui/label';
 import Layout from '@/components/Layout';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
-import { logoutUser } from '@/lib/firebase';
+import { auth, db, logoutUser } from '@/lib/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 const ProfilePage = () => {
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [userId, setUserId] = useState<string | null>(null);
   
-  // Personal information from localStorage or default values
+  // Personal information state
   const [personalInfo, setPersonalInfo] = useState({
-    name: localStorage.getItem('userName') || 'Mario Rossi',
-    email: localStorage.getItem('userEmail') || 'mario.rossi@example.com',
-    phone: localStorage.getItem('userPhone') || '+39 123 456 7890',
-    address: localStorage.getItem('userAddress') || 'Via Roma 123, Milano',
-    birthDate: localStorage.getItem('userBirthDate') || '01/01/1990',
+    name: '',
+    email: '',
+    phone: '',
+    address: '',
+    birthDate: '',
   });
+
+  // Load user data from Firebase
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        setUserId(user.uid);
+        setPersonalInfo(prev => ({
+          ...prev,
+          email: user.email || '',
+          name: user.displayName || ''
+        }));
+        
+        // Try to load additional profile data from Firestore
+        try {
+          const userProfileDoc = await getDoc(doc(db, "userProfiles", user.uid));
+          if (userProfileDoc.exists()) {
+            const profileData = userProfileDoc.data();
+            setPersonalInfo(prev => ({
+              ...prev,
+              name: profileData.name || user.displayName || '',
+              phone: profileData.phone || '',
+              address: profileData.address || '',
+              birthDate: profileData.birthDate || '',
+            }));
+          }
+        } catch (error) {
+          console.error("Error loading user profile:", error);
+        }
+      } else {
+        // User is not logged in, redirect to login
+        navigate('/login');
+      }
+      setIsLoading(false);
+    });
+    
+    return () => unsubscribe();
+  }, [navigate]);
 
   const handleLogout = async () => {
     try {
       await logoutUser();
       toast.success('Logout effettuato con successo');
-      localStorage.removeItem('isAuthenticated');
-      localStorage.removeItem('userEmail');
-      localStorage.removeItem('userId');
-      localStorage.removeItem('userName');
-      localStorage.removeItem('userType');
       navigate('/login');
     } catch (error: any) {
       toast.error(`Errore durante il logout: ${error.message}`);
@@ -62,27 +98,52 @@ const ProfilePage = () => {
     setIsEditing(!isEditing);
   };
 
-  const handleSave = () => {
-    // Save to localStorage
-    localStorage.setItem('userName', personalInfo.name);
-    localStorage.setItem('userEmail', personalInfo.email);
-    localStorage.setItem('userPhone', personalInfo.phone);
-    localStorage.setItem('userAddress', personalInfo.address);
-    localStorage.setItem('userBirthDate', personalInfo.birthDate);
+  const handleSave = async () => {
+    if (!userId) {
+      toast.error("Utente non autenticato");
+      return;
+    }
     
-    setIsEditing(false);
-    toast.success('Informazioni personali aggiornate con successo');
+    setIsLoading(true);
+    try {
+      // Save to Firestore
+      await setDoc(doc(db, "userProfiles", userId), {
+        name: personalInfo.name,
+        phone: personalInfo.phone,
+        address: personalInfo.address,
+        birthDate: personalInfo.birthDate,
+        updatedAt: new Date()
+      }, { merge: true });
+      
+      setIsEditing(false);
+      toast.success('Informazioni personali aggiornate con successo');
+    } catch (error: any) {
+      console.error("Error saving profile:", error);
+      toast.error(`Errore durante il salvataggio: ${error.message}`);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleCancel = () => {
-    // Reset to values from localStorage
-    setPersonalInfo({
-      name: localStorage.getItem('userName') || 'Mario Rossi',
-      email: localStorage.getItem('userEmail') || 'mario.rossi@example.com',
-      phone: localStorage.getItem('userPhone') || '+39 123 456 7890',
-      address: localStorage.getItem('userAddress') || 'Via Roma 123, Milano',
-      birthDate: localStorage.getItem('userBirthDate') || '01/01/1990',
-    });
+  const handleCancel = async () => {
+    // Reset to values from Firebase
+    if (userId) {
+      try {
+        const userProfileDoc = await getDoc(doc(db, "userProfiles", userId));
+        if (userProfileDoc.exists()) {
+          const profileData = userProfileDoc.data();
+          setPersonalInfo(prev => ({
+            ...prev,
+            name: profileData.name || auth.currentUser?.displayName || '',
+            phone: profileData.phone || '',
+            address: profileData.address || '',
+            birthDate: profileData.birthDate || '',
+          }));
+        }
+      } catch (error) {
+        console.error("Error reloading user profile:", error);
+      }
+    }
     setIsEditing(false);
   };
 
@@ -90,6 +151,16 @@ const ProfilePage = () => {
     const { name, value } = e.target;
     setPersonalInfo(prev => ({ ...prev, [name]: value }));
   };
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="flex justify-center items-center min-h-[60vh]">
+          <div className="w-12 h-12 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -109,7 +180,7 @@ const ProfilePage = () => {
                 <User size={32} />
               </div>
               <div>
-                <CardTitle>{personalInfo.name}</CardTitle>
+                <CardTitle>{personalInfo.name || 'Utente'}</CardTitle>
                 <CardDescription>{personalInfo.email}</CardDescription>
               </div>
             </div>
@@ -149,7 +220,8 @@ const ProfilePage = () => {
                       id="email" 
                       name="email"
                       value={personalInfo.email}
-                      onChange={handleChange}
+                      disabled
+                      className="bg-gray-100"
                     />
                   </div>
                 </div>
@@ -189,18 +261,29 @@ const ProfilePage = () => {
                   <Mail className="h-4 w-4 text-muted-foreground" />
                   <span>{personalInfo.email}</span>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <Phone className="h-4 w-4 text-muted-foreground" />
-                  <span>{personalInfo.phone}</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <span>{personalInfo.address}</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <span>Nato il: {personalInfo.birthDate}</span>
-                </div>
+                {personalInfo.phone && (
+                  <div className="flex items-center space-x-2">
+                    <Phone className="h-4 w-4 text-muted-foreground" />
+                    <span>{personalInfo.phone}</span>
+                  </div>
+                )}
+                {personalInfo.address && (
+                  <div className="flex items-center space-x-2">
+                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                    <span>{personalInfo.address}</span>
+                  </div>
+                )}
+                {personalInfo.birthDate && (
+                  <div className="flex items-center space-x-2">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <span>Nato il: {personalInfo.birthDate}</span>
+                  </div>
+                )}
+                {!personalInfo.phone && !personalInfo.address && !personalInfo.birthDate && (
+                  <div className="text-gray-500 italic">
+                    Nessuna informazione aggiuntiva disponibile. Clicca su Modifica per aggiungere i tuoi dati.
+                  </div>
+                )}
               </div>
             )}
           </CardContent>
@@ -210,9 +293,9 @@ const ProfilePage = () => {
                 <X size={16} className="mr-2" />
                 Annulla
               </Button>
-              <Button size="sm" onClick={handleSave}>
+              <Button size="sm" onClick={handleSave} disabled={isLoading}>
                 <Save size={16} className="mr-2" />
-                Salva
+                {isLoading ? 'Salvataggio...' : 'Salva'}
               </Button>
             </CardFooter>
           )}
@@ -239,8 +322,8 @@ const ProfilePage = () => {
             <div className="bg-secondary/20 rounded-lg p-8 text-center">
               <Heart size={32} className="mx-auto mb-3 text-primary" />
               <p className="text-gray-700 mb-2">Non hai ancora ristoranti preferiti</p>
-              <Button variant="outline" onClick={() => navigate('/')}>
-                Esplora ristoranti
+              <Button variant="outline" onClick={() => navigate('/favorites')}>
+                Esplora i preferiti
               </Button>
             </div>
           </TabsContent>
@@ -249,8 +332,8 @@ const ProfilePage = () => {
             <div className="bg-secondary/20 rounded-lg p-8 text-center">
               <FileText size={32} className="mx-auto mb-3 text-primary" />
               <p className="text-gray-700 mb-2">Non hai ancora videoricette salvate</p>
-              <Button variant="outline" onClick={() => navigate('/')}>
-                Esplora ristoranti
+              <Button variant="outline" onClick={() => navigate('/videos')}>
+                Esplora videoricette
               </Button>
             </div>
           </TabsContent>
