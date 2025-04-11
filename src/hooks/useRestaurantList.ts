@@ -97,8 +97,9 @@ export const useRestaurantList = () => {
           rating: data.rating || 0,
           reviews: data.reviews || 0,
           hasGlutenFreeOptions: data.hasGlutenFreeOptions || false,
-          isFavorite: userFavorites.includes(doc.id)
-        } as Restaurant;
+          isFavorite: userFavorites.includes(doc.id),
+          cuisine: data.cuisine || 'Italiana' // Default cuisine
+        };
       });
       
       setRestaurants(restaurantsData);
@@ -153,8 +154,9 @@ export const useRestaurantList = () => {
             rating: data.rating || 0,
             reviews: data.reviews || 0,
             hasGlutenFreeOptions: data.hasGlutenFreeOptions || false,
-            isFavorite: userFavorites.includes(doc.id)
-          } as Restaurant;
+            isFavorite: userFavorites.includes(doc.id),
+            cuisine: data.cuisine || 'Italiana' // Default cuisine
+          };
         })
         .filter(restaurant => 
           restaurant.name.toLowerCase().includes(normalizedSearchTerm) || 

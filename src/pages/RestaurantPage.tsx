@@ -38,11 +38,15 @@ const RestaurantPage = () => {
         const data = restaurantDoc.data();
         
         // Fetch additional data like opening hours
-        let openingHours: { day: string; hours: string }[] = [];
+        let openingHours: { days: string; hours: string }[] = [];
         try {
           const hoursDoc = await getDoc(doc(db, "restaurants", id, "details", "hours"));
           if (hoursDoc.exists()) {
-            openingHours = hoursDoc.data().schedule || [];
+            // Convert from {day: string, hours: string} to {days: string, hours: string}
+            openingHours = (hoursDoc.data().schedule || []).map((item: any) => ({
+              days: item.day, // Map day to days
+              hours: item.hours
+            }));
           }
         } catch (error) {
           console.error("Error fetching opening hours:", error);

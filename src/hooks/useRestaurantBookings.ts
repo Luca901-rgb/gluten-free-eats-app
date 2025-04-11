@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useBookings, Booking } from '@/context/BookingContext';
 import { toast } from 'sonner';
@@ -45,17 +46,18 @@ export const useRestaurantBookings = (restaurantId: string) => {
               return {
                 id: doc.id,
                 restaurantId: data.restaurantId,
-                userId: data.userId,
-                name: data.name,
-                email: data.email,
-                phone: data.phone,
+                restaurantName: data.restaurantName || 'Ristorante',
                 date: data.date,
-                time: data.time,
-                people: data.people,
-                specialRequests: data.specialRequests,
-                status: data.status,
+                people: data.people || 1,
+                notes: data.specialRequests || '',
+                status: data.status || 'pending',
+                bookingCode: data.bookingCode || `BOOK-${Math.random().toString(36).substring(2, 7).toUpperCase()}`,
+                customerName: data.name || 'Cliente',
                 attendance: data.attendance,
-                createdAt: data.createdAt?.toDate() || new Date(),
+                userId: data.userId,
+                // Adding minimal required properties
+                hasReview: false,
+                restaurantImage: data.restaurantImage || '/placeholder.svg',
               } as Booking;
             });
           }
@@ -93,17 +95,18 @@ export const useRestaurantBookings = (restaurantId: string) => {
           return {
             id: doc.id,
             restaurantId: data.restaurantId,
-            userId: data.userId,
-            name: data.name,
-            email: data.email,
-            phone: data.phone,
+            restaurantName: data.restaurantName || 'Ristorante',
             date: data.date,
-            time: data.time,
-            people: data.people,
-            specialRequests: data.specialRequests,
-            status: data.status,
+            people: data.people || 1,
+            notes: data.specialRequests || '',
+            status: data.status || 'pending',
+            bookingCode: data.bookingCode || `BOOK-${Math.random().toString(36).substring(2, 7).toUpperCase()}`,
+            customerName: data.name || 'Cliente',
             attendance: data.attendance,
-            createdAt: data.createdAt?.toDate() || new Date(),
+            userId: data.userId,
+            // Adding minimal required properties
+            hasReview: false,
+            restaurantImage: data.restaurantImage || '/placeholder.svg',
           } as Booking;
         });
         

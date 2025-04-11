@@ -60,7 +60,8 @@ const FavoritesPage = () => {
             rating: data.rating || 0,
             reviews: data.reviews || 0,
             hasGlutenFreeOptions: data.hasGlutenFreeOptions || false,
-            isFavorite: true
+            isFavorite: true,
+            cuisine: data.cuisine || 'Italiana' // Default cuisine
           } as Restaurant;
         }
         return null;

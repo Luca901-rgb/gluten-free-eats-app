@@ -11,9 +11,12 @@ export interface Restaurant {
   image: string;
   rating: number;
   reviews: number;
-  cuisine: string;
+  cuisine?: string; // Made cuisine optional
+  description?: string; // Added description
+  address?: string; // Added address
   distance?: string;
   isFavorite?: boolean;
+  hasGlutenFreeOptions?: boolean; // Added this property
 }
 
 interface RestaurantCardProps {
