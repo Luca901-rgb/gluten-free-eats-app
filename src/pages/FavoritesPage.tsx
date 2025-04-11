@@ -1,10 +1,11 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Layout from '@/components/Layout';
-import { Heart, Search, WifiOff, RefreshCcw } from 'lucide-react';
+import { Heart, Search, WifiOff, RefreshCcw, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import RestaurantCard, { Restaurant } from '@/components/Restaurant/RestaurantCard';
+import RestaurantList from '@/components/Home/RestaurantList';
 import { toast } from 'sonner';
 import { db, auth } from '@/lib/firebase';
 import { collection, doc, getDoc, getDocs, deleteDoc, setDoc } from 'firebase/firestore';
@@ -17,53 +18,15 @@ const FavoritesPage = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isOffline, setIsOffline] = useState(false);
   const [loadingError, setLoadingError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
-  useEffect(() => {
-    // Monitor online/offline status
-    const handleOnlineStatus = () => {
-      const isOnline = navigator.onLine;
-      setIsOffline(!isOnline);
-      
-      if (isOnline) {
-        // If we're back online and authenticated, try to fetch favorites again
-        const user = auth.currentUser;
-        if (user) {
-          fetchFavorites(user.uid);
-        }
-      }
-    };
-
-    // Initial check
-    setIsOffline(!navigator.onLine);
-    
-    // Add event listeners
-    window.addEventListener('online', handleOnlineStatus);
-    window.addEventListener('offline', handleOnlineStatus);
-
-    // Check authentication state
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setIsAuthenticated(!!user);
-      if (user) {
-        fetchFavorites(user.uid);
-      } else {
-        setIsLoading(false);
-        toast.error("Per vedere i preferiti devi effettuare l'accesso");
-      }
-    });
-
-    return () => {
-      window.removeEventListener('online', handleOnlineStatus);
-      window.removeEventListener('offline', handleOnlineStatus);
-      unsubscribe();
-    };
-  }, []);
-
-  const fetchFavorites = async (userId: string) => {
+  // Callback version of fetchFavorites to use in useEffect and retry handler
+  const fetchFavorites = useCallback(async (userId: string) => {
     setIsLoading(true);
     setLoadingError(null);
     
     try {
-      console.log("Tentativo di caricamento preferiti...");
+      console.log("Tentativo di caricamento preferiti...", { retryCount, time: new Date().toISOString() });
       console.log("Stato connessione:", navigator.onLine ? "Online" : "Offline");
       
       // Get the user's favorites list
@@ -113,7 +76,7 @@ const FavoritesPage = () => {
       setIsOffline(false); // Impostiamo esplicitamente a false se il caricamento è riuscito
     } catch (error) {
       console.error("Errore durante il recupero dei preferiti:", error);
-      // Non imposta automaticamente offline se c'è un errore di caricamento
+      // Determina se l'errore è dovuto alla connessione offline
       const isActuallyOffline = !navigator.onLine;
       setIsOffline(isActuallyOffline);
       
@@ -127,12 +90,55 @@ const FavoritesPage = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [retryCount]);
+
+  useEffect(() => {
+    // Monitor online/offline status
+    const handleOnlineStatus = () => {
+      const isOnline = navigator.onLine;
+      console.log("Cambiamento stato connessione:", isOnline ? "Online" : "Offline");
+      setIsOffline(!isOnline);
+      
+      if (isOnline) {
+        // If we're back online and authenticated, try to fetch favorites again
+        const user = auth.currentUser;
+        if (user) {
+          fetchFavorites(user.uid);
+        }
+      }
+    };
+
+    // Initial check
+    setIsOffline(!navigator.onLine);
+    
+    // Add event listeners
+    window.addEventListener('online', handleOnlineStatus);
+    window.addEventListener('offline', handleOnlineStatus);
+
+    // Check authentication state
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      console.log("Auth state changed:", user ? "Utente autenticato" : "Utente non autenticato");
+      setIsAuthenticated(!!user);
+      if (user) {
+        fetchFavorites(user.uid);
+      } else {
+        setIsLoading(false);
+        toast.error("Per vedere i preferiti devi effettuare l'accesso");
+      }
+    });
+
+    return () => {
+      window.removeEventListener('online', handleOnlineStatus);
+      window.removeEventListener('offline', handleOnlineStatus);
+      unsubscribe();
+    };
+  }, [fetchFavorites]);
 
   const handleRetry = () => {
     const user = auth.currentUser;
     if (user) {
       console.log("Tentativo di ricaricamento dei preferiti...");
+      setRetryCount(prev => prev + 1); // Incrementa il contatore per forzare il refetch
       fetchFavorites(user.uid);
     } else {
       toast.error("Per vedere i preferiti devi effettuare l'accesso");
@@ -197,53 +203,22 @@ const FavoritesPage = () => {
     );
   }
 
-  if (loadingError && !isLoading) {
-    return (
-      <Layout>
-        <div className="p-4 space-y-6">
-          <h1 className="text-2xl font-poppins font-bold text-primary">I miei preferiti</h1>
-          
-          <div className="bg-secondary/20 rounded-lg p-8 text-center">
-            {isOffline ? (
-              <WifiOff size={32} className="mx-auto mb-3 text-primary" />
-            ) : (
-              <RefreshCcw size={32} className="mx-auto mb-3 text-primary" />
-            )}
-            <p className="text-gray-700 mb-4">{loadingError}</p>
-            <Button 
-              onClick={handleRetry}
-              className="flex items-center gap-2"
-            >
-              <RefreshCcw size={16} />
-              Riprova
-            </Button>
-          </div>
-        </div>
-      </Layout>
-    );
-  }
-
   return (
     <Layout>
       <div className="p-4 space-y-6">
         <h1 className="text-2xl font-poppins font-bold text-primary">I miei preferiti</h1>
         
-        {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-10 space-y-4">
-            <div className="w-12 h-12 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
-            <p className="text-gray-500">Caricamento preferiti...</p>
-          </div>
-        ) : favorites.length > 0 ? (
-          <div className="grid grid-cols-1 gap-4">
-            {favorites.map(restaurant => (
-              <RestaurantCard
-                key={restaurant.id}
-                restaurant={restaurant}
-                onToggleFavorite={handleToggleFavorite}
-              />
-            ))}
-          </div>
-        ) : (
+        <RestaurantList
+          restaurants={favorites}
+          isLoading={isLoading}
+          isOffline={isOffline}
+          loadingError={loadingError}
+          regionStatus={{ checked: true, inRegion: true }}
+          onToggleFavorite={handleToggleFavorite}
+          onRetry={handleRetry}
+        />
+        
+        {!isLoading && !isOffline && !loadingError && favorites.length === 0 && (
           <div className="bg-secondary/20 rounded-lg p-8 text-center">
             <Heart size={32} className="mx-auto mb-3 text-primary" />
             <p className="text-gray-700 mb-4">Non hai ancora ristoranti preferiti</p>

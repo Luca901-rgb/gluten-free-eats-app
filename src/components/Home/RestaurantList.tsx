@@ -2,13 +2,14 @@
 import React from 'react';
 import { Restaurant } from '@/components/Restaurant/RestaurantCard';
 import RestaurantCard from '@/components/Restaurant/RestaurantCard';
-import { MapPin, WifiOff, RefreshCcw } from 'lucide-react';
+import { MapPin, WifiOff, RefreshCcw, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface RestaurantListProps {
   restaurants: Restaurant[];
   isLoading: boolean;
   isOffline?: boolean;
+  loadingError?: string | null;
   regionStatus: {
     checked: boolean;
     inRegion: boolean;
@@ -21,10 +22,13 @@ const RestaurantList: React.FC<RestaurantListProps> = ({
   restaurants, 
   isLoading, 
   isOffline,
+  loadingError,
   regionStatus,
   onToggleFavorite,
   onRetry
 }) => {
+  console.log("RestaurantList render state:", { isLoading, isOffline, loadingError, restaurants: restaurants.length });
+  
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -34,6 +38,24 @@ const RestaurantList: React.FC<RestaurantListProps> = ({
             className="h-48 bg-gray-200 animate-pulse rounded-lg"
           />
         ))}
+      </div>
+    );
+  }
+
+  if (loadingError && !isOffline) {
+    return (
+      <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
+        <AlertCircle className="mx-auto h-12 w-12 text-orange-500 mb-3" />
+        <h3 className="text-lg font-medium text-gray-800 mb-1">Errore di caricamento</h3>
+        <p className="text-gray-600 max-w-md mx-auto mb-4">
+          {loadingError || "Si è verificato un errore durante il caricamento dei ristoranti."}
+        </p>
+        {onRetry && (
+          <Button onClick={onRetry} variant="outline" className="flex items-center gap-2">
+            <RefreshCcw size={16} />
+            Riprova
+          </Button>
+        )}
       </div>
     );
   }
