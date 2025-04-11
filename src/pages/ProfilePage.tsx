@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
   User, 
@@ -30,8 +29,8 @@ import Layout from '@/components/Layout';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { auth, db, logoutUser } from '@/lib/firebase';
-import { onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { doc, getDoc, setDoc, DocumentSnapshot, DocumentData } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const ProfilePage = () => {
@@ -81,7 +80,7 @@ const ProfilePage = () => {
   }, [loadingError, loadingProfile]);
 
   // Load user profile function with improved error handling
-  const loadProfile = useCallback(async (user) => {
+  const loadProfile = useCallback(async (user: FirebaseUser) => {
     console.log(`Loading profile for user: ${user.uid}, attempt #${loadingAttempt + 1}`);
     setIsLoading(true);
     setLoadingProfile(true);
@@ -97,7 +96,7 @@ const ProfilePage = () => {
       }));
       
       // Try to load additional profile data from Firestore with a timeout
-      const timeoutPromise = new Promise((_, reject) => {
+      const timeoutPromise = new Promise<never>((_, reject) => {
         setTimeout(() => reject(new Error("Timeout loading profile")), 10000);
       });
       
@@ -105,12 +104,12 @@ const ProfilePage = () => {
         console.log("Attempting to fetch user profile from Firestore");
         
         // Race between the Firestore fetch and the timeout
-        const userProfileDoc = await Promise.race([
+        const userProfileDoc = await Promise.race<DocumentSnapshot<DocumentData> | never>([
           getDoc(doc(db, "userProfiles", user.uid)),
           timeoutPromise
         ]);
         
-        if (userProfileDoc && 'exists' in userProfileDoc && userProfileDoc.exists()) {
+        if (userProfileDoc && userProfileDoc.exists()) {
           console.log("User profile found in Firestore or cache");
           const profileData = userProfileDoc.data();
           setPersonalInfo(prev => ({
