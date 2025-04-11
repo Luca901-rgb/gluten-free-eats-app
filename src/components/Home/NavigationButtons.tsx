@@ -13,12 +13,6 @@ const NavigationButtons: React.FC<NavigationButtonsProps> = ({ isRegionAvailable
       <Button size="lg" asChild className="bg-blue-500 hover:bg-blue-600" disabled={!isRegionAvailable}>
         <Link to="/search">Trova Ristoranti</Link>
       </Button>
-      <Button size="lg" variant="outline" asChild>
-        <Link to="/videos">Scopri Ricette</Link>
-      </Button>
-      <Button size="lg" variant="secondary" asChild>
-        <Link to="/dashboard">Gestione Tavoli</Link>
-      </Button>
     </div>
   );
 };

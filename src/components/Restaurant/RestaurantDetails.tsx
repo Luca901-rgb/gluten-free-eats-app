@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Clock, MapPin, Phone, Calendar, Star, Award, Image, Video, Home, Copy, Check, Menu } from 'lucide-react';
+import { Clock, MapPin, Phone, Calendar, Star, Award, Image, Home, Copy, Check, Menu } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import StarRating from '@/components/common/StarRating';
 import BookingForm from '../Booking/BookingForm';
 import MenuViewer from './MenuViewer';
 import ReviewForm from './ReviewForm';
-import RestaurantVideos from '@/pages/restaurant/RestaurantVideos';
 import { toast } from 'sonner';
 
 export interface RestaurantDetailProps {
@@ -96,7 +95,6 @@ const RestaurantDetails: React.FC<RestaurantDetailsProps> = ({
   const navigationButtons = [
     { id: 'home', label: 'Home', icon: <Home size={18} /> },
     { id: 'menu', label: 'Menu', icon: <Menu size={18} /> },
-    { id: 'videos', label: 'Videoricette', icon: <Video size={18} /> },
     { id: 'gallery', label: 'Galleria', icon: <Image size={18} /> },
     { id: 'booking', label: 'Prenotazioni', icon: <Calendar size={18} /> },
     { id: 'reviews', label: 'Recensioni', icon: <Star size={18} /> },
@@ -208,12 +206,6 @@ const RestaurantDetails: React.FC<RestaurantDetailsProps> = ({
         {activeTab === 'menu' && (
           <div className="animate-fade-in">
             <MenuViewer />
-          </div>
-        )}
-
-        {activeTab === 'videos' && (
-          <div className="animate-fade-in">
-            <RestaurantVideos isRestaurantOwner={false} />
           </div>
         )}
 
