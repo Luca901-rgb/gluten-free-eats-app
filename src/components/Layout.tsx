@@ -13,11 +13,11 @@ interface LayoutProps {
 }
 
 const navigationItems = [
-  { path: '/', icon: <Home size={24} />, label: 'Home' },
-  { path: '/search', icon: <Search size={24} />, label: 'Ricerca' },
-  { path: '/favorites', icon: <Heart size={24} />, label: 'Preferiti' },
-  { path: '/bookings', icon: <Calendar size={24} />, label: 'Prenotazioni' },
-  { path: '/profile', icon: <UserRound size={24} />, label: 'Profilo' },
+  { path: '/', icon: <Home size={24} strokeWidth={2.5} />, label: 'Home' },
+  { path: '/search', icon: <Search size={24} strokeWidth={2.5} />, label: 'Ricerca' },
+  { path: '/favorites', icon: <Heart size={24} strokeWidth={2.5} />, label: 'Preferiti' },
+  { path: '/bookings', icon: <Calendar size={24} strokeWidth={2.5} />, label: 'Prenotazioni' },
+  { path: '/profile', icon: <UserRound size={24} strokeWidth={2.5} />, label: 'Profilo' },
 ];
 
 const Layout: React.FC<LayoutProps> = ({ children, hideNavigation = false }) => {
@@ -27,25 +27,37 @@ const Layout: React.FC<LayoutProps> = ({ children, hideNavigation = false }) => 
     <div className="flex flex-col min-h-screen bg-green-white">
       <header className="sticky top-0 z-10 flex items-center justify-between bg-gradient-to-r from-green-dark/90 via-green/80 to-green-light/70 border-b h-16 px-4 backdrop-blur-sm">
         <Link to="/" className="flex items-center gap-2">
-          <div className="flex items-center justify-center p-1.5 rounded-full bg-gradient-to-br from-green-dark via-green to-green-light shadow-sm">
+          <div className="flex items-center justify-center p-1.5 rounded-full bg-gradient-to-br from-green-dark via-green to-green-light shadow-md">
             <div className="relative">
-              <Wheat size={16} className="text-white" />
-              <Utensils size={12} className="text-white absolute -bottom-1 -right-1" />
+              <Wheat size={16} className="text-white drop-shadow-[0_0_1px_rgba(0,0,0,0.8)]" strokeWidth={2.5} />
+              <Utensils size={12} className="text-white drop-shadow-[0_0_1px_rgba(0,0,0,0.8)] absolute -bottom-1 -right-1" strokeWidth={2.5} />
             </div>
           </div>
-          <span className="font-poppins font-bold text-lg text-white">
+          <span className="font-poppins font-bold text-lg text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
             GlutenFree Eats
           </span>
         </Link>
         
         <div className="flex gap-2">
-          <Link to="/restaurant/1" className={buttonVariants({ variant: "outline", size: "sm", className: "bg-white/80 border-green hover:bg-white" })}>
+          <Link to="/restaurant/1" className={buttonVariants({ 
+            variant: "outline", 
+            size: "sm", 
+            className: "bg-white/80 border-green hover:bg-white text-primary font-medium drop-shadow-md" 
+          })}>
             Vista Cliente
           </Link>
-          <Link to="/restaurant-dashboard" className={buttonVariants({ variant: "outline", size: "sm", className: "bg-white/80 border-green hover:bg-white" })}>
+          <Link to="/restaurant-dashboard" className={buttonVariants({ 
+            variant: "outline", 
+            size: "sm", 
+            className: "bg-white/80 border-green hover:bg-white text-primary font-medium drop-shadow-md" 
+          })}>
             Ristoratore
           </Link>
-          <Link to="/admin-dashboard" className={buttonVariants({ variant: "outline", size: "sm", className: "bg-white/80 border-green hover:bg-white" })}>
+          <Link to="/admin-dashboard" className={buttonVariants({ 
+            variant: "outline", 
+            size: "sm", 
+            className: "bg-white/80 border-green hover:bg-white text-primary font-medium drop-shadow-md" 
+          })}>
             Admin
           </Link>
         </div>
@@ -62,14 +74,18 @@ const Layout: React.FC<LayoutProps> = ({ children, hideNavigation = false }) => 
               key={item.path}
               to={item.path}
               className={cn(
-                "flex flex-col items-center justify-center text-white/80 p-1",
-                location.pathname === item.path && "text-white"
+                "flex flex-col items-center justify-center p-1",
+                location.pathname === item.path 
+                  ? "text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]" 
+                  : "text-white/80 drop-shadow-[0_1px_1px_rgba(0,0,0,0.7)]"
               )}
             >
-              {item.icon}
+              <div className="drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
+                {item.icon}
+              </div>
               <span className="text-xs mt-1 font-medium" style={{ 
-                textShadow: '0px 0px 1px #000, 0px 0px 1px #000, 0px 0px 1px #000, 0px 0px 1px #000',
-                WebkitTextStroke: '0.5px #000'
+                textShadow: '0px 0px 2px #000, 0px 0px 2px #000, 0px 0px 2px #000, 0px 0px 2px #000',
+                WebkitTextStroke: '0.7px #000'
               }}>
                 {item.label}
               </span>
