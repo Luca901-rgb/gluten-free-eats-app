@@ -16,6 +16,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import AdminLogin from './pages/AdminLogin';
 import VideoRecipesPage from './pages/VideoRecipesPage';
 import { AdminProvider } from './context/AdminContext';
+import FavoritesPage from './pages/FavoritesPage';
 import './App.css';
 
 function App() {
@@ -47,6 +48,7 @@ function App() {
               />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/bookings" element={<BookingsPage />} />
+              <Route path="/favorites" element={<FavoritesPage />} />
               <Route 
                 path="/admin-dashboard" 
                 element={
