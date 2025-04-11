@@ -4,60 +4,6 @@ import { Restaurant } from '@/components/Restaurant/RestaurantCard';
 import { toast } from 'sonner';
 import { checkUserRegion } from '@/utils/geolocation';
 
-// Sample restaurant data
-const sampleRestaurants: Restaurant[] = [
-  {
-    id: '1',
-    name: 'La Trattoria Senza Glutine',
-    image: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-    rating: 4.7,
-    reviews: 128,
-    cuisine: 'Italiana',
-    distance: '0.8 km',
-    isFavorite: false,
-  },
-  {
-    id: '2',
-    name: 'Pizzeria Gluten Free',
-    image: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-    rating: 4.5,
-    reviews: 95,
-    cuisine: 'Pizzeria',
-    distance: '1.2 km',
-    isFavorite: true,
-  },
-  {
-    id: '3',
-    name: 'Pasta & Risotti',
-    image: 'https://images.unsplash.com/photo-1458644267420-66bc8a5f21e4?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-    rating: 4.3,
-    reviews: 72,
-    cuisine: 'Italiana',
-    distance: '2.5 km',
-    isFavorite: false,
-  },
-  {
-    id: '4',
-    name: 'La Celiachia',
-    image: 'https://images.unsplash.com/photo-1515669097368-22e68427d265?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-    rating: 4.8,
-    reviews: 103,
-    cuisine: 'Bistro',
-    distance: '3.1 km',
-    isFavorite: false,
-  },
-  {
-    id: '5',
-    name: 'Beato Te',
-    image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-    rating: 4.2,
-    reviews: 85,
-    cuisine: 'Mediterranea',
-    distance: '3.7 km',
-    isFavorite: true,
-  },
-];
-
 export interface RegionStatus {
   checked: boolean;
   inRegion: boolean;
@@ -66,7 +12,7 @@ export interface RegionStatus {
 }
 
 export const useRestaurantList = () => {
-  const [restaurants, setRestaurants] = useState<Restaurant[]>(sampleRestaurants);
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [regionStatus, setRegionStatus] = useState<RegionStatus>({
@@ -118,11 +64,9 @@ export const useRestaurantList = () => {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    const filtered = sampleRestaurants.filter(restaurant => 
-      restaurant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      restaurant.cuisine.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    setRestaurants(filtered);
+    // With no sample data, we'd just call an API here
+    // For now, just show empty results
+    setRestaurants([]);
   };
 
   const handleToggleFavorite = (id: string) => {

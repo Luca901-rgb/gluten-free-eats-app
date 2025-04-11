@@ -7,30 +7,6 @@ import { Button } from '@/components/ui/button';
 import RestaurantCard, { Restaurant } from '@/components/Restaurant/RestaurantCard';
 import { toast } from 'sonner';
 
-// Sample data - will be replaced with API calls in the future
-const sampleFavorites: Restaurant[] = [
-  {
-    id: '2',
-    name: 'Pizzeria Gluten Free',
-    image: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-    rating: 4.5,
-    reviews: 95,
-    cuisine: 'Pizzeria',
-    distance: '1.2 km',
-    isFavorite: true,
-  },
-  {
-    id: '5',
-    name: 'Beato Te',
-    image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
-    rating: 4.2,
-    reviews: 85,
-    cuisine: 'Mediterranea',
-    distance: '3.7 km',
-    isFavorite: true,
-  },
-];
-
 const FavoritesPage = () => {
   const navigate = useNavigate();
   const [favorites, setFavorites] = useState<Restaurant[]>([]);
@@ -42,7 +18,8 @@ const FavoritesPage = () => {
       setIsLoading(true);
       // In a real app, this would be an API call
       setTimeout(() => {
-        setFavorites(sampleFavorites);
+        // Setting empty array as we removed sample data
+        setFavorites([]);
         setIsLoading(false);
       }, 800);
     };
