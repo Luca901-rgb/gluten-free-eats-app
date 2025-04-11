@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { Heart, Search } from 'lucide-react';
@@ -54,14 +53,14 @@ const FavoritesPage = () => {
           return {
             id: restaurantDoc.id,
             name: data.name || 'Ristorante senza nome',
-            description: data.description || 'Nessuna descrizione disponibile',
-            address: data.address || 'Indirizzo non disponibile',
             image: data.coverImage || '/placeholder.svg',
             rating: data.rating || 0,
             reviews: data.reviews || 0,
+            cuisine: data.cuisine || 'Italiana',
+            description: data.description || 'Nessuna descrizione disponibile',
+            address: data.address || 'Indirizzo non disponibile',
             hasGlutenFreeOptions: data.hasGlutenFreeOptions || false,
-            isFavorite: true,
-            cuisine: data.cuisine || 'Italiana' // Adding cuisine with default value
+            isFavorite: true
           } as Restaurant;
         }
         return null;

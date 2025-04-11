@@ -91,14 +91,14 @@ export const useRestaurantList = () => {
         return {
           id: doc.id,
           name: data.name || 'Ristorante senza nome',
-          description: data.description || 'Nessuna descrizione disponibile',
-          address: data.address || 'Indirizzo non disponibile',
           image: data.coverImage || '/placeholder.svg',
           rating: data.rating || 0,
           reviews: data.reviews || 0,
+          cuisine: data.cuisine || 'Italiana',
+          description: data.description || 'Nessuna descrizione disponibile',
+          address: data.address || 'Indirizzo non disponibile',
           hasGlutenFreeOptions: data.hasGlutenFreeOptions || false,
-          isFavorite: userFavorites.includes(doc.id),
-          cuisine: data.cuisine || 'Italiana' // Adding cuisine with default value
+          isFavorite: userFavorites.includes(doc.id)
         } as Restaurant;
       });
       
@@ -148,20 +148,20 @@ export const useRestaurantList = () => {
           return {
             id: doc.id,
             name: data.name || 'Ristorante senza nome',
-            description: data.description || 'Nessuna descrizione disponibile',
-            address: data.address || 'Indirizzo non disponibile',
             image: data.coverImage || '/placeholder.svg',
             rating: data.rating || 0,
             reviews: data.reviews || 0,
+            cuisine: data.cuisine || 'Italiana',
+            description: data.description || 'Nessuna descrizione disponibile',
+            address: data.address || 'Indirizzo non disponibile',
             hasGlutenFreeOptions: data.hasGlutenFreeOptions || false,
-            isFavorite: userFavorites.includes(doc.id),
-            cuisine: data.cuisine || 'Italiana' // Adding cuisine with default value
+            isFavorite: userFavorites.includes(doc.id)
           } as Restaurant;
         })
         .filter(restaurant => 
           restaurant.name.toLowerCase().includes(normalizedSearchTerm) || 
-          (restaurant.description && restaurant.description.toLowerCase().includes(normalizedSearchTerm)) ||
-          (restaurant.address && restaurant.address.toLowerCase().includes(normalizedSearchTerm))
+          restaurant.description?.toLowerCase().includes(normalizedSearchTerm) ||
+          restaurant.address?.toLowerCase().includes(normalizedSearchTerm)
         );
       
       setRestaurants(filteredRestaurants);

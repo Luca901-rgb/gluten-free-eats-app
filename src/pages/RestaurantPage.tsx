@@ -44,7 +44,7 @@ const RestaurantPage = () => {
           if (hoursDoc.exists()) {
             // Convert from {day: string, hours: string} to {days: string, hours: string}
             openingHours = (hoursDoc.data().schedule || []).map((item: any) => ({
-              days: item.day, // Map day property to days property
+              days: item.day || item.days, // Map day property to days property
               hours: item.hours
             }));
           }

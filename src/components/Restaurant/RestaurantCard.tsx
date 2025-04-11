@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Heart } from 'lucide-react';
@@ -11,9 +10,9 @@ export interface Restaurant {
   image: string;
   rating: number;
   reviews: number;
-  cuisine?: string; // Making cuisine optional
-  description?: string; // Adding description
-  address?: string; // Adding address
+  cuisine: string;
+  description?: string;
+  address?: string;
   distance?: string;
   isFavorite?: boolean;
   hasGlutenFreeOptions?: boolean;
