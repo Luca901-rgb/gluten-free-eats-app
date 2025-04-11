@@ -17,12 +17,28 @@ export const useRestaurantList = () => {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [regionStatus, setRegionStatus] = useState<RegionStatus>({
     checked: false,
     inRegion: false
   });
 
   useEffect(() => {
+    // Monitor online/offline status
+    const handleOnlineStatus = () => {
+      const online = navigator.onLine;
+      setIsOffline(!online);
+      
+      if (online && regionStatus.inRegion) {
+        // If we're back online and in a supported region, refresh data
+        fetchRestaurants();
+      }
+    };
+    
+    // Add event listeners
+    window.addEventListener('online', handleOnlineStatus);
+    window.addEventListener('offline', handleOnlineStatus);
+    
     // Welcome toast
     toast.info("Benvenuto nell'app Gluten Free Eats!");
     
@@ -39,7 +55,12 @@ export const useRestaurantList = () => {
 
         if (result.inRegion) {
           toast.success(`Benvenuto! Il servizio è disponibile nella tua regione: ${result.regionName}`);
-          fetchRestaurants(); // Fetch restaurants only if in supported region
+          if (navigator.onLine) {
+            fetchRestaurants(); // Fetch restaurants only if in supported region and online
+          } else {
+            setIsLoading(false);
+            toast.error("Sei offline. Alcune funzionalità potrebbero non essere disponibili.");
+          }
         } else if (result.error) {
           toast.error(result.error);
           setIsLoading(false);
@@ -62,11 +83,18 @@ export const useRestaurantList = () => {
     verifyRegion();
 
     return () => {
-      // Cleanup if needed
+      window.removeEventListener('online', handleOnlineStatus);
+      window.removeEventListener('offline', handleOnlineStatus);
     };
   }, []);
 
   const fetchRestaurants = async () => {
+    if (isOffline) {
+      toast.error("Non è possibile caricare i ristoranti mentre sei offline");
+      setIsLoading(false);
+      return;
+    }
+    
     try {
       const restaurantsCollection = collection(db, "restaurants");
       const restaurantsSnapshot = await getDocs(restaurantsCollection);
@@ -113,6 +141,12 @@ export const useRestaurantList = () => {
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (isOffline) {
+      toast.error("Non è possibile cercare ristoranti mentre sei offline");
+      return;
+    }
+    
     setIsLoading(true);
     
     try {
@@ -174,6 +208,11 @@ export const useRestaurantList = () => {
   };
 
   const handleToggleFavorite = async (id: string) => {
+    if (isOffline) {
+      toast.error("Non puoi modificare i preferiti mentre sei offline");
+      return;
+    }
+    
     const currentUser = auth.currentUser;
     
     if (!currentUser) {
@@ -224,6 +263,7 @@ export const useRestaurantList = () => {
     searchTerm,
     setSearchTerm,
     isLoading,
+    isOffline,
     regionStatus,
     handleSearch,
     handleToggleFavorite

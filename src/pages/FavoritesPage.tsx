@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
-import { Heart, Search } from 'lucide-react';
+import { Heart, Search, WifiOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import RestaurantCard, { Restaurant } from '@/components/Restaurant/RestaurantCard';
@@ -14,20 +15,46 @@ const FavoritesPage = () => {
   const [favorites, setFavorites] = useState<Restaurant[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isOffline, setIsOffline] = useState(false);
 
   useEffect(() => {
+    // Monitor online/offline status
+    const handleOnlineStatus = () => {
+      setIsOffline(!navigator.onLine);
+      if (navigator.onLine) {
+        // If we're back online and authenticated, try to fetch favorites again
+        const user = auth.currentUser;
+        if (user) {
+          fetchFavorites(user.uid);
+        }
+      }
+    };
+
+    // Initial check
+    setIsOffline(!navigator.onLine);
+    
+    // Add event listeners
+    window.addEventListener('online', handleOnlineStatus);
+    window.addEventListener('offline', handleOnlineStatus);
+
     // Check authentication state
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setIsAuthenticated(!!user);
-      if (user) {
+      if (user && navigator.onLine) {
         fetchFavorites(user.uid);
-      } else {
+      } else if (!user) {
         setIsLoading(false);
         toast.error("Per vedere i preferiti devi effettuare l'accesso");
+      } else {
+        setIsLoading(false);
       }
     });
 
-    return () => unsubscribe();
+    return () => {
+      window.removeEventListener('online', handleOnlineStatus);
+      window.removeEventListener('offline', handleOnlineStatus);
+      unsubscribe();
+    };
   }, []);
 
   const fetchFavorites = async (userId: string) => {
@@ -70,6 +97,7 @@ const FavoritesPage = () => {
       setFavorites(restaurantsData);
     } catch (error) {
       console.error("Errore durante il recupero dei preferiti:", error);
+      setIsOffline(true);
       toast.error("Si è verificato un errore nel caricamento dei preferiti");
     } finally {
       setIsLoading(false);
@@ -77,6 +105,11 @@ const FavoritesPage = () => {
   };
 
   const handleToggleFavorite = async (id: string) => {
+    if (isOffline) {
+      toast.error("Non puoi modificare i preferiti mentre sei offline");
+      return;
+    }
+    
     const currentUser = auth.currentUser;
     if (!currentUser) {
       toast.error("Devi effettuare l'accesso per gestire i preferiti");
@@ -122,6 +155,37 @@ const FavoritesPage = () => {
               className="flex items-center gap-2"
             >
               Accedi
+            </Button>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (isOffline) {
+    return (
+      <Layout>
+        <div className="p-4 space-y-6">
+          <h1 className="text-2xl font-poppins font-bold text-primary">I miei preferiti</h1>
+          
+          <div className="bg-secondary/20 rounded-lg p-8 text-center">
+            <WifiOff size={32} className="mx-auto mb-3 text-primary" />
+            <p className="text-gray-700 mb-4">Non è possibile caricare i preferiti perché sei offline</p>
+            <Button 
+              onClick={() => {
+                if (navigator.onLine) {
+                  const user = auth.currentUser;
+                  if (user) {
+                    fetchFavorites(user.uid);
+                    setIsOffline(false);
+                  }
+                } else {
+                  toast.error("Sei ancora offline. Controlla la tua connessione internet.");
+                }
+              }}
+              className="flex items-center gap-2"
+            >
+              Riprova
             </Button>
           </div>
         </div>
