@@ -83,8 +83,9 @@ const Layout: React.FC<LayoutProps> = ({ children, hideNavigation = false }) => 
               <div className="drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
                 {item.icon}
               </div>
-              <span className="text-xs mt-1 font-medium text-white" style={{ 
-                textShadow: '0px 1px 2px rgba(0,0,0,0.8)',
+              <span className="text-xs mt-1 font-bold text-white" style={{ 
+                textShadow: '0px 1px 3px rgba(0,0,0,0.9), 0px 1px 2px rgba(0,0,0,0.8)',
+                WebkitTextStroke: '0.5px rgba(0,0,0,0.8)'
               }}>
                 {item.label}
               </span>
