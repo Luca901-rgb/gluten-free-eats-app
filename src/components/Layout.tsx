@@ -24,28 +24,28 @@ const Layout: React.FC<LayoutProps> = ({ children, hideNavigation = false }) => 
   const location = useLocation();
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
-      <header className="sticky top-0 z-10 flex items-center justify-between bg-white border-b h-16 px-4">
+    <div className="flex flex-col min-h-screen bg-green-white">
+      <header className="sticky top-0 z-10 flex items-center justify-between bg-gradient-to-r from-green-dark/90 via-green/80 to-green-light/70 border-b h-16 px-4 backdrop-blur-sm">
         <Link to="/" className="flex items-center gap-2">
-          <div className="flex items-center justify-center p-1.5 rounded-full bg-gradient-to-br from-accent to-secondary shadow-sm">
+          <div className="flex items-center justify-center p-1.5 rounded-full bg-gradient-to-br from-green-dark via-green to-green-light shadow-sm">
             <div className="relative">
               <Wheat size={16} className="text-white" />
               <Utensils size={12} className="text-white absolute -bottom-1 -right-1" />
             </div>
           </div>
-          <span className="font-poppins font-bold text-lg bg-gradient-to-r from-primary via-accent to-secondary bg-clip-text text-transparent">
+          <span className="font-poppins font-bold text-lg text-white">
             GlutenFree Eats
           </span>
         </Link>
         
         <div className="flex gap-2">
-          <Link to="/restaurant/1" className={buttonVariants({ variant: "outline", size: "sm" })}>
+          <Link to="/restaurant/1" className={buttonVariants({ variant: "outline", size: "sm", className: "bg-white/80 border-green hover:bg-white" })}>
             Vista Cliente
           </Link>
-          <Link to="/restaurant-dashboard" className={buttonVariants({ variant: "outline", size: "sm" })}>
+          <Link to="/restaurant-dashboard" className={buttonVariants({ variant: "outline", size: "sm", className: "bg-white/80 border-green hover:bg-white" })}>
             Ristoratore
           </Link>
-          <Link to="/admin-dashboard" className={buttonVariants({ variant: "outline", size: "sm" })}>
+          <Link to="/admin-dashboard" className={buttonVariants({ variant: "outline", size: "sm", className: "bg-white/80 border-green hover:bg-white" })}>
             Admin
           </Link>
         </div>
@@ -56,14 +56,14 @@ const Layout: React.FC<LayoutProps> = ({ children, hideNavigation = false }) => 
       </div>
       
       {!hideNavigation && (
-        <nav className="fixed bottom-0 w-full bg-white border-t h-16 flex justify-around items-center z-10">
+        <nav className="fixed bottom-0 w-full bg-gradient-to-r from-green-dark/90 via-green/80 to-green-light/70 border-t h-16 flex justify-around items-center z-10 backdrop-blur-sm">
           {navigationItems.map((item) => (
             <Link
               key={item.path}
               to={item.path}
               className={cn(
-                "flex flex-col items-center justify-center text-gray-500 p-1",
-                location.pathname === item.path && "text-primary"
+                "flex flex-col items-center justify-center text-white/80 p-1",
+                location.pathname === item.path && "text-white"
               )}
             >
               {item.icon}
