@@ -2,7 +2,7 @@
 import React from 'react';
 import { Restaurant } from '@/components/Restaurant/RestaurantCard';
 import RestaurantCard from '@/components/Restaurant/RestaurantCard';
-import { MapPin, WifiOff } from 'lucide-react';
+import { MapPin, WifiOff, RefreshCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface RestaurantListProps {
@@ -48,7 +48,8 @@ const RestaurantList: React.FC<RestaurantListProps> = ({
           Controlla la tua connessione e riprova.
         </p>
         {onRetry && (
-          <Button onClick={onRetry} variant="outline">
+          <Button onClick={onRetry} variant="outline" className="flex items-center gap-2">
+            <RefreshCcw size={16} />
             Riprova
           </Button>
         )}
@@ -56,7 +57,7 @@ const RestaurantList: React.FC<RestaurantListProps> = ({
     );
   }
 
-  if (!regionStatus.inRegion) {
+  if (!regionStatus.inRegion && regionStatus.checked) {
     return (
       <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
         <MapPin className="mx-auto h-12 w-12 text-gray-400 mb-3" />

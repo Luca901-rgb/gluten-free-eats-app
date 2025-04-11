@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
-import { Heart, Search, WifiOff } from 'lucide-react';
+import { Heart, Search, WifiOff, RefreshCcw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import RestaurantCard, { Restaurant } from '@/components/Restaurant/RestaurantCard';
@@ -16,12 +16,15 @@ const FavoritesPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isOffline, setIsOffline] = useState(false);
+  const [loadingError, setLoadingError] = useState<string | null>(null);
 
   useEffect(() => {
     // Monitor online/offline status
     const handleOnlineStatus = () => {
-      setIsOffline(!navigator.onLine);
-      if (navigator.onLine) {
+      const isOnline = navigator.onLine;
+      setIsOffline(!isOnline);
+      
+      if (isOnline) {
         // If we're back online and authenticated, try to fetch favorites again
         const user = auth.currentUser;
         if (user) {
@@ -40,13 +43,11 @@ const FavoritesPage = () => {
     // Check authentication state
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setIsAuthenticated(!!user);
-      if (user && navigator.onLine) {
+      if (user) {
         fetchFavorites(user.uid);
-      } else if (!user) {
-        setIsLoading(false);
-        toast.error("Per vedere i preferiti devi effettuare l'accesso");
       } else {
         setIsLoading(false);
+        toast.error("Per vedere i preferiti devi effettuare l'accesso");
       }
     });
 
@@ -59,48 +60,82 @@ const FavoritesPage = () => {
 
   const fetchFavorites = async (userId: string) => {
     setIsLoading(true);
+    setLoadingError(null);
+    
     try {
+      console.log("Tentativo di caricamento preferiti...");
+      console.log("Stato connessione:", navigator.onLine ? "Online" : "Offline");
+      
       // Get the user's favorites list
       const userFavoritesRef = doc(db, "userFavorites", userId);
       const userFavoritesDoc = await getDoc(userFavoritesRef);
       
       if (!userFavoritesDoc.exists() || !userFavoritesDoc.data().restaurantIds || userFavoritesDoc.data().restaurantIds.length === 0) {
+        console.log("Nessun preferito trovato o lista vuota");
         setFavorites([]);
         setIsLoading(false);
         return;
       }
       
       const favoriteIds = userFavoritesDoc.data().restaurantIds as string[];
+      console.log(`Trovati ${favoriteIds.length} preferiti`);
       
       // Fetch each restaurant from the favorites list
       const restaurantsPromises = favoriteIds.map(async (id) => {
-        const restaurantDoc = await getDoc(doc(db, "restaurants", id));
-        if (restaurantDoc.exists()) {
-          const data = restaurantDoc.data();
-          return {
-            id: restaurantDoc.id,
-            name: data.name || 'Ristorante senza nome',
-            image: data.coverImage || '/placeholder.svg',
-            rating: data.rating || 0,
-            reviews: data.reviews || 0,
-            cuisine: data.cuisine || 'Italiana',
-            description: data.description || 'Nessuna descrizione disponibile',
-            address: data.address || 'Indirizzo non disponibile',
-            hasGlutenFreeOptions: data.hasGlutenFreeOptions || false,
-            isFavorite: true
-          } as Restaurant;
+        try {
+          const restaurantDoc = await getDoc(doc(db, "restaurants", id));
+          if (restaurantDoc.exists()) {
+            const data = restaurantDoc.data();
+            return {
+              id: restaurantDoc.id,
+              name: data.name || 'Ristorante senza nome',
+              image: data.coverImage || '/placeholder.svg',
+              rating: data.rating || 0,
+              reviews: data.reviews || 0,
+              cuisine: data.cuisine || 'Italiana',
+              description: data.description || 'Nessuna descrizione disponibile',
+              address: data.address || 'Indirizzo non disponibile',
+              hasGlutenFreeOptions: data.hasGlutenFreeOptions || false,
+              isFavorite: true
+            } as Restaurant;
+          }
+          console.log(`Ristorante ${id} non trovato`);
+          return null;
+        } catch (error) {
+          console.error(`Errore nel recupero del ristorante ${id}:`, error);
+          return null;
         }
-        return null;
       });
       
       const restaurantsData = (await Promise.all(restaurantsPromises)).filter(r => r !== null) as Restaurant[];
+      console.log(`Caricati con successo ${restaurantsData.length} ristoranti preferiti`);
       setFavorites(restaurantsData);
+      setIsOffline(false); // Impostiamo esplicitamente a false se il caricamento è riuscito
     } catch (error) {
       console.error("Errore durante il recupero dei preferiti:", error);
-      setIsOffline(true);
+      // Non imposta automaticamente offline se c'è un errore di caricamento
+      const isActuallyOffline = !navigator.onLine;
+      setIsOffline(isActuallyOffline);
+      
+      if (isActuallyOffline) {
+        setLoadingError("Sei offline. Non è possibile caricare i preferiti");
+      } else {
+        setLoadingError("Si è verificato un errore nel caricamento dei preferiti. Riprova più tardi.");
+      }
+      
       toast.error("Si è verificato un errore nel caricamento dei preferiti");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleRetry = () => {
+    const user = auth.currentUser;
+    if (user) {
+      console.log("Tentativo di ricaricamento dei preferiti...");
+      fetchFavorites(user.uid);
+    } else {
+      toast.error("Per vedere i preferiti devi effettuare l'accesso");
     }
   };
 
@@ -162,29 +197,24 @@ const FavoritesPage = () => {
     );
   }
 
-  if (isOffline) {
+  if (loadingError && !isLoading) {
     return (
       <Layout>
         <div className="p-4 space-y-6">
           <h1 className="text-2xl font-poppins font-bold text-primary">I miei preferiti</h1>
           
           <div className="bg-secondary/20 rounded-lg p-8 text-center">
-            <WifiOff size={32} className="mx-auto mb-3 text-primary" />
-            <p className="text-gray-700 mb-4">Non è possibile caricare i preferiti perché sei offline</p>
+            {isOffline ? (
+              <WifiOff size={32} className="mx-auto mb-3 text-primary" />
+            ) : (
+              <RefreshCcw size={32} className="mx-auto mb-3 text-primary" />
+            )}
+            <p className="text-gray-700 mb-4">{loadingError}</p>
             <Button 
-              onClick={() => {
-                if (navigator.onLine) {
-                  const user = auth.currentUser;
-                  if (user) {
-                    fetchFavorites(user.uid);
-                    setIsOffline(false);
-                  }
-                } else {
-                  toast.error("Sei ancora offline. Controlla la tua connessione internet.");
-                }
-              }}
+              onClick={handleRetry}
               className="flex items-center gap-2"
             >
+              <RefreshCcw size={16} />
               Riprova
             </Button>
           </div>
