@@ -11,6 +11,7 @@ import ProfilePage from './pages/ProfilePage';
 import BookingsPage from './pages/BookingsPage';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminLogin from './pages/AdminLogin';
+import VideoRecipesPage from './pages/VideoRecipesPage';
 import { AdminProvider } from './context/AdminContext';
 import './App.css';
 
@@ -30,6 +31,7 @@ function App() {
               <Route path="/bookings" element={<BookingsPage />} />
               <Route path="/admin-dashboard" element={<AdminDashboard />} />
               <Route path="/admin-login" element={<AdminLogin />} />
+              <Route path="/videos" element={<VideoRecipesPage />} />
             </Routes>
             <Toaster />
           </AdminProvider>
