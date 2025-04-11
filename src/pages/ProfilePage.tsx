@@ -11,7 +11,8 @@ import {
   MapPin,
   Edit,
   Save,
-  X
+  X,
+  RefreshCcw
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -36,7 +37,10 @@ const ProfilePage = () => {
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadingError, setLoadingError] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+  const [retryCount, setRetryCount] = useState(0);
   
   // Personal information state
   const [personalInfo, setPersonalInfo] = useState({
@@ -47,10 +51,35 @@ const ProfilePage = () => {
     birthDate: '',
   });
 
+  // Check network status
+  useEffect(() => {
+    const handleOnlineStatus = () => {
+      console.log("Network status changed:", navigator.onLine ? "Online" : "Offline");
+      setIsOffline(!navigator.onLine);
+      
+      if (navigator.onLine && loadingError) {
+        // Auto-retry when back online
+        handleRetry();
+      }
+    };
+    
+    window.addEventListener('online', handleOnlineStatus);
+    window.addEventListener('offline', handleOnlineStatus);
+    
+    return () => {
+      window.removeEventListener('online', handleOnlineStatus);
+      window.removeEventListener('offline', handleOnlineStatus);
+    };
+  }, [loadingError]);
+
   // Load user data from Firebase
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
+    const loadProfile = async (user) => {
+      setIsLoading(true);
+      setLoadingError(null);
+      
+      try {
+        console.log(`Loading profile for user: ${user.uid}, attempt #${retryCount + 1}`);
         setUserId(user.uid);
         setPersonalInfo(prev => ({
           ...prev,
@@ -62,6 +91,7 @@ const ProfilePage = () => {
         try {
           const userProfileDoc = await getDoc(doc(db, "userProfiles", user.uid));
           if (userProfileDoc.exists()) {
+            console.log("User profile found in Firestore");
             const profileData = userProfileDoc.data();
             setPersonalInfo(prev => ({
               ...prev,
@@ -70,19 +100,37 @@ const ProfilePage = () => {
               address: profileData.address || '',
               birthDate: profileData.birthDate || '',
             }));
+          } else {
+            console.log("No user profile found in Firestore - using auth data only");
           }
         } catch (error) {
-          console.error("Error loading user profile:", error);
+          console.error("Error loading user profile from Firestore:", error);
+          if (!navigator.onLine) {
+            setIsOffline(true);
+            setLoadingError("Non puoi caricare il profilo mentre sei offline");
+          } else {
+            setLoadingError("Si è verificato un errore nel caricamento del profilo");
+          }
         }
+      } catch (error) {
+        console.error("Error in profile loading:", error);
+        setLoadingError("Si è verificato un errore nel caricamento del profilo");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        loadProfile(user);
       } else {
         // User is not logged in, redirect to login
         navigate('/login');
       }
-      setIsLoading(false);
     });
     
     return () => unsubscribe();
-  }, [navigate]);
+  }, [navigate, retryCount]);
 
   const handleLogout = async () => {
     try {
@@ -101,6 +149,11 @@ const ProfilePage = () => {
   const handleSave = async () => {
     if (!userId) {
       toast.error("Utente non autenticato");
+      return;
+    }
+    
+    if (isOffline) {
+      toast.error("Non puoi salvare le modifiche mentre sei offline");
       return;
     }
     
@@ -152,11 +205,40 @@ const ProfilePage = () => {
     setPersonalInfo(prev => ({ ...prev, [name]: value }));
   };
 
+  const handleRetry = () => {
+    console.log("Manually retrying profile load");
+    setRetryCount(prev => prev + 1);
+  };
+
   if (isLoading) {
     return (
       <Layout>
         <div className="flex justify-center items-center min-h-[60vh]">
           <div className="w-12 h-12 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
+        </div>
+      </Layout>
+    );
+  }
+  
+  if (loadingError) {
+    return (
+      <Layout>
+        <div className="p-4 space-y-6">
+          <h1 className="text-2xl font-poppins font-bold text-primary">Il mio profilo</h1>
+          
+          <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
+            <User size={32} className="mx-auto mb-3 text-gray-400" />
+            <h3 className="text-lg font-medium text-gray-800 mb-1">Errore di caricamento</h3>
+            <p className="text-gray-600 max-w-md mx-auto mb-4">
+              {isOffline 
+                ? "Non è possibile caricare il profilo mentre sei offline."
+                : loadingError || "Si è verificato un errore durante il caricamento del profilo."}
+            </p>
+            <Button onClick={handleRetry} variant="outline" className="flex items-center gap-2">
+              <RefreshCcw size={16} />
+              Riprova
+            </Button>
+          </div>
         </div>
       </Layout>
     );
@@ -293,7 +375,7 @@ const ProfilePage = () => {
                 <X size={16} className="mr-2" />
                 Annulla
               </Button>
-              <Button size="sm" onClick={handleSave} disabled={isLoading}>
+              <Button size="sm" onClick={handleSave} disabled={isLoading || isOffline}>
                 <Save size={16} className="mr-2" />
                 {isLoading ? 'Salvataggio...' : 'Salva'}
               </Button>

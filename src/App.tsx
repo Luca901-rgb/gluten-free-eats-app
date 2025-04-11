@@ -8,6 +8,7 @@ import RestaurantDashboard from './pages/RestaurantDashboard';
 import RestaurantLogin from './pages/RestaurantLogin';
 import RestaurantPage from './pages/RestaurantPage';
 import Register from './pages/Register';
+import Login from './pages/Login';
 import Index from './pages/Index';
 import SearchPage from './pages/SearchPage';
 import ProfilePage from './pages/ProfilePage';
@@ -46,6 +47,7 @@ function App() {
                   </AuthGuard>
                 } 
               />
+              <Route path="/login" element={<Login />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/bookings" element={<BookingsPage />} />
               <Route path="/favorites" element={<FavoritesPage />} />
