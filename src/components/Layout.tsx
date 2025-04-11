@@ -77,15 +77,14 @@ const Layout: React.FC<LayoutProps> = ({ children, hideNavigation = false }) => 
                 "flex flex-col items-center justify-center p-1",
                 location.pathname === item.path 
                   ? "text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]" 
-                  : "text-white/80 drop-shadow-[0_1px_1px_rgba(0,0,0,0.7)]"
+                  : "text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.7)]"
               )}
             >
               <div className="drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
                 {item.icon}
               </div>
-              <span className="text-xs mt-1 font-medium" style={{ 
-                textShadow: '0px 0px 2px #000, 0px 0px 2px #000, 0px 0px 2px #000, 0px 0px 2px #000',
-                WebkitTextStroke: '0.7px #000'
+              <span className="text-xs mt-1 font-medium text-white" style={{ 
+                textShadow: '0px 1px 2px rgba(0,0,0,0.8)',
               }}>
                 {item.label}
               </span>
