@@ -19,7 +19,7 @@ const RestaurantDashboard = () => {
       <TabProvider>
         <div className="relative">
           <DashboardHeader restaurantData={restaurantData} />
-          <DashboardNavigation />
+          <DashboardNavigation isRestaurantOwner={isRestaurantOwner} />
           <DashboardContent 
             restaurantData={restaurantData} 
             isRestaurantOwner={isRestaurantOwner} 

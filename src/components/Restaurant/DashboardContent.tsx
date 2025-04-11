@@ -27,7 +27,8 @@ const DashboardContent = ({ restaurantData, isRestaurantOwner }: DashboardConten
         </div>
       )}
       
-      {activeTab === 'tables' && (
+      {/* La gestione tavoli è visibile solo ai ristoratori */}
+      {activeTab === 'tables' && isRestaurantOwner && (
         <div className="animate-fade-in">
           <TableManagement restaurantId={restaurantData.id || '1'} />
         </div>

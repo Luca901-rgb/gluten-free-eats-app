@@ -19,19 +19,29 @@ interface NavigationButton {
   icon: React.ReactNode;
 }
 
-const DashboardNavigation = () => {
+interface DashboardNavigationProps {
+  isRestaurantOwner?: boolean;
+}
+
+const DashboardNavigation = ({ isRestaurantOwner = false }: DashboardNavigationProps) => {
   const { activeTab, navigateToTab } = useTab();
   const tabsContainerRef = useRef<HTMLDivElement>(null);
 
-  const navigationButtons: NavigationButton[] = [
+  // Definizione dei pulsanti di navigazione base
+  let navigationButtons: NavigationButton[] = [
     { id: 'home', label: 'Home', icon: <Home size={18} /> },
     { id: 'menu', label: 'Menu', icon: <Menu size={18} /> },
-    { id: 'tables', label: 'Tavoli', icon: <Table size={18} /> },
     { id: 'videos', label: 'Videoricette', icon: <VideoIcon size={18} /> },
     { id: 'gallery', label: 'Galleria', icon: <Image size={18} /> },
     { id: 'bookings', label: 'Prenotazioni', icon: <CalendarRange size={18} /> },
     { id: 'reviews', label: 'Recensioni', icon: <Star size={18} /> },
   ];
+
+  // Aggiungi la scheda "Tavoli" solo per i proprietari dei ristoranti
+  if (isRestaurantOwner) {
+    // Inseriamo "Tavoli" dopo "Menu"
+    navigationButtons.splice(2, 0, { id: 'tables', label: 'Tavoli', icon: <Table size={18} /> });
+  }
 
   return (
     <div className="bg-white shadow-sm sticky top-0 z-10" ref={tabsContainerRef}>
