@@ -67,7 +67,12 @@ const Layout: React.FC<LayoutProps> = ({ children, hideNavigation = false }) => 
               )}
             >
               {item.icon}
-              <span className="text-xs mt-1">{item.label}</span>
+              <span className="text-xs mt-1 font-medium" style={{ 
+                textShadow: '0px 0px 1px #000, 0px 0px 1px #000, 0px 0px 1px #000, 0px 0px 1px #000',
+                WebkitTextStroke: '0.5px #000'
+              }}>
+                {item.label}
+              </span>
             </Link>
           ))}
         </nav>
