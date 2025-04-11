@@ -38,42 +38,6 @@ const Layout: React.FC<LayoutProps> = ({ children, hideNavigation = false }) => 
             {isRestaurantView ? "Dashboard Ristoratore" : "GlutenFree Eats"}
           </span>
         </Link>
-        
-        {!isRestaurantView && (
-          <div className="flex gap-2">
-            <Link to="/restaurant/1" className={buttonVariants({ 
-              variant: "outline", 
-              size: "sm", 
-              className: "bg-white/80 border-green hover:bg-white text-primary font-medium drop-shadow-md" 
-            })}>
-              Vista Cliente
-            </Link>
-            <Link to="/restaurant-dashboard" className={buttonVariants({ 
-              variant: "outline", 
-              size: "sm", 
-              className: "bg-white/80 border-green hover:bg-white text-primary font-medium drop-shadow-md" 
-            })}>
-              Ristoratore
-            </Link>
-            <Link to="/admin-dashboard" className={buttonVariants({ 
-              variant: "outline", 
-              size: "sm", 
-              className: "bg-white/80 border-green hover:bg-white text-primary font-medium drop-shadow-md" 
-            })}>
-              Admin
-            </Link>
-          </div>
-        )}
-        
-        {isRestaurantView && (
-          <Link to="/" className={buttonVariants({ 
-            variant: "outline", 
-            size: "sm", 
-            className: "bg-white/80 border-green hover:bg-white text-primary font-medium drop-shadow-md" 
-          })}>
-            Esci da Dashboard
-          </Link>
-        )}
       </header>
       
       <div className="flex-1 overflow-y-auto pb-16">

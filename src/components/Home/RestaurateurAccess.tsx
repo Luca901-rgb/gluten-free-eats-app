@@ -15,7 +15,7 @@ const RestaurateurAccess: React.FC = () => {
         <Button variant="outline" size="sm" asChild className="border-accent/30 bg-white/80 text-primary font-medium drop-shadow-md">
           <Link to="/restaurant-dashboard">
             <ChefHat className="w-4 h-4 mr-1.5" />
-            Accedi al pannello ristoratore
+            Accedi
           </Link>
         </Button>
       </div>
