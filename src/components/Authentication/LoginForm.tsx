@@ -9,10 +9,14 @@ import { toast } from 'sonner';
 import { Mail, Lock, Eye, EyeOff, LogIn, User, Store } from 'lucide-react';
 import { loginUser, signInWithGoogle } from '@/lib/firebase';
 
-const LoginForm = () => {
+interface LoginFormProps {
+  initialUserType?: 'customer' | 'restaurant';
+}
+
+const LoginForm: React.FC<LoginFormProps> = ({ initialUserType = 'customer' }) => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
-  const [userType, setUserType] = useState<'customer' | 'restaurant'>('customer');
+  const [userType, setUserType] = useState<'customer' | 'restaurant'>(initialUserType);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
@@ -111,7 +115,7 @@ const LoginForm = () => {
         <p className="text-gray-600 mt-2">Benvenuto su Gluten Free Eats</p>
       </div>
 
-      <Tabs defaultValue="customer" className="w-full mb-6" onValueChange={(value) => setUserType(value as 'customer' | 'restaurant')}>
+      <Tabs defaultValue={userType} className="w-full mb-6" onValueChange={(value) => setUserType(value as 'customer' | 'restaurant')}>
         <TabsList className="grid w-full grid-cols-2 mb-8">
           <TabsTrigger value="customer" className="flex items-center justify-center gap-2">
             <User size={16} />

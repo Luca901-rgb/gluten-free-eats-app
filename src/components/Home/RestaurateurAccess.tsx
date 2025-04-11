@@ -13,7 +13,7 @@ const RestaurateurAccess: React.FC = () => {
           Area Ristoratori
         </h3>
         <Button variant="outline" size="sm" asChild className="border-accent/30 bg-white/80 text-primary font-medium drop-shadow-md">
-          <Link to="/restaurant-dashboard">
+          <Link to="/restaurant-login">
             <ChefHat className="w-4 h-4 mr-1.5" />
             Accedi
           </Link>

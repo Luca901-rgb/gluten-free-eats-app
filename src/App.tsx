@@ -3,8 +3,11 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { BookingProvider } from './context/BookingContext';
 import { TableProvider } from './context/TableContext';
 import { Toaster } from './components/ui/sonner';
+import AuthGuard from './components/Authentication/AuthGuard';
 import RestaurantDashboard from './pages/RestaurantDashboard';
+import RestaurantLogin from './pages/RestaurantLogin';
 import RestaurantPage from './pages/RestaurantPage';
+import Register from './pages/Register';
 import Index from './pages/Index';
 import SearchPage from './pages/SearchPage';
 import ProfilePage from './pages/ProfilePage';
@@ -25,13 +28,36 @@ function App() {
               <Route path="/" element={<Index />} />
               <Route path="/search" element={<SearchPage />} />
               <Route path="/restaurant/:id" element={<RestaurantPage />} />
-              <Route path="/restaurant-dashboard" element={<RestaurantDashboard />} />
-              <Route path="/dashboard" element={<RestaurantDashboard />} />
+              <Route path="/restaurant-login" element={<RestaurantLogin />} />
+              <Route 
+                path="/restaurant-dashboard" 
+                element={
+                  <AuthGuard requiredUserType="restaurant">
+                    <RestaurantDashboard />
+                  </AuthGuard>
+                } 
+              />
+              <Route 
+                path="/dashboard" 
+                element={
+                  <AuthGuard requiredUserType="restaurant">
+                    <RestaurantDashboard />
+                  </AuthGuard>
+                } 
+              />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/bookings" element={<BookingsPage />} />
-              <Route path="/admin-dashboard" element={<AdminDashboard />} />
+              <Route 
+                path="/admin-dashboard" 
+                element={
+                  <AuthGuard requiredUserType="admin">
+                    <AdminDashboard />
+                  </AuthGuard>
+                } 
+              />
               <Route path="/admin-login" element={<AdminLogin />} />
               <Route path="/videos" element={<VideoRecipesPage />} />
+              <Route path="/register" element={<Register />} />
             </Routes>
             <Toaster />
           </AdminProvider>
