@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   User, 
   LogOut, 
@@ -41,6 +40,7 @@ const ProfilePage = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [retryCount, setRetryCount] = useState(0);
+  const [loadingAttempt, setLoadingAttempt] = useState(0);
   
   // Personal information state
   const [personalInfo, setPersonalInfo] = useState({
@@ -53,12 +53,14 @@ const ProfilePage = () => {
 
   // Check network status
   useEffect(() => {
+    console.log("Setting up online/offline detection");
     const handleOnlineStatus = () => {
-      console.log("Network status changed:", navigator.onLine ? "Online" : "Offline");
-      setIsOffline(!navigator.onLine);
+      const isOnline = navigator.onLine;
+      console.log("Network status changed:", isOnline ? "Online" : "Offline");
+      setIsOffline(!isOnline);
       
-      if (navigator.onLine && loadingError) {
-        // Auto-retry when back online
+      if (isOnline && loadingError) {
+        console.log("Back online - triggering automatic retry");
         handleRetry();
       }
     };
@@ -66,71 +68,114 @@ const ProfilePage = () => {
     window.addEventListener('online', handleOnlineStatus);
     window.addEventListener('offline', handleOnlineStatus);
     
+    // Initial check
+    handleOnlineStatus();
+    
     return () => {
       window.removeEventListener('online', handleOnlineStatus);
       window.removeEventListener('offline', handleOnlineStatus);
     };
   }, [loadingError]);
 
-  // Load user data from Firebase
-  useEffect(() => {
-    const loadProfile = async (user) => {
-      setIsLoading(true);
-      setLoadingError(null);
+  // Load user profile function
+  const loadProfile = useCallback(async (user) => {
+    console.log(`Loading profile for user: ${user.uid}, attempt #${loadingAttempt + 1}`);
+    setIsLoading(true);
+    setLoadingError(null);
+    
+    try {
+      // Set basic user info
+      setUserId(user.uid);
+      setPersonalInfo(prev => ({
+        ...prev,
+        email: user.email || '',
+        name: user.displayName || ''
+      }));
+      
+      // Try to load additional profile data from Firestore
+      if (!navigator.onLine) {
+        console.log("Device is offline, checking IndexedDB cache");
+        // When offline, Firebase will use IndexedDB cache if available
+      }
       
       try {
-        console.log(`Loading profile for user: ${user.uid}, attempt #${retryCount + 1}`);
-        setUserId(user.uid);
-        setPersonalInfo(prev => ({
-          ...prev,
-          email: user.email || '',
-          name: user.displayName || ''
-        }));
+        console.log("Attempting to fetch user profile from Firestore");
+        const userProfileDoc = await getDoc(doc(db, "userProfiles", user.uid));
         
-        // Try to load additional profile data from Firestore
-        try {
-          const userProfileDoc = await getDoc(doc(db, "userProfiles", user.uid));
-          if (userProfileDoc.exists()) {
-            console.log("User profile found in Firestore");
-            const profileData = userProfileDoc.data();
-            setPersonalInfo(prev => ({
-              ...prev,
-              name: profileData.name || user.displayName || '',
-              phone: profileData.phone || '',
-              address: profileData.address || '',
-              birthDate: profileData.birthDate || '',
-            }));
-          } else {
-            console.log("No user profile found in Firestore - using auth data only");
-          }
-        } catch (error) {
-          console.error("Error loading user profile from Firestore:", error);
-          if (!navigator.onLine) {
-            setIsOffline(true);
-            setLoadingError("Non puoi caricare il profilo mentre sei offline");
-          } else {
-            setLoadingError("Si è verificato un errore nel caricamento del profilo");
-          }
+        if (userProfileDoc.exists()) {
+          console.log("User profile found in Firestore or cache");
+          const profileData = userProfileDoc.data();
+          setPersonalInfo(prev => ({
+            ...prev,
+            name: profileData.name || user.displayName || '',
+            phone: profileData.phone || '',
+            address: profileData.address || '',
+            birthDate: profileData.birthDate || '',
+          }));
+        } else {
+          console.log("No user profile found in Firestore - using auth data only");
         }
+        
+        // If we got here, loading was successful
+        setLoadingError(null);
       } catch (error) {
-        console.error("Error in profile loading:", error);
-        setLoadingError("Si è verificato un errore nel caricamento del profilo");
-      } finally {
-        setIsLoading(false);
+        console.error("Error loading user profile from Firestore:", error);
+        if (!navigator.onLine) {
+          setIsOffline(true);
+          setLoadingError("Non puoi caricare il profilo mentre sei offline");
+        } else {
+          setLoadingError("Si è verificato un errore nel caricamento del profilo");
+        }
+        throw error; // Re-throw to be caught by outer handler
       }
+    } catch (error: any) {
+      console.error("Error in profile loading:", error);
+      
+      if (!navigator.onLine) {
+        setLoadingError("Non puoi caricare il profilo mentre sei offline");
+      } else if (error.code === 'unavailable' || error.code === 'resource-exhausted') {
+        setLoadingError("Il server non è disponibile. Riprova più tardi.");
+      } else {
+        setLoadingError("Si è verificato un errore nel caricamento del profilo");
+      }
+    } finally {
+      setIsLoading(false);
+      setLoadingAttempt(prev => prev + 1);
+    }
+  }, [loadingAttempt]);
+
+  // Auth state listener with retry mechanism
+  useEffect(() => {
+    console.log("Initializing auth state listener");
+    
+    // Function to check auth and load profile
+    const checkAuthAndLoadProfile = () => {
+      console.log("Checking authentication state");
+      
+      const unsubscribe = onAuthStateChanged(auth, async (user) => {
+        if (user) {
+          console.log("User is authenticated:", user.uid);
+          loadProfile(user);
+        } else {
+          console.log("User is not authenticated, redirecting to login");
+          navigate('/login');
+        }
+      }, (error) => {
+        console.error("Auth state listener error:", error);
+        setLoadingError("Errore di autenticazione");
+        setIsLoading(false);
+      });
+      
+      return unsubscribe;
     };
     
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        loadProfile(user);
-      } else {
-        // User is not logged in, redirect to login
-        navigate('/login');
-      }
-    });
+    const authUnsubscribe = checkAuthAndLoadProfile();
     
-    return () => unsubscribe();
-  }, [navigate, retryCount]);
+    return () => {
+      console.log("Cleaning up auth state listener");
+      authUnsubscribe();
+    };
+  }, [navigate, loadProfile, retryCount]);
 
   const handleLogout = async () => {
     try {
@@ -159,6 +204,7 @@ const ProfilePage = () => {
     
     setIsLoading(true);
     try {
+      console.log("Saving profile to Firestore:", userId);
       // Save to Firestore
       await setDoc(doc(db, "userProfiles", userId), {
         name: personalInfo.name,
@@ -208,13 +254,17 @@ const ProfilePage = () => {
   const handleRetry = () => {
     console.log("Manually retrying profile load");
     setRetryCount(prev => prev + 1);
+    toast.info("Tentativo di ricaricamento del profilo in corso...");
   };
 
-  if (isLoading) {
+  if (isLoading && loadingAttempt <= 1) {
     return (
       <Layout>
         <div className="flex justify-center items-center min-h-[60vh]">
-          <div className="w-12 h-12 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
+          <div className="text-center">
+            <div className="w-12 h-12 rounded-full border-4 border-primary border-t-transparent animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-600">Caricamento del profilo...</p>
+          </div>
         </div>
       </Layout>
     );
@@ -226,7 +276,7 @@ const ProfilePage = () => {
         <div className="p-4 space-y-6">
           <h1 className="text-2xl font-poppins font-bold text-primary">Il mio profilo</h1>
           
-          <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
+          <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200 shadow-sm">
             <User size={32} className="mx-auto mb-3 text-gray-400" />
             <h3 className="text-lg font-medium text-gray-800 mb-1">Errore di caricamento</h3>
             <p className="text-gray-600 max-w-md mx-auto mb-4">
@@ -234,9 +284,18 @@ const ProfilePage = () => {
                 ? "Non è possibile caricare il profilo mentre sei offline."
                 : loadingError || "Si è verificato un errore durante il caricamento del profilo."}
             </p>
-            <Button onClick={handleRetry} variant="outline" className="flex items-center gap-2">
-              <RefreshCcw size={16} />
-              Riprova
+            <Button 
+              onClick={handleRetry} 
+              variant="outline" 
+              className="flex items-center gap-2 mx-auto"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <div className="w-4 h-4 rounded-full border-2 border-primary border-t-transparent animate-spin"></div>
+              ) : (
+                <RefreshCcw size={16} />
+              )}
+              {isLoading ? 'Ricaricamento...' : 'Riprova'}
             </Button>
           </div>
         </div>
