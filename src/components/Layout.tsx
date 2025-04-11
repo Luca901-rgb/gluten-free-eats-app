@@ -22,6 +22,7 @@ const navigationItems = [
 
 const Layout: React.FC<LayoutProps> = ({ children, hideNavigation = false }) => {
   const location = useLocation();
+  const isRestaurantView = location.pathname.includes('/restaurant-dashboard') || location.pathname.includes('/dashboard');
 
   return (
     <div className="flex flex-col min-h-screen bg-green-white">
@@ -34,33 +35,45 @@ const Layout: React.FC<LayoutProps> = ({ children, hideNavigation = false }) => 
             </div>
           </div>
           <span className="font-poppins font-bold text-lg text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
-            GlutenFree Eats
+            {isRestaurantView ? "Dashboard Ristoratore" : "GlutenFree Eats"}
           </span>
         </Link>
         
-        <div className="flex gap-2">
-          <Link to="/restaurant/1" className={buttonVariants({ 
+        {!isRestaurantView && (
+          <div className="flex gap-2">
+            <Link to="/restaurant/1" className={buttonVariants({ 
+              variant: "outline", 
+              size: "sm", 
+              className: "bg-white/80 border-green hover:bg-white text-primary font-medium drop-shadow-md" 
+            })}>
+              Vista Cliente
+            </Link>
+            <Link to="/restaurant-dashboard" className={buttonVariants({ 
+              variant: "outline", 
+              size: "sm", 
+              className: "bg-white/80 border-green hover:bg-white text-primary font-medium drop-shadow-md" 
+            })}>
+              Ristoratore
+            </Link>
+            <Link to="/admin-dashboard" className={buttonVariants({ 
+              variant: "outline", 
+              size: "sm", 
+              className: "bg-white/80 border-green hover:bg-white text-primary font-medium drop-shadow-md" 
+            })}>
+              Admin
+            </Link>
+          </div>
+        )}
+        
+        {isRestaurantView && (
+          <Link to="/" className={buttonVariants({ 
             variant: "outline", 
             size: "sm", 
             className: "bg-white/80 border-green hover:bg-white text-primary font-medium drop-shadow-md" 
           })}>
-            Vista Cliente
+            Esci da Dashboard
           </Link>
-          <Link to="/restaurant-dashboard" className={buttonVariants({ 
-            variant: "outline", 
-            size: "sm", 
-            className: "bg-white/80 border-green hover:bg-white text-primary font-medium drop-shadow-md" 
-          })}>
-            Ristoratore
-          </Link>
-          <Link to="/admin-dashboard" className={buttonVariants({ 
-            variant: "outline", 
-            size: "sm", 
-            className: "bg-white/80 border-green hover:bg-white text-primary font-medium drop-shadow-md" 
-          })}>
-            Admin
-          </Link>
-        </div>
+        )}
       </header>
       
       <div className="flex-1 overflow-y-auto pb-16">
