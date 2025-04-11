@@ -1,18 +1,14 @@
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
 
 interface NavigationButtonsProps {
   isRegionAvailable: boolean;
 }
 
-const NavigationButtons: React.FC<NavigationButtonsProps> = ({ isRegionAvailable }) => {
+const NavigationButtons: React.FC<NavigationButtonsProps> = () => {
   return (
     <div className="flex flex-wrap gap-4 mt-8">
-      <Button size="lg" asChild className="bg-blue-500 hover:bg-blue-600" disabled={!isRegionAvailable}>
-        <Link to="/search">Trova Ristoranti</Link>
-      </Button>
+      {/* All navigation buttons have been removed as requested */}
     </div>
   );
 };
