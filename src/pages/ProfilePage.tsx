@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
   User, 
@@ -31,6 +32,7 @@ import { useNavigate } from 'react-router-dom';
 import { auth, db, logoutUser } from '@/lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const ProfilePage = () => {
   const navigate = useNavigate();
@@ -41,6 +43,7 @@ const ProfilePage = () => {
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [retryCount, setRetryCount] = useState(0);
   const [loadingAttempt, setLoadingAttempt] = useState(0);
+  const [loadingProfile, setLoadingProfile] = useState(false);
   
   // Personal information state
   const [personalInfo, setPersonalInfo] = useState({
@@ -59,7 +62,7 @@ const ProfilePage = () => {
       console.log("Network status changed:", isOnline ? "Online" : "Offline");
       setIsOffline(!isOnline);
       
-      if (isOnline && loadingError) {
+      if (isOnline && loadingError && !loadingProfile) {
         console.log("Back online - triggering automatic retry");
         handleRetry();
       }
@@ -75,16 +78,17 @@ const ProfilePage = () => {
       window.removeEventListener('online', handleOnlineStatus);
       window.removeEventListener('offline', handleOnlineStatus);
     };
-  }, [loadingError]);
+  }, [loadingError, loadingProfile]);
 
-  // Load user profile function
+  // Load user profile function with improved error handling
   const loadProfile = useCallback(async (user) => {
     console.log(`Loading profile for user: ${user.uid}, attempt #${loadingAttempt + 1}`);
     setIsLoading(true);
+    setLoadingProfile(true);
     setLoadingError(null);
     
     try {
-      // Set basic user info
+      // Set basic user info from authentication
       setUserId(user.uid);
       setPersonalInfo(prev => ({
         ...prev,
@@ -92,17 +96,21 @@ const ProfilePage = () => {
         name: user.displayName || ''
       }));
       
-      // Try to load additional profile data from Firestore
-      if (!navigator.onLine) {
-        console.log("Device is offline, checking IndexedDB cache");
-        // When offline, Firebase will use IndexedDB cache if available
-      }
+      // Try to load additional profile data from Firestore with a timeout
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error("Timeout loading profile")), 10000);
+      });
       
       try {
         console.log("Attempting to fetch user profile from Firestore");
-        const userProfileDoc = await getDoc(doc(db, "userProfiles", user.uid));
         
-        if (userProfileDoc.exists()) {
+        // Race between the Firestore fetch and the timeout
+        const userProfileDoc = await Promise.race([
+          getDoc(doc(db, "userProfiles", user.uid)),
+          timeoutPromise
+        ]);
+        
+        if (userProfileDoc && 'exists' in userProfileDoc && userProfileDoc.exists()) {
           console.log("User profile found in Firestore or cache");
           const profileData = userProfileDoc.data();
           setPersonalInfo(prev => ({
@@ -140,6 +148,7 @@ const ProfilePage = () => {
       }
     } finally {
       setIsLoading(false);
+      setLoadingProfile(false);
       setLoadingAttempt(prev => prev + 1);
     }
   }, [loadingAttempt]);
@@ -164,6 +173,7 @@ const ProfilePage = () => {
         console.error("Auth state listener error:", error);
         setLoadingError("Errore di autenticazione");
         setIsLoading(false);
+        setLoadingProfile(false);
       });
       
       return unsubscribe;
@@ -260,10 +270,23 @@ const ProfilePage = () => {
   if (isLoading && loadingAttempt <= 1) {
     return (
       <Layout>
-        <div className="flex justify-center items-center min-h-[60vh]">
-          <div className="text-center">
-            <div className="w-12 h-12 rounded-full border-4 border-primary border-t-transparent animate-spin mx-auto mb-4"></div>
-            <p className="text-gray-600">Caricamento del profilo...</p>
+        <div className="p-4 space-y-6">
+          <div className="flex justify-between items-center">
+            <Skeleton className="h-10 w-40" />
+            <Skeleton className="h-9 w-24" />
+          </div>
+          
+          <Skeleton className="h-32 w-full" />
+          
+          <Skeleton className="h-64 w-full" />
+          
+          <div className="space-y-4">
+            <Skeleton className="h-10 w-full" />
+            <div className="grid grid-cols-3 gap-4">
+              <Skeleton className="h-32 w-full" />
+              <Skeleton className="h-32 w-full" />
+              <Skeleton className="h-32 w-full" />
+            </div>
           </div>
         </div>
       </Layout>
@@ -288,14 +311,14 @@ const ProfilePage = () => {
               onClick={handleRetry} 
               variant="outline" 
               className="flex items-center gap-2 mx-auto"
-              disabled={isLoading}
+              disabled={loadingProfile}
             >
-              {isLoading ? (
+              {loadingProfile ? (
                 <div className="w-4 h-4 rounded-full border-2 border-primary border-t-transparent animate-spin"></div>
               ) : (
                 <RefreshCcw size={16} />
               )}
-              {isLoading ? 'Ricaricamento...' : 'Riprova'}
+              {loadingProfile ? 'Ricaricamento...' : 'Riprova'}
             </Button>
           </div>
         </div>
