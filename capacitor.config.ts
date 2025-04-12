@@ -6,7 +6,9 @@ const config: CapacitorConfig = {
   appName: 'Gluten Free Eats',
   webDir: 'dist',
   server: {
-    url: 'https://0406988d-f72c-4fb8-9c66-f80fcfc8a946.lovableproject.com?forceHideBadge=true',
+    androidScheme: 'https',
+    iosScheme: 'https',
+    allowNavigation: ['*'],
     cleartext: true
   },
   plugins: {
