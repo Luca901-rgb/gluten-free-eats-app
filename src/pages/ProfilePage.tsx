@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
   User, 
@@ -112,13 +113,15 @@ const ProfilePage = () => {
         if (userProfileDoc && userProfileDoc.exists()) {
           console.log("User profile found in Firestore or cache");
           const profileData = userProfileDoc.data();
-          setPersonalInfo(prev => ({
-            ...prev,
-            name: profileData.name || user.displayName || '',
-            phone: profileData.phone || '',
-            address: profileData.address || '',
-            birthDate: profileData.birthDate || '',
-          }));
+          if (profileData) {
+            setPersonalInfo(prev => ({
+              ...prev,
+              name: profileData.name || user.displayName || '',
+              phone: profileData.phone || '',
+              address: profileData.address || '',
+              birthDate: profileData.birthDate || '',
+            }));
+          }
         } else {
           console.log("No user profile found in Firestore - using auth data only");
         }
@@ -152,6 +155,13 @@ const ProfilePage = () => {
     }
   }, [loadingAttempt]);
 
+  // Define the handleRetry function that's used in the useEffect
+  const handleRetry = useCallback(() => {
+    console.log("Manually retrying profile load");
+    setRetryCount(prev => prev + 1);
+    toast.info("Tentativo di ricaricamento del profilo in corso...");
+  }, []);
+
   // Auth state listener with retry mechanism
   useEffect(() => {
     console.log("Initializing auth state listener");
@@ -184,7 +194,7 @@ const ProfilePage = () => {
       console.log("Cleaning up auth state listener");
       authUnsubscribe();
     };
-  }, [navigate, loadProfile, retryCount]);
+  }, [navigate, loadProfile, retryCount, handleRetry]);
 
   const handleLogout = async () => {
     try {
@@ -258,12 +268,6 @@ const ProfilePage = () => {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setPersonalInfo(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleRetry = () => {
-    console.log("Manually retrying profile load");
-    setRetryCount(prev => prev + 1);
-    toast.info("Tentativo di ricaricamento del profilo in corso...");
   };
 
   if (isLoading && loadingAttempt <= 1) {
