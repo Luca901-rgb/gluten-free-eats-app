@@ -2,7 +2,7 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.0406988df72c4fb89c66f80fcfc8a946',
+  appId: 'com.glutenfreeeats.app',
   appName: 'Gluten Free Eats',
   webDir: 'dist',
   server: {
