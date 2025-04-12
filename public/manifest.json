@@ -22,7 +22,7 @@
     }
   ],
   "orientation": "portrait",
-  "prefer_related_applications": false,
+  "prefer_related_applications": true,
   "related_applications": [
     {
       "platform": "play",
@@ -30,5 +30,21 @@
       "id": "app.lovable.0406988df72c4fb89c66f80fcfc8a946"
     }
   ],
-  "categories": ["food", "health", "lifestyle"]
+  "categories": ["food", "health", "lifestyle"],
+  "shortcuts": [
+    {
+      "name": "Ristoranti vicini",
+      "short_name": "Vicini",
+      "description": "Trova ristoranti senza glutine vicino a te",
+      "url": "/?source=pwa",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Preferiti",
+      "short_name": "Preferiti",
+      "description": "I tuoi ristoranti preferiti",
+      "url": "/favorites?source=pwa",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
 }

@@ -12,7 +12,7 @@ const config: CapacitorConfig = {
   plugins: {
     SplashScreen: {
       launchShowDuration: 2000,
-      backgroundColor: "#ffffffff",
+      backgroundColor: "#FFFFFF",
       androidScaleType: "CENTER_CROP",
       launchAutoHide: true,
       showSpinner: true,
@@ -43,7 +43,15 @@ const config: CapacitorConfig = {
     allowMixedContent: true,
     captureInput: true,
     webContentsDebuggingEnabled: true,
-    minSdkVersion: 22
+    minSdkVersion: 22,
+    hideLogs: false,
+    buildOptions: {
+      keystorePath: null,
+      keystorePassword: null,
+      keystoreAlias: null,
+      keystoreAliasPassword: null,
+      releaseType: null
+    }
   },
   ios: {
     preferredContentMode: "mobile",
