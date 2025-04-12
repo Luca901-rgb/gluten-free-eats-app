@@ -10,7 +10,8 @@ const config: CapacitorConfig = {
     iosScheme: 'https',
     allowNavigation: ['*'],
     cleartext: true,
-    hostname: 'localhost'
+    url: 'https://0406988d-f72c-4fb8-9c66-f80fcfc8a946.lovableproject.com?forceHideBadge=true', 
+    hostname: 'lovableproject.com'
   },
   plugins: {
     SplashScreen: {

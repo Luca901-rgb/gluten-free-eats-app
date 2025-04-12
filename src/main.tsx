@@ -12,4 +12,9 @@ if ('serviceWorker' in navigator) {
   });
 }
 
+// Inizializzazione per capacitor/mobile
+document.addEventListener('deviceready', () => {
+  console.log('Device is ready');
+}, false);
+
 createRoot(document.getElementById("root")!).render(<App />);
