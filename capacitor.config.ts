@@ -9,7 +9,8 @@ const config: CapacitorConfig = {
     androidScheme: 'https',
     iosScheme: 'https',
     allowNavigation: ['*'],
-    cleartext: true
+    cleartext: true,
+    hostname: 'localhost'
   },
   plugins: {
     SplashScreen: {
