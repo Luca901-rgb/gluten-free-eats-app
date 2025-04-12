@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import Layout from '@/components/Layout';
 import { Heart, Search, WifiOff, RefreshCcw, AlertCircle } from 'lucide-react';
@@ -16,7 +15,7 @@ const FavoritesPage = () => {
   const [favorites, setFavorites] = useState<Restaurant[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isOffline, setIsOffline] = useState(false);
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [loadingError, setLoadingError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
 
@@ -26,8 +25,16 @@ const FavoritesPage = () => {
     setLoadingError(null);
     
     try {
+      // Check network connection first
+      if (!navigator.onLine) {
+        console.log("Utente offline, impossibile caricare i preferiti");
+        setIsOffline(true);
+        setLoadingError("Sei offline. Non è possibile caricare i preferiti");
+        setIsLoading(false);
+        return;
+      }
+      
       console.log("Tentativo di caricamento preferiti...", { retryCount, time: new Date().toISOString() });
-      console.log("Stato connessione:", navigator.onLine ? "Online" : "Offline");
       
       // Get the user's favorites list
       const userFavoritesRef = doc(db, "userFavorites", userId);
@@ -76,6 +83,7 @@ const FavoritesPage = () => {
       setIsOffline(false); // Impostiamo esplicitamente a false se il caricamento è riuscito
     } catch (error) {
       console.error("Errore durante il recupero dei preferiti:", error);
+      
       // Determina se l'errore è dovuto alla connessione offline
       const isActuallyOffline = !navigator.onLine;
       setIsOffline(isActuallyOffline);
@@ -93,6 +101,9 @@ const FavoritesPage = () => {
   }, [retryCount]);
 
   useEffect(() => {
+    // Set initial online/offline state
+    setIsOffline(!navigator.onLine);
+    
     // Monitor online/offline status
     const handleOnlineStatus = () => {
       const isOnline = navigator.onLine;
@@ -101,15 +112,16 @@ const FavoritesPage = () => {
       
       if (isOnline) {
         // If we're back online and authenticated, try to fetch favorites again
+        toast.info("Connessione ripristinata");
         const user = auth.currentUser;
         if (user) {
           fetchFavorites(user.uid);
         }
+      } else {
+        toast.error("Sei offline. Alcune funzionalità potrebbero non essere disponibili");
+        setLoadingError("Sei offline. Non è possibile caricare i preferiti");
       }
     };
-
-    // Initial check
-    setIsOffline(!navigator.onLine);
     
     // Add event listeners
     window.addEventListener('online', handleOnlineStatus);
@@ -207,6 +219,27 @@ const FavoritesPage = () => {
     <Layout>
       <div className="p-4 space-y-6">
         <h1 className="text-2xl font-poppins font-bold text-primary">I miei preferiti</h1>
+        
+        {isOffline && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+            <div className="flex items-center gap-2">
+              <WifiOff size={18} className="text-yellow-500" />
+              <p className="text-yellow-700 font-medium">Sei offline</p>
+            </div>
+            <p className="text-yellow-600 text-sm mt-1">
+              Non è possibile caricare i preferiti. Controlla la tua connessione internet.
+            </p>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="mt-2" 
+              onClick={handleRetry}
+            >
+              <RefreshCcw size={14} className="mr-1" />
+              Riprova
+            </Button>
+          </div>
+        )}
         
         <RestaurantList
           restaurants={favorites}
