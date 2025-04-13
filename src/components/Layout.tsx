@@ -25,8 +25,8 @@ const Layout: React.FC<LayoutProps> = ({ children, hideNavigation = false }) => 
   const isRestaurantView = location.pathname.includes('/restaurant-dashboard') || location.pathname.includes('/dashboard');
 
   return (
-    <div className="flex flex-col min-h-screen bg-green-white">
-      <header className="sticky top-0 z-10 flex items-center justify-between bg-gradient-to-r from-green-dark/90 via-green/80 to-green-light/70 border-b h-16 px-4 backdrop-blur-sm">
+    <div className="flex flex-col min-h-screen w-full bg-green-white">
+      <header className="sticky top-0 z-10 flex items-center justify-between bg-gradient-to-r from-green-dark/90 via-green/80 to-green-light/70 border-b h-16 px-4 backdrop-blur-sm w-full">
         <Link to="/" className="flex items-center gap-2">
           <div className="flex items-center justify-center p-1.5 rounded-full bg-gradient-to-br from-green-dark via-green to-green-light shadow-md">
             <div className="relative">
@@ -40,7 +40,7 @@ const Layout: React.FC<LayoutProps> = ({ children, hideNavigation = false }) => 
         </Link>
       </header>
       
-      <div className="flex-1 overflow-y-auto pb-16">
+      <div className="flex-1 overflow-y-auto pb-16 w-full">
         {children}
       </div>
       
