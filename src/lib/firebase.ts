@@ -16,6 +16,7 @@ import {
   collection,
   enableIndexedDbPersistence
 } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 
 // La tua configurazione Firebase
 // IMPORTANTE: Queste sono solo chiavi pubbliche che possono essere incluse nel client
@@ -32,6 +33,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+const storage = getStorage(app);
 const googleProvider = new GoogleAuthProvider();
 
 // Configurazione aggiuntiva per Google Provider
@@ -291,5 +293,5 @@ export const setSpecificUserAsAdmin = async () => {
   };
 };
 
-export { auth, db };
+export { auth, db, storage };
 export default app;
