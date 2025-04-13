@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Gluten Free Eats</string>
+    <string name="title_activity_main">Gluten Free Eats</string>
+    <string name="package_name">com.glutenfreeeats.app</string>
+    <string name="custom_url_scheme">com.glutenfreeeats.app</string>
+</resources>
