@@ -7,8 +7,10 @@ import { componentTagger } from "lovable-tagger";
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
-    host: "::",
+    host: "0.0.0.0",
     port: 8080,
+    strictPort: true,
+    cors: true
   },
   plugins: [
     react(),
@@ -23,11 +25,11 @@ export default defineConfig(({ mode }) => ({
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
-    sourcemap: mode === 'development', // Only generate sourcemaps in development
+    sourcemap: mode === 'development',
     minify: 'terser',
     terserOptions: {
       compress: {
-        drop_console: mode === 'production', // Only drop console in production
+        drop_console: mode === 'production',
       },
     },
     rollupOptions: {

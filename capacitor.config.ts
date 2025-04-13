@@ -5,10 +5,21 @@ const config: CapacitorConfig = {
   appId: 'com.glutenfreeeats.app',
   appName: 'Gluten Free Eats',
   webDir: 'dist',
+<<<<<<< HEAD
 // server: {
 //   url: 'https://0406988d-f72c-4fb8-9c66-f80fcfc8a946.lovableproject.com?forceHideBadge=true',
 //   cleartext: true
 // },
+=======
+  server: {
+    androidScheme: 'https',
+    iosScheme: 'https',
+    allowNavigation: ['*'],
+    cleartext: true,
+    url: 'https://0406988d-f72c-4fb8-9c66-f80fcfc8a946.lovableproject.com?forceHideBadge=true', 
+    hostname: 'lovableproject.com'
+  },
+>>>>>>> 1cccafbb3ad1e9c57240529d258384464fed11b9
   plugins: {
     SplashScreen: {
       launchShowDuration: 2000,

@@ -50,7 +50,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ initialUserType = 'customer' }) =
       if (userType === 'restaurant') {
         navigate('/restaurant-dashboard');
       } else {
-        navigate('/');
+        navigate('/home');
       }
     } catch (error: any) {
       toast.error(`Errore durante il login: ${error.message}`);
@@ -93,7 +93,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ initialUserType = 'customer' }) =
       if (userType === 'restaurant') {
         navigate('/restaurant-dashboard');
       } else {
-        navigate('/');
+        navigate('/home');
       }
     } catch (error: any) {
       console.error("Errore durante l'accesso con Google:", error);
