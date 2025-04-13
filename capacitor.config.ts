@@ -1,10 +1,17 @@
-
 import { CapacitorConfig } from '@capacitor/cli';
-
 const config: CapacitorConfig = {
   appId: 'com.glutenfreeeats.app',
   appName: 'Gluten Free Eats',
   webDir: 'dist',
+  // La sezione server è stata commentata per rimuovere la dipendenza dal server remoto
+  // server: {
+  //   androidScheme: 'https',
+  //   iosScheme: 'https',
+  //   allowNavigation: ['*'],
+  //   cleartext: true,
+  //   url: 'https://0406988d-f72c-4fb8-9c66-f80fcfc8a946.lovableproject.com?forceHideBadge=true', 
+  //   hostname: 'lovableproject.com'
+  // },
   plugins: {
     SplashScreen: {
       launchShowDuration: 2000,
@@ -55,5 +62,4 @@ const config: CapacitorConfig = {
     contentInset: "always"
   }
 };
-
 export default config;

@@ -1,272 +1,240 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import Layout from '@/components/Layout';
-import { Heart, Search, WifiOff, RefreshCcw, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { collection, getDocs, query, where, deleteDoc, doc } from 'firebase/firestore';
+import { db, auth } from '../lib/firebase';
 import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import RestaurantCard, { Restaurant } from '@/components/Restaurant/RestaurantCard';
-import RestaurantList from '@/components/Home/RestaurantList';
 import { toast } from 'sonner';
-import { db, auth } from '@/lib/firebase';
-import { collection, doc, getDoc, getDocs, deleteDoc, setDoc } from 'firebase/firestore';
-import { onAuthStateChanged } from 'firebase/auth';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Loader2, Star, MapPin, Trash2 } from 'lucide-react';
 
-const FavoritesPage = () => {
+// Tipo per un elemento preferito
+interface Favorite {
+  id: string;
+  name: string;
+  address?: string;
+  image?: string;
+  rating?: number;
+  description?: string;
+  restaurantId?: string;
+}
+
+const FavoritesPage: React.FC = () => {
+  const [favorites, setFavorites] = useState<Favorite[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
-  const [favorites, setFavorites] = useState<Restaurant[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isOffline, setIsOffline] = useState(!navigator.onLine);
-  const [loadingError, setLoadingError] = useState<string | null>(null);
-  const [retryCount, setRetryCount] = useState(0);
-
-  // Callback version of fetchFavorites to use in useEffect and retry handler
-  const fetchFavorites = useCallback(async (userId: string) => {
-    setIsLoading(true);
-    setLoadingError(null);
-    
-    try {
-      // Check network connection first
-      if (!navigator.onLine) {
-        console.log("Utente offline, impossibile caricare i preferiti");
-        setIsOffline(true);
-        setLoadingError("Sei offline. Non è possibile caricare i preferiti");
-        setIsLoading(false);
-        return;
-      }
-      
-      console.log("Tentativo di caricamento preferiti...", { retryCount, time: new Date().toISOString() });
-      
-      // Get the user's favorites list
-      const userFavoritesRef = doc(db, "userFavorites", userId);
-      const userFavoritesDoc = await getDoc(userFavoritesRef);
-      
-      if (!userFavoritesDoc.exists() || !userFavoritesDoc.data().restaurantIds || userFavoritesDoc.data().restaurantIds.length === 0) {
-        console.log("Nessun preferito trovato o lista vuota");
-        setFavorites([]);
-        setIsLoading(false);
-        return;
-      }
-      
-      const favoriteIds = userFavoritesDoc.data().restaurantIds as string[];
-      console.log(`Trovati ${favoriteIds.length} preferiti`);
-      
-      // Fetch each restaurant from the favorites list
-      const restaurantsPromises = favoriteIds.map(async (id) => {
-        try {
-          const restaurantDoc = await getDoc(doc(db, "restaurants", id));
-          if (restaurantDoc.exists()) {
-            const data = restaurantDoc.data();
-            return {
-              id: restaurantDoc.id,
-              name: data.name || 'Ristorante senza nome',
-              image: data.coverImage || '/placeholder.svg',
-              rating: data.rating || 0,
-              reviews: data.reviews || 0,
-              cuisine: data.cuisine || 'Italiana',
-              description: data.description || 'Nessuna descrizione disponibile',
-              address: data.address || 'Indirizzo non disponibile',
-              hasGlutenFreeOptions: data.hasGlutenFreeOptions || false,
-              isFavorite: true
-            } as Restaurant;
-          }
-          console.log(`Ristorante ${id} non trovato`);
-          return null;
-        } catch (error) {
-          console.error(`Errore nel recupero del ristorante ${id}:`, error);
-          return null;
-        }
-      });
-      
-      const restaurantsData = (await Promise.all(restaurantsPromises)).filter(r => r !== null) as Restaurant[];
-      console.log(`Caricati con successo ${restaurantsData.length} ristoranti preferiti`);
-      setFavorites(restaurantsData);
-      setIsOffline(false); // Impostiamo esplicitamente a false se il caricamento è riuscito
-    } catch (error) {
-      console.error("Errore durante il recupero dei preferiti:", error);
-      
-      // Determina se l'errore è dovuto alla connessione offline
-      const isActuallyOffline = !navigator.onLine;
-      setIsOffline(isActuallyOffline);
-      
-      if (isActuallyOffline) {
-        setLoadingError("Sei offline. Non è possibile caricare i preferiti");
-      } else {
-        setLoadingError("Si è verificato un errore nel caricamento dei preferiti. Riprova più tardi.");
-      }
-      
-      toast.error("Si è verificato un errore nel caricamento dei preferiti");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [retryCount]);
-
+  
   useEffect(() => {
-    // Set initial online/offline state
-    setIsOffline(!navigator.onLine);
-    
-    // Monitor online/offline status
-    const handleOnlineStatus = () => {
-      const isOnline = navigator.onLine;
-      console.log("Cambiamento stato connessione:", isOnline ? "Online" : "Offline");
-      setIsOffline(!isOnline);
+    const fetchFavorites = async () => {
+      setLoading(true);
+      setError(null);
       
-      if (isOnline) {
-        // If we're back online and authenticated, try to fetch favorites again
-        toast.info("Connessione ripristinata");
+      try {
         const user = auth.currentUser;
-        if (user) {
-          fetchFavorites(user.uid);
+        
+        if (!user) {
+          console.log("Nessun utente autenticato");
+          setFavorites([]);
+          setLoading(false);
+          return;
         }
-      } else {
-        toast.error("Sei offline. Alcune funzionalità potrebbero non essere disponibili");
-        setLoadingError("Sei offline. Non è possibile caricare i preferiti");
-      }
-    };
-    
-    // Add event listeners
-    window.addEventListener('online', handleOnlineStatus);
-    window.addEventListener('offline', handleOnlineStatus);
-
-    // Check authentication state
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      console.log("Auth state changed:", user ? "Utente autenticato" : "Utente non autenticato");
-      setIsAuthenticated(!!user);
-      if (user) {
-        fetchFavorites(user.uid);
-      } else {
-        setIsLoading(false);
-        toast.error("Per vedere i preferiti devi effettuare l'accesso");
-      }
-    });
-
-    return () => {
-      window.removeEventListener('online', handleOnlineStatus);
-      window.removeEventListener('offline', handleOnlineStatus);
-      unsubscribe();
-    };
-  }, [fetchFavorites]);
-
-  const handleRetry = () => {
-    const user = auth.currentUser;
-    if (user) {
-      console.log("Tentativo di ricaricamento dei preferiti...");
-      setRetryCount(prev => prev + 1); // Incrementa il contatore per forzare il refetch
-      fetchFavorites(user.uid);
-    } else {
-      toast.error("Per vedere i preferiti devi effettuare l'accesso");
-    }
-  };
-
-  const handleToggleFavorite = async (id: string) => {
-    if (isOffline) {
-      toast.error("Non puoi modificare i preferiti mentre sei offline");
-      return;
-    }
-    
-    const currentUser = auth.currentUser;
-    if (!currentUser) {
-      toast.error("Devi effettuare l'accesso per gestire i preferiti");
-      return;
-    }
-    
-    try {
-      const userFavoritesRef = doc(db, "userFavorites", currentUser.uid);
-      const userFavoritesDoc = await getDoc(userFavoritesRef);
-      
-      let userFavorites: string[] = [];
-      if (userFavoritesDoc.exists()) {
-        userFavorites = userFavoritesDoc.data().restaurantIds || [];
-      }
-      
-      // Remove from favorites
-      const updatedFavorites = userFavorites.filter(restaurantId => restaurantId !== id);
-      
-      // Update Firestore
-      await setDoc(userFavoritesRef, { restaurantIds: updatedFavorites }, { merge: true });
-      
-      // Update local state
-      setFavorites(prevFavorites => prevFavorites.filter(restaurant => restaurant.id !== id));
-      
-      toast.success("Ristorante rimosso dai preferiti");
-    } catch (error) {
-      console.error("Errore durante la rimozione dai preferiti:", error);
-      toast.error("Si è verificato un errore durante la rimozione dai preferiti");
-    }
-  };
-
-  if (!isAuthenticated) {
-    return (
-      <Layout>
-        <div className="p-4 space-y-6">
-          <h1 className="text-2xl font-poppins font-bold text-primary">I miei preferiti</h1>
+        
+        const userId = user.uid;
+        
+        // Verifica se ci sono preferiti salvati localmente
+        const cachedFavorites = localStorage.getItem(`favorites_${userId}`);
+        let favoritesData: Favorite[] = [];
+        
+        if (cachedFavorites) {
+          try {
+            const parsedFavorites = JSON.parse(cachedFavorites);
+            if (Array.isArray(parsedFavorites)) {
+              favoritesData = parsedFavorites;
+              console.log("Caricati preferiti dalla cache locale:", favoritesData.length);
+            }
+          } catch (e) {
+            console.error("Errore nel parsing dei preferiti dalla cache:", e);
+          }
+        }
+        
+        // Prova a recuperare i preferiti da Firestore
+        try {
+          const favoritesRef = collection(db, `users/${userId}/favorites`);
+          const favoritesSnapshot = await getDocs(favoritesRef);
           
-          <div className="bg-secondary/20 rounded-lg p-8 text-center">
-            <Heart size={32} className="mx-auto mb-3 text-primary" />
-            <p className="text-gray-700 mb-4">Devi effettuare l'accesso per vedere i tuoi preferiti</p>
-            <Button 
-              onClick={() => navigate('/login')}
-              className="flex items-center gap-2"
-            >
-              Accedi
-            </Button>
-          </div>
-        </div>
-      </Layout>
+          if (!favoritesSnapshot.empty) {
+            favoritesData = favoritesSnapshot.docs.map(doc => ({
+              id: doc.id,
+              ...doc.data()
+            })) as Favorite[];
+            
+            // Aggiorna la cache locale
+            localStorage.setItem(`favorites_${userId}`, JSON.stringify(favoritesData));
+            console.log("Preferiti caricati da Firestore e salvati in cache:", favoritesData.length);
+          } else if (favoritesData.length === 0) {
+            console.log("Nessun preferito trovato in Firestore");
+          }
+        } catch (firestoreError) {
+          console.error("Errore nel caricamento dei preferiti da Firestore:", firestoreError);
+          // Se abbiamo dati dalla cache, continuiamo a usarli
+          if (favoritesData.length === 0) {
+            setError("Impossibile caricare i preferiti. Verifica la tua connessione.");
+          }
+        }
+        
+        setFavorites(favoritesData);
+      } catch (err) {
+        console.error("Errore generale nel caricamento dei preferiti:", err);
+        setError("Si è verificato un errore nel caricamento dei preferiti.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchFavorites();
+    
+    // Aggiorna i preferiti quando l'utente cambia
+    const unsubscribe = auth.onAuthStateChanged(() => {
+      fetchFavorites();
+    });
+    
+    return () => unsubscribe();
+  }, []);
+  
+  const removeFavorite = async (favoriteId: string) => {
+    try {
+      const user = auth.currentUser;
+      if (!user) {
+        toast.error("Devi essere loggato per rimuovere dai preferiti");
+        return;
+      }
+      
+      const userId = user.uid;
+      
+      // Ottimistic UI update - rimuovi immediatamente dall'interfaccia
+      setFavorites(prev => prev.filter(fav => fav.id !== favoriteId));
+      
+      // Aggiorna la cache locale
+      const updatedFavorites = favorites.filter(fav => fav.id !== favoriteId);
+      localStorage.setItem(`favorites_${userId}`, JSON.stringify(updatedFavorites));
+      
+      // Rimuovi da Firestore
+      try {
+        await deleteDoc(doc(db, `users/${userId}/favorites`, favoriteId));
+        toast.success("Rimosso dai preferiti");
+      } catch (error) {
+        console.error("Errore nella rimozione da Firestore:", error);
+        // Non ripristiniamo l'interfaccia per semplicità dell'utente, ma logghiamo l'errore
+      }
+    } catch (error) {
+      console.error("Errore nella rimozione dai preferiti:", error);
+      toast.error("Impossibile rimuovere dai preferiti");
+      
+      // Ricarica i preferiti in caso di errore
+      const user = auth.currentUser;
+      if (user) {
+        const cachedFavorites = localStorage.getItem(`favorites_${user.uid}`);
+        if (cachedFavorites) {
+          setFavorites(JSON.parse(cachedFavorites));
+        }
+      }
+    }
+  };
+  
+  const navigateToRestaurant = (restaurantId: string) => {
+    if (restaurantId) {
+      navigate(`/restaurants/${restaurantId}`);
+    } else {
+      toast.error("Informazioni sul ristorante non disponibili");
+    }
+  };
+  
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center p-8 min-h-[60vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="mt-4 text-muted-foreground">Caricamento preferiti...</p>
+      </div>
     );
   }
-
+  
   return (
-    <Layout>
-      <div className="p-4 space-y-6">
-        <h1 className="text-2xl font-poppins font-bold text-primary">I miei preferiti</h1>
-        
-        {isOffline && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
-            <div className="flex items-center gap-2">
-              <WifiOff size={18} className="text-yellow-500" />
-              <p className="text-yellow-700 font-medium">Sei offline</p>
-            </div>
-            <p className="text-yellow-600 text-sm mt-1">
-              Non è possibile caricare i preferiti. Controlla la tua connessione internet.
-            </p>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="mt-2" 
-              onClick={handleRetry}
-            >
-              <RefreshCcw size={14} className="mr-1" />
-              Riprova
-            </Button>
-          </div>
-        )}
-        
-        <RestaurantList
-          restaurants={favorites}
-          isLoading={isLoading}
-          isOffline={isOffline}
-          loadingError={loadingError}
-          regionStatus={{ checked: true, inRegion: true }}
-          onToggleFavorite={handleToggleFavorite}
-          onRetry={handleRetry}
-        />
-        
-        {!isLoading && !isOffline && !loadingError && favorites.length === 0 && (
-          <div className="bg-secondary/20 rounded-lg p-8 text-center">
-            <Heart size={32} className="mx-auto mb-3 text-primary" />
-            <p className="text-gray-700 mb-4">Non hai ancora ristoranti preferiti</p>
-            <Button 
-              variant="outline" 
-              onClick={() => navigate('/')}
-              className="flex items-center gap-2"
-            >
-              <Search size={16} />
-              Esplora ristoranti
-            </Button>
-          </div>
-        )}
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-6">I miei preferiti</h1>
+      
+      {error && (
+        <div className="bg-destructive/10 text-destructive p-4 rounded-md mb-6">
+          {error}
+        </div>
+      )}
+      
+      {!loading && favorites.length === 0 && !error && (
+        <div className="text-center py-10">
+          <Star className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+          <h2 className="text-xl font-semibold mb-2">Nessun preferito</h2>
+          <p className="text-muted-foreground mb-6">
+            Non hai ancora aggiunto ristoranti ai preferiti.
+          </p>
+          <Button onClick={() => navigate('/restaurants')}>
+            Esplora ristoranti
+          </Button>
+        </div>
+      )}
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {favorites.map((favorite) => (
+          <Card key={favorite.id} className="overflow-hidden">
+            {favorite.image && (
+              <div className="aspect-video w-full overflow-hidden">
+                <img 
+                  src={favorite.image} 
+                  alt={favorite.name} 
+                  className="w-full h-full object-cover transition-transform hover:scale-105"
+                  onError={(e) => (e.currentTarget.src = '/placeholder-restaurant.jpg')}
+                />
+              </div>
+            )}
+            
+            <CardHeader>
+              <CardTitle>{favorite.name}</CardTitle>
+              {favorite.address && (
+                <CardDescription className="flex items-center">
+                  <MapPin className="h-4 w-4 mr-1" />
+                  {favorite.address}
+                </CardDescription>
+              )}
+            </CardHeader>
+            
+            <CardContent>
+              {favorite.description && (
+                <p className="text-sm text-muted-foreground line-clamp-3">
+                  {favorite.description}
+                </p>
+              )}
+            </CardContent>
+            
+            <CardFooter className="flex justify-between">
+              <Button 
+                variant="outline" 
+                onClick={() => favorite.restaurantId && navigateToRestaurant(favorite.restaurantId)}
+                disabled={!favorite.restaurantId}
+              >
+                Visualizza
+              </Button>
+              
+              <Button 
+                variant="ghost" 
+                className="text-destructive" 
+                onClick={() => removeFavorite(favorite.id)}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Rimuovi
+              </Button>
+            </CardFooter>
+          </Card>
+        ))}
       </div>
-    </Layout>
+    </div>
   );
 };
 
