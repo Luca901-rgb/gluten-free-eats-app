@@ -1,5 +1,5 @@
 
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { BookingProvider } from './context/BookingContext';
 import { TableProvider } from './context/TableContext';
 import { Toaster } from './components/ui/sonner';
@@ -27,7 +27,8 @@ function App() {
         <TableProvider>
           <AdminProvider>
             <Routes>
-              <Route path="/" element={<Index />} />
+              <Route path="/" element={<Navigate to="/login" replace />} />
+              <Route path="/home" element={<Index />} />
               <Route path="/search" element={<SearchPage />} />
               <Route path="/restaurant/:id" element={<RestaurantPage />} />
               <Route path="/restaurant-login" element={<RestaurantLogin />} />
