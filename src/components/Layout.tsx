@@ -23,6 +23,12 @@ const navigationItems = [
 const Layout: React.FC<LayoutProps> = ({ children, hideNavigation = false }) => {
   const location = useLocation();
   const isRestaurantView = location.pathname.includes('/restaurant-dashboard') || location.pathname.includes('/dashboard');
+  
+  // Pagine dove la navigazione NON deve essere mostrata
+  const hideNavOn = ['/login', '/register', '/restaurant-login', '/admin-login'];
+  
+  // Verifica se la navigazione deve essere nascosta nella pagina attuale
+  const shouldHideNav = hideNavigation || hideNavOn.some(path => location.pathname === path);
 
   return (
     <div className="flex flex-col min-h-screen w-full bg-green-white">
@@ -44,7 +50,7 @@ const Layout: React.FC<LayoutProps> = ({ children, hideNavigation = false }) => 
         {children}
       </div>
       
-      {!hideNavigation && (
+      {!shouldHideNav && (
         <nav className="fixed bottom-0 w-full bg-gradient-to-r from-green-dark/90 via-green/80 to-green-light/70 border-t h-16 flex justify-around items-center z-10 backdrop-blur-sm">
           {navigationItems.map((item) => (
             <Link

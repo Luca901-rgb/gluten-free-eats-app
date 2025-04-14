@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { collection, getDocs, query, where, deleteDoc, doc, getDoc } from 'firebase/firestore';
+import { collection, getDocs, query, where, deleteDoc, doc } from 'firebase/firestore';
 import { db, auth } from '../lib/firebase';
 import { toast } from 'sonner';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../components/ui/card";
@@ -93,13 +94,12 @@ const FavoritesPage: React.FC = () => {
     
     fetchFavorites();
     
-    // Timeout di sicurezza - se dopo 3 secondi ancora carica, forziamo la fine
+    // Timeout di sicurezza - se dopo 2 secondi ancora carica, forziamo la fine
     const safetyTimeout = setTimeout(() => {
       if (loading) {
         setLoading(false);
-        console.log("Timeout nel caricamento dei preferiti");
       }
-    }, 3000);
+    }, 2000);
     
     return () => clearTimeout(safetyTimeout);
   }, []);
@@ -137,7 +137,7 @@ const FavoritesPage: React.FC = () => {
   
   const navigateToRestaurant = (restaurantId: string) => {
     if (restaurantId) {
-      navigate(`/restaurants/${restaurantId}`);
+      navigate(`/restaurant/${restaurantId}`);
     } else {
       toast.error("Informazioni sul ristorante non disponibili");
     }
@@ -199,7 +199,7 @@ const FavoritesPage: React.FC = () => {
             <p className="text-muted-foreground mb-6">
               Non hai ancora aggiunto ristoranti ai preferiti.
             </p>
-            <Button onClick={() => navigate('/restaurants')}>
+            <Button onClick={() => navigate('/search')}>
               Esplora ristoranti
             </Button>
           </div>
@@ -215,7 +215,7 @@ const FavoritesPage: React.FC = () => {
                     alt={favorite.name} 
                     className="w-full h-full object-cover transition-transform hover:scale-105"
                     onError={(e) => {
-                      (e.target as HTMLImageElement).src = '/placeholder-restaurant.jpg';
+                      (e.currentTarget.src as string) = '/placeholder-restaurant.jpg';
                     }}
                   />
                 </div>

@@ -6,7 +6,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar } from '@/components/ui/avatar';
-import { Loader2, LogOut, Settings, User, Shield, Info } from 'lucide-react';
+import { Loader2, LogOut, Settings, User, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
 import Layout from '@/components/Layout';
@@ -51,9 +51,6 @@ const ProfilePage: React.FC = () => {
               ...userDoc.data()
             };
           }
-          
-          // Salva in cache
-          localStorage.setItem('user', JSON.stringify(userData));
         } catch (firestoreError) {
           console.error("Errore nel caricamento dati da Firestore:", firestoreError);
           // Non blocchiamo il flusso, usiamo i dati di base disponibili
@@ -64,22 +61,18 @@ const ProfilePage: React.FC = () => {
         console.error("Errore nel caricamento del profilo:", err);
         setError("Si è verificato un errore nel caricamento del profilo");
       } finally {
-        // Terminiamo lo stato di caricamento anche in caso di errore
         setLoading(false);
       }
     };
     
     loadUserProfile();
     
-    // Timeout di sicurezza - se dopo 3 secondi ancora carica, forziamo la fine
+    // Timeout di sicurezza - se dopo 2 secondi ancora carica, forziamo la fine
     const safetyTimeout = setTimeout(() => {
       if (loading) {
         setLoading(false);
-        if (!user) {
-          setError("Timeout nel caricamento del profilo");
-        }
       }
-    }, 3000); // Ridotto da 5 a 3 secondi
+    }, 2000);
     
     return () => clearTimeout(safetyTimeout);
   }, [navigate]);
@@ -95,7 +88,6 @@ const ProfilePage: React.FC = () => {
     }
   };
   
-  // Se il caricamento dura più di 3 secondi, mostriamo uno skeleton
   if (loading) {
     return (
       <Layout>
@@ -117,19 +109,6 @@ const ProfilePage: React.FC = () => {
             <Skeleton className="h-10 w-full" />
             <Skeleton className="h-10 w-full mt-6" />
           </div>
-        </div>
-      </Layout>
-    );
-  }
-  
-  if (error && !user) {
-    return (
-      <Layout>
-        <div className="flex flex-col items-center justify-center min-h-[80vh] p-4">
-          <Info className="h-12 w-12 text-destructive mb-4" />
-          <h2 className="text-xl font-semibold mb-2">Errore</h2>
-          <p className="text-muted-foreground mb-4">{error}</p>
-          <Button onClick={() => navigate('/login')}>Vai al login</Button>
         </div>
       </Layout>
     );
@@ -176,7 +155,7 @@ const ProfilePage: React.FC = () => {
           <Button 
             variant="outline" 
             className="flex justify-start items-center"
-            onClick={() => navigate('/admin')}
+            onClick={() => navigate('/admin-dashboard')}
           >
             <Shield className="h-5 w-5 mr-2" />
             Area amministratore
