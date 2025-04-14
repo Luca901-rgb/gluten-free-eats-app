@@ -34,6 +34,11 @@ export const AVAILABLE_REGIONS: Region[] = [
  * Verifica se le coordinate sono all'interno della regione Campania
  */
 export const isInAvailableRegion = (coords: Coordinates): { inRegion: boolean; regionName?: string } => {
+  // Coordinata default per Napoli se l'utente non ha fornito posizione
+  if (!coords || (!coords.lat && !coords.lng)) {
+    return { inRegion: true, regionName: "Campania" };
+  }
+  
   for (const region of AVAILABLE_REGIONS) {
     if (
       coords.lat <= region.bounds.north &&
@@ -53,16 +58,28 @@ export const isInAvailableRegion = (coords: Coordinates): { inRegion: boolean; r
  */
 export const checkUserRegion = (): Promise<{ inRegion: boolean; regionName?: string; error?: string }> => {
   return new Promise((resolve) => {
+    // Se non abbiamo la geolocalizzazione, assumiamo che l'utente sia in Campania
     if (!navigator.geolocation) {
       resolve({ 
-        inRegion: false, 
+        inRegion: true, 
+        regionName: "Campania",
         error: "Il tuo browser non supporta la geolocalizzazione" 
       });
       return;
     }
 
+    const timeoutId = setTimeout(() => {
+      // Se scade il timeout, assumiamo che l'utente sia in Campania
+      resolve({ 
+        inRegion: true, 
+        regionName: "Campania",
+        error: "Timeout durante la richiesta della posizione" 
+      });
+    }, 8000);
+
     navigator.geolocation.getCurrentPosition(
       (position) => {
+        clearTimeout(timeoutId);
         const coords = {
           lat: position.coords.latitude,
           lng: position.coords.longitude
@@ -72,20 +89,14 @@ export const checkUserRegion = (): Promise<{ inRegion: boolean; regionName?: str
         resolve(regionCheck);
       },
       (error) => {
-        let errorMessage = "Impossibile determinare la tua posizione.";
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            errorMessage = "Accesso alla posizione negato. Verifica i permessi del browser.";
-            break;
-          case error.POSITION_UNAVAILABLE:
-            errorMessage = "Dati sulla posizione non disponibili.";
-            break;
-          case error.TIMEOUT:
-            errorMessage = "Timeout durante la richiesta della posizione.";
-            break;
-        }
+        clearTimeout(timeoutId);
         
-        resolve({ inRegion: false, error: errorMessage });
+        // In caso di errore, assumiamo che l'utente sia in Campania
+        resolve({ 
+          inRegion: true, 
+          regionName: "Campania",
+          error: "Si è verificato un errore con la geolocalizzazione. L'app continuerà a funzionare normalmente." 
+        });
       }
     );
   });

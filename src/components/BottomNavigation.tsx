@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Home, Search, Heart, Calendar, User } from 'lucide-react';
@@ -77,6 +78,7 @@ const BottomNavigation: React.FC = () => {
           <span>Profilo</span>
         </Link>
       </div>
+      <div className="h-safe-area-bottom bg-white dark:bg-gray-900"></div>
     </div>
   );
 };

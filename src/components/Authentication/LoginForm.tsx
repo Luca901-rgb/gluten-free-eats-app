@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -64,10 +63,9 @@ const LoginForm: React.FC<LoginFormProps> = ({ initialUserType = 'customer' }) =
     toast.loading("Accesso con Google in corso...");
     
     try {
-      console.log("Avvio autenticazione Google dal form di login");
       const user = await signInWithGoogle();
-      console.log("Autenticazione Google completata:", user);
       
+      // Verifica che l'utente sia valido
       if (!user || !user.uid) {
         throw new Error("Dati utente non validi o incompleti");
       }
@@ -79,15 +77,8 @@ const LoginForm: React.FC<LoginFormProps> = ({ initialUserType = 'customer' }) =
       localStorage.setItem('userName', user.displayName || '');
       localStorage.setItem('userId', user.uid);
       
-      // Verifica se l'utente è un utente di sviluppo
-      const isDevelopmentUser = user.uid.startsWith('dev-');
-      if (isDevelopmentUser) {
-        toast.dismiss();
-        toast.success("Accesso effettuato in modalità sviluppo (dominio non autorizzato in Firebase)");
-      } else {
-        toast.dismiss();
-        toast.success("Accesso con Google effettuato con successo");
-      }
+      toast.dismiss();
+      toast.success("Accesso con Google effettuato con successo");
       
       // Reindirizza in base al tipo di utente
       if (userType === 'restaurant') {
@@ -98,7 +89,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ initialUserType = 'customer' }) =
     } catch (error: any) {
       console.error("Errore durante l'accesso con Google:", error);
       toast.dismiss();
-      toast.error(`Errore durante l'accesso con Google: ${error.message}`);
+      toast.error(`Errore: ${error.message}`);
     } finally {
       setIsLoading(false);
     }

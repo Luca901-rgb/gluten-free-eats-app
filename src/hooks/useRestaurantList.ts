@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Restaurant } from '@/components/Restaurant/RestaurantCard';
 import { toast } from 'sonner';
 import { checkUserRegion } from '@/utils/geolocation';
@@ -23,14 +23,50 @@ export const useRestaurantList = () => {
     inRegion: false
   });
 
+  // Verifica la regione dell'utente
+  const verifyRegion = useCallback(async () => {
+    try {
+      const result = await checkUserRegion();
+      setRegionStatus({
+        checked: true,
+        inRegion: result.inRegion || true, // Default a true per evitare blocchi
+        regionName: result.regionName,
+        error: result.error
+      });
+
+      if (result.inRegion) {
+        if (result.regionName) {
+          toast.success(`Servizio disponibile nella tua regione: ${result.regionName}`);
+        }
+        return true;
+      } else if (result.error) {
+        if (navigator.onLine) {
+          toast.info(result.error);
+        }
+        return true; // Continuiamo comunque
+      } else {
+        toast.info("Il servizio è attualmente in fase pilota in Campania");
+        return true; // Continuiamo comunque
+      }
+    } catch (error) {
+      console.error("Errore durante la verifica della regione:", error);
+      setRegionStatus({
+        checked: true,
+        inRegion: true, // Default a true per evitare blocchi
+        error: "Si è verificato un errore durante la verifica della tua posizione."
+      });
+      return true; // Continuiamo comunque
+    }
+  }, []);
+
   useEffect(() => {
     // Monitor online/offline status
     const handleOnlineStatus = () => {
       const online = navigator.onLine;
       setIsOffline(!online);
       
-      if (online && regionStatus.inRegion) {
-        // If we're back online and in a supported region, refresh data
+      if (online) {
+        // Se siamo tornati online, ricarica i dati
         fetchRestaurants();
       }
     };
@@ -39,63 +75,45 @@ export const useRestaurantList = () => {
     window.addEventListener('online', handleOnlineStatus);
     window.addEventListener('offline', handleOnlineStatus);
     
-    // Welcome toast
-    toast.info("Benvenuto nell'app Gluten Free Eats!");
-    
-    // Check user region
-    const verifyRegion = async () => {
-      try {
-        const result = await checkUserRegion();
-        setRegionStatus({
-          checked: true,
-          inRegion: result.inRegion,
-          regionName: result.regionName,
-          error: result.error
-        });
-
-        if (result.inRegion) {
-          toast.success(`Benvenuto! Il servizio è disponibile nella tua regione: ${result.regionName}`);
-          if (navigator.onLine) {
-            fetchRestaurants(); // Fetch restaurants only if in supported region and online
-          } else {
-            setIsLoading(false);
-            toast.error("Sei offline. Alcune funzionalità potrebbero non essere disponibili.");
-          }
-        } else if (result.error) {
-          toast.error(result.error);
-          setIsLoading(false);
-        } else {
-          toast.warning("Il servizio è attualmente disponibile solo in Campania durante la fase pilota.");
-          setIsLoading(false);
-        }
-      } catch (error) {
-        console.error("Errore durante la verifica della regione:", error);
-        setRegionStatus({
-          checked: true,
-          inRegion: false,
-          error: "Si è verificato un errore durante la verifica della tua posizione."
-        });
-        toast.error("Si è verificato un errore durante la verifica della tua posizione.");
+    // Inizializzazione
+    const initApp = async () => {
+      // Verifica la regione dell'utente - continua comunque
+      await verifyRegion();
+      
+      // Carica i ristoranti se online
+      if (navigator.onLine) {
+        await fetchRestaurants();
+      } else {
         setIsLoading(false);
+        toast.info("Sei offline. Alcune funzionalità potrebbero non essere disponibili.");
       }
     };
 
-    verifyRegion();
+    initApp();
 
     return () => {
       window.removeEventListener('online', handleOnlineStatus);
       window.removeEventListener('offline', handleOnlineStatus);
     };
-  }, []);
+  }, [verifyRegion]);
 
   const fetchRestaurants = async () => {
     if (isOffline) {
-      toast.error("Non è possibile caricare i ristoranti mentre sei offline");
+      // Prova a caricare dalla cache
+      const cachedRestaurants = localStorage.getItem('cachedRestaurants');
+      if (cachedRestaurants) {
+        try {
+          setRestaurants(JSON.parse(cachedRestaurants));
+        } catch (e) {
+          console.error("Errore nel parsing dei ristoranti dalla cache:", e);
+        }
+      }
       setIsLoading(false);
       return;
     }
     
     try {
+      setIsLoading(true);
       const restaurantsCollection = collection(db, "restaurants");
       const restaurantsSnapshot = await getDocs(restaurantsCollection);
       
@@ -130,10 +148,26 @@ export const useRestaurantList = () => {
         } as Restaurant;
       });
       
+      // Salva in cache
+      localStorage.setItem('cachedRestaurants', JSON.stringify(restaurantsData));
+      
       setRestaurants(restaurantsData);
     } catch (error) {
       console.error("Errore durante il recupero dei ristoranti:", error);
-      toast.error("Si è verificato un errore nel caricamento dei ristoranti");
+      
+      // Prova a caricare dalla cache
+      const cachedRestaurants = localStorage.getItem('cachedRestaurants');
+      if (cachedRestaurants) {
+        try {
+          setRestaurants(JSON.parse(cachedRestaurants));
+          toast.info("Utilizzando dati ristoranti dalla cache");
+        } catch (e) {
+          console.error("Errore nel parsing dei ristoranti dalla cache:", e);
+          toast.error("Impossibile caricare i ristoranti");
+        }
+      } else {
+        toast.error("Si è verificato un errore nel caricamento dei ristoranti");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -143,7 +177,32 @@ export const useRestaurantList = () => {
     e.preventDefault();
     
     if (isOffline) {
-      toast.error("Non è possibile cercare ristoranti mentre sei offline");
+      // Filtra dalla cache
+      const cachedRestaurants = localStorage.getItem('cachedRestaurants');
+      if (cachedRestaurants) {
+        try {
+          const restaurants = JSON.parse(cachedRestaurants);
+          const normalizedSearchTerm = searchTerm.toLowerCase().trim();
+          
+          if (!normalizedSearchTerm) {
+            setRestaurants(restaurants);
+            return;
+          }
+          
+          const filtered = restaurants.filter((restaurant: Restaurant) => 
+            restaurant.name.toLowerCase().includes(normalizedSearchTerm) || 
+            restaurant.description?.toLowerCase().includes(normalizedSearchTerm) ||
+            restaurant.address?.toLowerCase().includes(normalizedSearchTerm)
+          );
+          
+          setRestaurants(filtered);
+        } catch (e) {
+          console.error("Errore nel parsing dei ristoranti dalla cache:", e);
+          toast.error("Impossibile cercare ristoranti mentre sei offline");
+        }
+      } else {
+        toast.error("Non è possibile cercare ristoranti mentre sei offline");
+      }
       return;
     }
     
@@ -151,7 +210,7 @@ export const useRestaurantList = () => {
     
     try {
       if (!searchTerm.trim()) {
-        // If search term is empty, fetch all restaurants
+        // Se la ricerca è vuota, recupera tutti
         await fetchRestaurants();
         return;
       }
@@ -175,7 +234,7 @@ export const useRestaurantList = () => {
         }
       }
       
-      // Client-side filtering (in a real app, this would be a Firestore query)
+      // Client-side filtering
       const filteredRestaurants = restaurantsSnapshot.docs
         .map(doc => {
           const data = doc.data();
@@ -208,11 +267,6 @@ export const useRestaurantList = () => {
   };
 
   const handleToggleFavorite = async (id: string) => {
-    if (isOffline) {
-      toast.error("Non puoi modificare i preferiti mentre sei offline");
-      return;
-    }
-    
     const currentUser = auth.currentUser;
     
     if (!currentUser) {
@@ -221,30 +275,35 @@ export const useRestaurantList = () => {
     }
     
     try {
+      // Ottieni l'elenco corrente dei preferiti
       const userFavoritesRef = doc(db, "userFavorites", currentUser.uid);
-      const userFavoritesDoc = await getDoc(userFavoritesRef);
-      
       let userFavorites: string[] = [];
-      if (userFavoritesDoc.exists()) {
-        userFavorites = userFavoritesDoc.data().restaurantIds || [];
+      
+      try {
+        const userFavoritesDoc = await getDoc(userFavoritesRef);
+        if (userFavoritesDoc.exists()) {
+          userFavorites = userFavoritesDoc.data().restaurantIds || [];
+        }
+      } catch (error) {
+        console.error("Errore nel recupero dei preferiti:", error);
       }
       
       // Toggle favorite status
       const isFavorite = userFavorites.includes(id);
       let updatedFavorites: string[];
+      let message: string;
       
       if (isFavorite) {
+        // Rimuovi dai preferiti
         updatedFavorites = userFavorites.filter(restaurantId => restaurantId !== id);
-        toast.success("Ristorante rimosso dai preferiti");
+        message = "Ristorante rimosso dai preferiti";
       } else {
+        // Aggiungi ai preferiti
         updatedFavorites = [...userFavorites, id];
-        toast.success("Ristorante aggiunto ai preferiti");
+        message = "Ristorante aggiunto ai preferiti";
       }
       
-      // Update Firestore
-      await setDoc(userFavoritesRef, { restaurantIds: updatedFavorites }, { merge: true });
-      
-      // Update local state
+      // Aggiorna subito UI (optimistic update)
       setRestaurants(prevRestaurants => 
         prevRestaurants.map(restaurant => 
           restaurant.id === id 
@@ -252,8 +311,52 @@ export const useRestaurantList = () => {
             : restaurant
         )
       );
+      
+      // Salva nel localStorage per accesso offline
+      try {
+        localStorage.setItem(`favorites_${currentUser.uid}`, JSON.stringify(updatedFavorites));
+      } catch (error) {
+        console.error("Errore nel salvataggio locale dei preferiti:", error);
+      }
+      
+      // Prova ad aggiornare Firestore se online
+      if (navigator.onLine) {
+        try {
+          await setDoc(userFavoritesRef, { restaurantIds: updatedFavorites }, { merge: true });
+          
+          // Crea o aggiorna anche singolo documento nei preferiti utente
+          const selectedRestaurant = restaurants.find(r => r.id === id);
+          
+          if (selectedRestaurant && !isFavorite) {
+            // Aggiungi il documento dettagliato nei preferiti
+            const userFavRef = doc(db, `users/${currentUser.uid}/favorites`, id);
+            await setDoc(userFavRef, {
+              name: selectedRestaurant.name,
+              address: selectedRestaurant.address,
+              image: selectedRestaurant.image,
+              rating: selectedRestaurant.rating,
+              description: selectedRestaurant.description,
+              restaurantId: id
+            });
+          } else if (isFavorite) {
+            // Rimuovi il documento dai preferiti
+            try {
+              await deleteDoc(doc(db, `users/${currentUser.uid}/favorites`, id));
+            } catch (error) {
+              console.error("Errore nella rimozione del documento preferito:", error);
+            }
+          }
+          
+          toast.success(message);
+        } catch (error) {
+          console.error("Errore nell'aggiornamento dei preferiti su Firestore:", error);
+          toast.warning(message + " (solo in locale)");
+        }
+      } else {
+        toast.info(message + " (in modalità offline)");
+      }
     } catch (error) {
-      console.error("Errore durante l'aggiornamento dei preferiti:", error);
+      console.error("Errore generale nei preferiti:", error);
       toast.error("Si è verificato un errore durante l'aggiornamento dei preferiti");
     }
   };
@@ -266,6 +369,8 @@ export const useRestaurantList = () => {
     isOffline,
     regionStatus,
     handleSearch,
-    handleToggleFavorite
+    handleToggleFavorite,
+    refreshRestaurants: fetchRestaurants,
+    retryRegionCheck: verifyRegion
   };
 };

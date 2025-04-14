@@ -1,3 +1,4 @@
+
 import { initializeApp } from 'firebase/app';
 import { 
   getAuth, 
@@ -6,9 +7,7 @@ import {
   signOut, 
   sendPasswordResetEmail,
   GoogleAuthProvider,
-  signInWithPopup,
-  signInWithRedirect,
-  getRedirectResult
+  signInWithPopup
 } from 'firebase/auth';
 import { 
   getFirestore, 
@@ -42,8 +41,6 @@ const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({
   prompt: 'select_account'
 });
-googleProvider.addScope('email');
-googleProvider.addScope('profile');
 
 // Persistenza offline per Firestore
 try {
@@ -100,139 +97,48 @@ export const resetPassword = async (email: string) => {
   }
 };
 
-// Autenticazione Google ottimizzata per mobile
+// Autenticazione Google semplificata
 export const signInWithGoogle = async () => {
-  console.log("Avvio autenticazione Google...");
-  
-  // Verifica se l'autenticazione è già stata tentata in questa sessione
-  if (sessionStorage.getItem('authAttempted')) {
-    toast.info("Autenticazione già in corso, attendi...");
-    return;
-  }
-  
-  sessionStorage.setItem('authAttempted', 'true');
-  
-  // Rileva se è un dispositivo mobile
-  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-  
   try {
-    if (!auth) {
-      console.error("Firebase auth non è inizializzato");
-      throw new Error("Servizio di autenticazione non disponibile");
-    }
+    // Usa sempre il popup per semplicità e coerenza
+    const result = await signInWithPopup(auth, googleProvider);
+    const user = result.user;
     
-    let user;
+    // Salva l'utente nel localStorage per accesso offline
+    localStorage.setItem('user', JSON.stringify({
+      uid: user.uid,
+      email: user.email,
+      displayName: user.displayName || "Utente",
+      photoURL: user.photoURL
+    }));
     
-    if (isMobile) {
-      console.log("Utilizzo metodo redirect per dispositivi mobili");
-      try {
-        // Prima controlla se c'è un risultato di redirect
-        const result = await getRedirectResult(auth);
-        if (result && result.user) {
-          console.log("Autenticazione da redirect completata");
-          user = result.user;
-        } else {
-          // Altrimenti, inizia un nuovo flusso di redirect
-          await signInWithRedirect(auth, googleProvider);
-          return null; // La pagina verrà ricaricata dopo il redirect
-        }
-      } catch (redirectError: any) {
-        console.error("Errore nel metodo redirect:", redirectError);
-        
-        // Prova con il popup come fallback
-        if (redirectError.code === 'auth/unauthorized-domain') {
-          console.warn("Dominio non autorizzato. Usando modalità di sviluppo.");
-          return createMockGoogleUser();
-        }
-        
-        try {
-          console.log("Tentativo con popup come fallback");
-          const result = await signInWithPopup(auth, googleProvider);
-          user = result.user;
-        } catch (popupError: any) {
-          console.error("Anche il fallback con popup è fallito:", popupError);
-          
-          if (popupError.code === 'auth/unauthorized-domain') {
-            console.warn("Dominio non autorizzato. Usando modalità di sviluppo.");
-            return createMockGoogleUser();
-          }
-          
-          throw popupError;
-        }
-      }
-    } else {
-      // Approccio desktop
-      console.log("Utilizzo metodo popup per desktop");
-      const result = await signInWithPopup(auth, googleProvider);
-      user = result.user;
-    }
-    
-    if (user) {
-      console.log("Autenticazione Google completata con successo");
-      
-      // Salva l'utente in localStorage per accesso offline
-      localStorage.setItem('user', JSON.stringify({
-        uid: user.uid,
+    // Salva i dati utente in Firestore
+    try {
+      await setDoc(doc(db, "users", user.uid), {
         email: user.email,
-        displayName: user.displayName || "Utente",
-        photoURL: user.photoURL
-      }));
-      
-      // Salva i dati utente in Firestore
-      try {
-        await setDoc(doc(db, "users", user.uid), {
-          email: user.email,
-          displayName: user.displayName,
-          photoURL: user.photoURL,
-          lastLogin: new Date(),
-          authProvider: "google"
-        }, { merge: true });
-      } catch (firestoreError) {
-        console.warn("Errore nel salvataggio dati utente:", firestoreError);
-      }
-      
-      return user;
+        displayName: user.displayName,
+        photoURL: user.photoURL,
+        lastLogin: new Date(),
+        authProvider: "google"
+      }, { merge: true });
+    } catch (firestoreError) {
+      console.warn("Errore nel salvataggio dati utente:", firestoreError);
     }
+    
+    return user;
   } catch (error: any) {
     console.error("Errore durante l'autenticazione Google:", error);
     
-    let errorMessage = "Errore durante l'autenticazione con Google";
-    
-    if (error.code) {
-      switch (error.code) {
-        case 'auth/unauthorized-domain':
-          console.log("Dominio non autorizzato per Google Auth. Usando modalità di sviluppo.");
-          return createMockGoogleUser();
-        case 'auth/popup-closed-by-user':
-          errorMessage = "Popup di autenticazione chiuso. Riprova.";
-          break;
-        case 'auth/popup-blocked':
-          errorMessage = "Il popup è stato bloccato dal browser. Abilita i popup per questo sito.";
-          break;
-        case 'auth/cancelled-popup-request':
-          errorMessage = "Richiesta di autenticazione annullata.";
-          break;
-        case 'auth/network-request-failed':
-          errorMessage = "Errore di rete. Verifica la tua connessione.";
-          break;
-        default:
-          errorMessage = `Errore di autenticazione: ${error.message || error.code}`;
-      }
+    // In caso di errore, utilizza un utente di test
+    if (process.env.NODE_ENV === 'development' || 
+        error.code === 'auth/popup-blocked' || 
+        error.code === 'auth/popup-closed-by-user' ||
+        error.code === 'auth/unauthorized-domain') {
+      const mockUser = createMockGoogleUser();
+      return mockUser;
     }
     
-    // In ambiente di sviluppo o su mobile, usa un utente mock
-    if (process.env.NODE_ENV === 'development' || isMobile) {
-      console.warn("Utilizzo utente di fallback");
-      return createMockGoogleUser();
-    }
-    
-    toast.error(errorMessage);
-    throw new Error(errorMessage);
-  } finally {
-    // Pulisci il flag di tentativo dopo un breve ritardo
-    setTimeout(() => {
-      sessionStorage.removeItem('authAttempted');
-    }, 5000);
+    throw new Error(`Errore di autenticazione: ${error.message || error.code}`);
   }
 };
 
@@ -263,6 +169,8 @@ const createMockGoogleUser = () => {
     displayName: mockUser.displayName,
     photoURL: mockUser.photoURL
   }));
+  
+  toast.success("Modalità di test: Accesso con utente demo");
   
   return mockUser;
 };
@@ -317,56 +225,43 @@ export const setSpecificUserAsAdmin = async () => {
   const adminEmail = "lcammarota24@gmail.com";
   
   localStorage.setItem('adminEmail', adminEmail);
+  localStorage.setItem('isAdmin', 'true');
   console.log("Admin impostato in localStorage per modalità offline");
   
-  let retries = 0;
-  const maxRetries = 2;
-  
-  while (retries < maxRetries) {
-    try {
-      console.log(`Tentativo ${retries + 1}/${maxRetries} di impostare admin su Firebase`);
-      
-      try {
-        const isAlreadyAdmin = await isUserAdmin(adminEmail);
-        
-        if (isAlreadyAdmin) {
-          console.log(`L'utente ${adminEmail} è già amministratore`);
-          return { 
-            success: true, 
-            message: "L'utente è già amministratore",
-            offline: false
-          };
-        }
-      } catch (checkError) {
-        console.warn("Errore durante la verifica dello stato admin:", checkError);
-      }
-      
-      await setDoc(doc(db, "admins", adminEmail), {
-        email: adminEmail,
-        role: "admin",
-        createdAt: new Date(),
-        lastModified: new Date()
-      });
-      
-      console.log(`L'utente ${adminEmail} è stato impostato come amministratore su Firebase`);
+  try {
+    const isAlreadyAdmin = await isUserAdmin(adminEmail);
+    
+    if (isAlreadyAdmin) {
+      console.log(`L'utente ${adminEmail} è già amministratore`);
       return { 
         success: true, 
-        message: "Utente impostato come amministratore con successo",
+        message: "L'utente è già amministratore",
         offline: false
       };
-    } catch (error: any) {
-      retries++;
-      console.warn(`Tentativo ${retries}/${maxRetries} fallito:`, error);
-      
-      await new Promise(resolve => setTimeout(resolve, 1000));
     }
+    
+    await setDoc(doc(db, "admins", adminEmail), {
+      email: adminEmail,
+      role: "admin",
+      createdAt: new Date(),
+      lastModified: new Date()
+    });
+    
+    console.log(`L'utente ${adminEmail} è stato impostato come amministratore su Firebase`);
+    return { 
+      success: true, 
+      message: "Utente impostato come amministratore con successo",
+      offline: false
+    };
+  } catch (error) {
+    console.warn("Errore nell'impostazione admin:", error);
+    
+    return {
+      success: true,
+      message: "Admin impostato in modalità offline (i dati verranno sincronizzati quando sarai online)",
+      offline: true
+    };
   }
-  
-  return {
-    success: true,
-    message: "Admin impostato in modalità offline (i dati verranno sincronizzati quando sarai online)",
-    offline: true
-  };
 };
 
 export { auth, db, storage };

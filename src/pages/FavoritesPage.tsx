@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { collection, getDocs, query, where, deleteDoc, doc } from 'firebase/firestore';
+import { collection, getDocs, query, where, deleteDoc, doc, getDoc } from 'firebase/firestore';
 import { db, auth } from '../lib/firebase';
 import { toast } from 'sonner';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../components/ui/card";
@@ -42,51 +42,52 @@ const FavoritesPage: React.FC = () => {
         
         const userId = user.uid;
         
-        // Verifica se ci sono preferiti salvati localmente
-        const cachedFavorites = localStorage.getItem(`favorites_${userId}`);
-        let favoritesData: Favorite[] = [];
-        
-        if (cachedFavorites) {
-          try {
-            const parsedFavorites = JSON.parse(cachedFavorites);
-            if (Array.isArray(parsedFavorites)) {
-              favoritesData = parsedFavorites;
-              console.log("Caricati preferiti dalla cache locale:", favoritesData.length);
-            }
-          } catch (e) {
-            console.error("Errore nel parsing dei preferiti dalla cache:", e);
-          }
-        }
-        
         // Prova a recuperare i preferiti da Firestore
         try {
+          // Ottieni preferiti dall'utente corrente
           const favoritesRef = collection(db, `users/${userId}/favorites`);
           const favoritesSnapshot = await getDocs(favoritesRef);
           
           if (!favoritesSnapshot.empty) {
-            favoritesData = favoritesSnapshot.docs.map(doc => ({
+            const favoritesData = favoritesSnapshot.docs.map(doc => ({
               id: doc.id,
               ...doc.data()
             })) as Favorite[];
             
             // Aggiorna la cache locale
             localStorage.setItem(`favorites_${userId}`, JSON.stringify(favoritesData));
-            console.log("Preferiti caricati da Firestore e salvati in cache:", favoritesData.length);
-          } else if (favoritesData.length === 0) {
+            console.log("Preferiti caricati da Firestore:", favoritesData.length);
+            setFavorites(favoritesData);
+          } else {
             console.log("Nessun preferito trovato in Firestore");
+            setFavorites([]);
           }
         } catch (firestoreError) {
           console.error("Errore nel caricamento dei preferiti da Firestore:", firestoreError);
-          // Se abbiamo dati dalla cache, continuiamo a usarli
-          if (favoritesData.length === 0) {
-            setError("Impossibile caricare i preferiti. Verifica la tua connessione.");
+          
+          // Prova a caricare dalla cache locale
+          const cachedFavorites = localStorage.getItem(`favorites_${userId}`);
+          if (cachedFavorites) {
+            try {
+              const parsedFavorites = JSON.parse(cachedFavorites);
+              if (Array.isArray(parsedFavorites)) {
+                setFavorites(parsedFavorites);
+                console.log("Caricati preferiti dalla cache locale:", parsedFavorites.length);
+              }
+            } catch (e) {
+              console.error("Errore nel parsing dei preferiti dalla cache:", e);
+              setFavorites([]);
+            }
+          } else {
+            setFavorites([]);
           }
+          
+          setError("Impossibile caricare i preferiti da Firestore. Verifica la tua connessione.");
         }
-        
-        setFavorites(favoritesData);
       } catch (err) {
         console.error("Errore generale nel caricamento dei preferiti:", err);
         setError("Si è verificato un errore nel caricamento dei preferiti.");
+        setFavorites([]);
       } finally {
         setLoading(false);
       }
@@ -125,20 +126,11 @@ const FavoritesPage: React.FC = () => {
         toast.success("Rimosso dai preferiti");
       } catch (error) {
         console.error("Errore nella rimozione da Firestore:", error);
-        // Non ripristiniamo l'interfaccia per semplicità dell'utente, ma logghiamo l'errore
+        toast.error("Impossibile rimuovere dai preferiti online");
       }
     } catch (error) {
       console.error("Errore nella rimozione dai preferiti:", error);
       toast.error("Impossibile rimuovere dai preferiti");
-      
-      // Ricarica i preferiti in caso di errore
-      const user = auth.currentUser;
-      if (user) {
-        const cachedFavorites = localStorage.getItem(`favorites_${user.uid}`);
-        if (cachedFavorites) {
-          setFavorites(JSON.parse(cachedFavorites));
-        }
-      }
     }
   };
   

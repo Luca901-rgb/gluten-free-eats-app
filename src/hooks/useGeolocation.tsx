@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 
@@ -11,7 +12,7 @@ export function useGeolocation() {
   const [state, setState] = useState<GeolocationState>({
     location: null,
     error: null,
-    loading: true
+    loading: false
   });
   
   const [permissionAsked, setPermissionAsked] = useState(false);
@@ -26,7 +27,7 @@ export function useGeolocation() {
   }, []);
 
   useEffect(() => {
-    // Non chiedere i permessi immediatamente all'avvio dell'app
+    // Controlla se l'autorizzazione è già stata richiesta
     if (sessionStorage.getItem('geolocationPermissionAsked')) {
       setPermissionAsked(true);
     }
@@ -75,7 +76,7 @@ export function useGeolocation() {
         localStorage.setItem('locationTimestamp', Date.now().toString());
       },
       (error) => {
-        console.error("Errore geolocalizzazione:", error.message);
+        console.error("Errore geolocalizzazione:", error);
         
         // Se l'errore è già stato dismesso in questa sessione, non mostrarlo di nuovo
         if (dismissedError) {
@@ -107,13 +108,13 @@ export function useGeolocation() {
         
         switch(error.code) {
           case error.PERMISSION_DENIED:
-            errorMsg = "Accesso alla posizione negato. Tocca per chiudere.";
+            errorMsg = "Accesso alla posizione negato. Verifica i permessi del browser.";
             break;
           case error.POSITION_UNAVAILABLE:
-            errorMsg = "Posizione non disponibile. Tocca per chiudere.";
+            errorMsg = "Posizione non disponibile.";
             break;
           case error.TIMEOUT:
-            errorMsg = "Richiesta posizione scaduta. Tocca per chiudere.";
+            errorMsg = "Richiesta posizione scaduta.";
             break;
         }
         
