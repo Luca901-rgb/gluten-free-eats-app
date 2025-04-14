@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { collection, getDocs, query, where, deleteDoc, doc, getDoc } from 'firebase/firestore';
@@ -6,7 +7,7 @@ import { toast } from 'sonner';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Loader2, Star, MapPin, Trash2 } from 'lucide-react';
-import BottomNavigation from '../components/BottomNavigation';
+import { Skeleton } from "@/components/ui/skeleton";
 
 // Tipo per un elemento preferito
 interface Favorite {
@@ -81,12 +82,9 @@ const FavoritesPage: React.FC = () => {
           } else {
             setFavorites([]);
           }
-          
-          setError("Impossibile caricare i preferiti da Firestore. Verifica la tua connessione.");
         }
       } catch (err) {
         console.error("Errore generale nel caricamento dei preferiti:", err);
-        setError("Si è verificato un errore nel caricamento dei preferiti.");
         setFavorites([]);
       } finally {
         setLoading(false);
@@ -95,12 +93,15 @@ const FavoritesPage: React.FC = () => {
     
     fetchFavorites();
     
-    // Aggiorna i preferiti quando l'utente cambia
-    const unsubscribe = auth.onAuthStateChanged(() => {
-      fetchFavorites();
-    });
+    // Timeout di sicurezza - se dopo 5 secondi ancora carica, forziamo la fine
+    const safetyTimeout = setTimeout(() => {
+      if (loading) {
+        setLoading(false);
+        console.log("Timeout nel caricamento dei preferiti");
+      }
+    }, 5000);
     
-    return () => unsubscribe();
+    return () => clearTimeout(safetyTimeout);
   }, []);
   
   const removeFavorite = async (favoriteId: string) => {
@@ -142,15 +143,30 @@ const FavoritesPage: React.FC = () => {
     }
   };
   
+  // Se il caricamento dura più di 1 secondo, mostriamo uno skeleton
   if (loading) {
     return (
       <div className="container mx-auto p-4 min-h-[calc(100vh-4rem)]">
         <h1 className="text-2xl font-bold mb-6">I miei preferiti</h1>
-        <div className="flex flex-col items-center justify-center h-[50vh]">
-          <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
-          <p className="text-muted-foreground">Caricamento preferiti...</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {[1, 2, 3, 4].map((item) => (
+            <Card key={item} className="overflow-hidden">
+              <Skeleton className="aspect-video w-full" />
+              <CardHeader>
+                <Skeleton className="h-5 w-3/4 mb-2" />
+                <Skeleton className="h-4 w-1/2" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-4 w-full mb-2" />
+                <Skeleton className="h-4 w-4/5" />
+              </CardContent>
+              <CardFooter className="flex justify-between py-4">
+                <Skeleton className="h-9 w-24" />
+                <Skeleton className="h-9 w-24" />
+              </CardFooter>
+            </Card>
+          ))}
         </div>
-        {/* Manteniamo la barra di navigazione visibile anche durante il caricamento */}
       </div>
     );
   }

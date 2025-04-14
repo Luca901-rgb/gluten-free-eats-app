@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { auth, db, logoutUser } from '@/lib/firebase';
@@ -7,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar } from '@/components/ui/avatar';
 import { Loader2, LogOut, Settings, User, Shield, Info } from 'lucide-react';
 import { toast } from 'sonner';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const ProfilePage: React.FC = () => {
   const [loading, setLoading] = useState(true);
@@ -21,95 +23,66 @@ const ProfilePage: React.FC = () => {
         setLoading(true);
         setError(null);
         
-        // Prima controlla localStorage per supporto offline
-        const cachedUser = localStorage.getItem('user');
-        
         // Controlla se l'utente è autenticato
         const currentUser = auth.currentUser;
         
-        if (!currentUser && !cachedUser) {
-          // Non è autenticato e non ci sono dati in cache
+        if (!currentUser) {
+          // Se non è autenticato, reindirizza al login
+          console.log("Utente non autenticato, reindirizzo al login");
           navigate('/login');
           return;
         }
         
-        let userData: any = null;
+        // Crea un oggetto utente minimo usando i dati di auth
+        let userData = {
+          uid: currentUser.uid,
+          email: currentUser.email,
+          displayName: currentUser.displayName || "Utente",
+          photoURL: currentUser.photoURL
+        };
         
-        if (cachedUser) {
-          // Usa i dati dalla cache
-          try {
-            userData = JSON.parse(cachedUser);
-            console.log("Caricati dati utente dalla cache:", userData);
-          } catch (e) {
-            console.error("Errore nel parsing dei dati dalla cache:", e);
-          }
-        }
-        
-        if (currentUser) {
-          // Se l'utente è autenticato, ottieni dati aggiornati
-          try {
-            const userDoc = await getDoc(doc(db, "users", currentUser.uid));
-            
-            if (userDoc.exists()) {
-              userData = {
-                ...userData,
-                ...userDoc.data(),
-                uid: currentUser.uid,
-                email: currentUser.email,
-                displayName: currentUser.displayName || userData?.displayName || "Utente",
-                photoURL: currentUser.photoURL || userData?.photoURL
-              };
-              
-              // Aggiorna la cache
-              localStorage.setItem('user', JSON.stringify(userData));
-            } else if (!userData) {
-              // Se non ci sono dati in Firestore e nemmeno in cache
-              userData = {
-                uid: currentUser.uid,
-                email: currentUser.email,
-                displayName: currentUser.displayName || "Utente",
-                photoURL: currentUser.photoURL
-              };
-              localStorage.setItem('user', JSON.stringify(userData));
-            }
-          } catch (firestoreError) {
-            console.error("Errore nel caricamento dati da Firestore:", firestoreError);
-            // Continuiamo con i dati in cache se disponibili
-            if (!userData) {
-              userData = {
-                uid: currentUser.uid,
-                email: currentUser.email,
-                displayName: currentUser.displayName || "Utente",
-                photoURL: currentUser.photoURL
-              };
-              localStorage.setItem('user', JSON.stringify(userData));
-            }
-          }
-        }
-        
-        if (userData) {
-          setUser(userData);
-        } else {
-          setError("Impossibile caricare i dati del profilo");
+        // Prova a recuperare altri dati da Firestore
+        try {
+          const userDoc = await getDoc(doc(db, "users", currentUser.uid));
           
-          // Se ci sono stati troppi tentativi falliti, reindirizza al login
-          if (loadAttempts >= 2) {
-            toast.error("Sessione scaduta, effettua nuovamente l'accesso");
-            navigate('/login');
-          } else {
-            setLoadAttempts(prev => prev + 1);
+          if (userDoc.exists()) {
+            userData = {
+              ...userData,
+              ...userDoc.data()
+            };
           }
+          
+          // Salva in cache
+          localStorage.setItem('user', JSON.stringify(userData));
+        } catch (firestoreError) {
+          console.error("Errore nel caricamento dati da Firestore:", firestoreError);
+          // Non blocchiamo il flusso, usiamo i dati di base disponibili
         }
+        
+        setUser(userData);
       } catch (err) {
         console.error("Errore nel caricamento del profilo:", err);
         setError("Si è verificato un errore nel caricamento del profilo");
       } finally {
+        // Importante: terminiamo lo stato di caricamento anche in caso di errore
         setLoading(false);
       }
     };
     
     loadUserProfile();
-  }, [navigate, loadAttempts]);
+    
+    // Timeout di sicurezza - se dopo 5 secondi ancora carica, forziamo la fine
+    const safetyTimeout = setTimeout(() => {
+      if (loading) {
+        setLoading(false);
+        if (!user) {
+          setError("Timeout nel caricamento del profilo");
+        }
+      }
+    }, 5000);
+    
+    return () => clearTimeout(safetyTimeout);
+  }, [navigate]);
   
   const handleLogout = async () => {
     try {
@@ -122,11 +95,27 @@ const ProfilePage: React.FC = () => {
     }
   };
   
+  // Se il caricamento dura più di 3 secondi, mostriamo uno skeleton
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[80vh] p-4">
-        <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
-        <p className="text-muted-foreground">Caricamento profilo...</p>
+      <div className="container mx-auto p-4">
+        <h1 className="text-2xl font-bold mb-6">Il mio profilo</h1>
+        
+        <Card className="mb-6">
+          <CardHeader className="flex flex-row items-center gap-4">
+            <Skeleton className="h-16 w-16 rounded-full" />
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-3 w-32" />
+            </div>
+          </CardHeader>
+        </Card>
+        
+        <div className="grid gap-4">
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full mt-6" />
+        </div>
       </div>
     );
   }

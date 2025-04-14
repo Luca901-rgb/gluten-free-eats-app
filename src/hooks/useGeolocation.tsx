@@ -1,6 +1,5 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { toast } from 'sonner';
 
 interface GeolocationState {
   location: [number, number] | null;
@@ -16,7 +15,7 @@ export function useGeolocation() {
   });
   
   const [permissionAsked, setPermissionAsked] = useState(false);
-  const [dismissedError, setDismissedError] = useState(false);
+  const [dismissedError, setDismissedError] = useState(true); // Default a true per non mostrare errori
 
   // Funzione per cancellare gli errori
   const clearError = useCallback(() => {
@@ -32,26 +31,17 @@ export function useGeolocation() {
       setPermissionAsked(true);
     }
     
-    // Controlla se l'errore è già stato dismesso in questa sessione
-    if (sessionStorage.getItem('geolocationErrorDismissed')) {
-      setDismissedError(true);
-    }
+    // Imposta di default che l'errore è dismesso
+    setDismissedError(true);
+    sessionStorage.setItem('geolocationErrorDismissed', 'true');
     
-    // Auto-dismetti gli errori dopo 5 secondi
-    if (state.error && !dismissedError) {
-      const timer = setTimeout(() => {
-        clearError();
-      }, 5000);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [state.error, dismissedError, clearError]);
+  }, []);
 
   const requestLocation = useCallback(() => {
     if (!navigator.geolocation) {
+      // Silenziosamente fallisce senza errore visibile
       setState(prev => ({
         ...prev,
-        error: "La geolocalizzazione non è supportata dal browser",
         loading: false
       }));
       return;
@@ -78,15 +68,6 @@ export function useGeolocation() {
       (error) => {
         console.error("Errore geolocalizzazione:", error);
         
-        // Se l'errore è già stato dismesso in questa sessione, non mostrarlo di nuovo
-        if (dismissedError) {
-          setState(prev => ({
-            ...prev,
-            loading: false
-          }));
-          return;
-        }
-        
         // Recupera l'ultima posizione conosciuta se disponibile
         const lastLocation = localStorage.getItem('lastKnownLocation');
         const timestamp = localStorage.getItem('locationTimestamp');
@@ -97,36 +78,17 @@ export function useGeolocation() {
           if (locationAge < 3600000) {
             setState({
               location: JSON.parse(lastLocation),
-              error: "Utilizzando ultima posizione conosciuta",
+              error: null, // Nessun messaggio di errore
               loading: false
             });
             return;
           }
         }
         
-        let errorMsg = "Accesso alla posizione negato. Tocca per chiudere.";
-        
-        switch(error.code) {
-          case error.PERMISSION_DENIED:
-            errorMsg = "Accesso alla posizione negato. Verifica i permessi del browser.";
-            break;
-          case error.POSITION_UNAVAILABLE:
-            errorMsg = "Posizione non disponibile.";
-            break;
-          case error.TIMEOUT:
-            errorMsg = "Richiesta posizione scaduta.";
-            break;
-        }
-        
-        // Notifica breve e non bloccante
-        toast.error(errorMsg, {
-          duration: 3000,
-          dismissible: true
-        });
-        
+        // Non mostriamo messaggi di errore, semplicemente terminiamo il caricamento
         setState({
           location: null,
-          error: errorMsg,
+          error: null,
           loading: false
         });
       },
