@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Loader2, ArrowLeft, Save } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import Layout from '@/components/Layout';
@@ -18,9 +17,6 @@ interface UserData {
   email: string;
   phone?: string;
   address?: string;
-  allergies?: string;
-  dietaryPreferences?: string;
-  bio?: string;
 }
 
 const UserSettingsPage: React.FC = () => {
@@ -55,9 +51,6 @@ const UserSettingsPage: React.FC = () => {
               ...userInfo,
               phone: firestoreData.phone || '',
               address: firestoreData.address || '',
-              allergies: firestoreData.allergies || '',
-              dietaryPreferences: firestoreData.dietaryPreferences || '',
-              bio: firestoreData.bio || ''
             };
           }
         } catch (err) {
@@ -76,7 +69,7 @@ const UserSettingsPage: React.FC = () => {
     loadUserData();
   }, [navigate]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     if (userData) {
       setUserData({ ...userData, [name]: value });
@@ -97,9 +90,6 @@ const UserSettingsPage: React.FC = () => {
       await updateDoc(doc(db, "users", currentUser.uid), {
         phone: userData.phone || '',
         address: userData.address || '',
-        allergies: userData.allergies || '',
-        dietaryPreferences: userData.dietaryPreferences || '',
-        bio: userData.bio || ''
       });
       
       toast.success("Informazioni aggiornate con successo");
@@ -124,7 +114,7 @@ const UserSettingsPage: React.FC = () => {
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <h1 className="text-2xl font-bold">Impostazioni utente</h1>
+            <h1 className="text-2xl font-bold">Anagrafica Utente</h1>
           </div>
           
           <Card className="mb-6">
@@ -135,17 +125,6 @@ const UserSettingsPage: React.FC = () => {
               <Skeleton className="h-10 w-full" />
               <Skeleton className="h-10 w-full" />
               <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-24 w-full" />
-            </CardContent>
-          </Card>
-          
-          <Card className="mb-6">
-            <CardHeader>
-              <Skeleton className="h-8 w-48" />
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-24 w-full" />
             </CardContent>
           </Card>
           
@@ -167,7 +146,7 @@ const UserSettingsPage: React.FC = () => {
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="text-2xl font-bold">Impostazioni utente</h1>
+          <h1 className="text-2xl font-bold">Anagrafica Utente</h1>
         </div>
         
         <Card className="mb-6">
@@ -210,44 +189,12 @@ const UserSettingsPage: React.FC = () => {
             
             <div className="space-y-2">
               <Label htmlFor="address">Indirizzo</Label>
-              <Textarea 
+              <Input 
                 id="address" 
                 name="address" 
                 value={userData?.address || ''} 
                 onChange={handleInputChange} 
                 placeholder="Inserisci il tuo indirizzo" 
-                rows={3}
-              />
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Preferenze alimentari</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="allergies">Allergie</Label>
-              <Textarea 
-                id="allergies" 
-                name="allergies" 
-                value={userData?.allergies || ''} 
-                onChange={handleInputChange} 
-                placeholder="Inserisci le tue allergie (es. lattosio, frutta a guscio)" 
-                rows={2}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="dietaryPreferences">Preferenze alimentari</Label>
-              <Textarea 
-                id="dietaryPreferences" 
-                name="dietaryPreferences" 
-                value={userData?.dietaryPreferences || ''} 
-                onChange={handleInputChange} 
-                placeholder="Inserisci le tue preferenze alimentari" 
-                rows={2}
               />
             </div>
           </CardContent>

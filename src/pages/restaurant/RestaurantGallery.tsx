@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import Layout from '@/components/Layout';
 import { Button } from '@/components/ui/button';
-import { Upload, ImagePlus, Trash2, X } from 'lucide-react';
+import { Upload, X } from 'lucide-react';
 import { 
   Dialog, 
   DialogContent,
@@ -10,14 +10,9 @@ import {
 } from '@/components/ui/dialog';
 
 const RestaurantGallery = () => {
-  // Mock gallery data
-  const [images, setImages] = React.useState([
-    '/placeholder.svg',
-    '/placeholder.svg',
-    '/placeholder.svg',
-    '/placeholder.svg'
-  ]);
-
+  // State for uploaded images
+  const [images, setImages] = useState<string[]>([]);
+  
   // State for the image viewer modal
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
@@ -69,20 +64,21 @@ const RestaurantGallery = () => {
                   onClick={() => handleDeleteImage(index)}
                   className="flex items-center gap-1"
                 >
-                  <Trash2 size={16} />
                   <span>Elimina</span>
                 </Button>
               </div>
             </div>
           ))}
           
-          <div 
-            className="border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center p-8 cursor-pointer hover:bg-gray-50 transition-colors aspect-square"
-            onClick={handleAddImage}
-          >
-            <ImagePlus className="h-12 w-12 text-gray-400 mb-2" />
-            <span className="text-sm text-gray-500">Aggiungi immagine</span>
-          </div>
+          {images.length === 0 && (
+            <div className="col-span-full text-center py-12">
+              <p className="text-gray-500 mb-4">Nessuna immagine nella galleria</p>
+              <Button onClick={handleAddImage} className="flex items-center gap-2 mx-auto">
+                <Upload size={16} />
+                <span>Carica la prima immagine</span>
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Image Viewer Modal */}

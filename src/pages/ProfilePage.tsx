@@ -67,12 +67,12 @@ const ProfilePage: React.FC = () => {
     
     loadUserProfile();
     
-    // Timeout di sicurezza - se dopo 2 secondi ancora carica, forziamo la fine
+    // Timeout di sicurezza - se dopo 1 secondo ancora carica, forziamo la fine
     const safetyTimeout = setTimeout(() => {
       if (loading) {
         setLoading(false);
       }
-    }, 2000);
+    }, 1000);
     
     return () => clearTimeout(safetyTimeout);
   }, [navigate]);
@@ -128,7 +128,7 @@ const ProfilePage: React.FC = () => {
                   alt={user.displayName || "Utente"} 
                   className="h-full w-full object-cover"
                   onError={(e) => {
-                    e.currentTarget.src = '/placeholder-user.jpg';
+                    e.currentTarget.src = '/placeholder.svg';
                   }}
                 />
               ) : (
@@ -149,7 +149,7 @@ const ProfilePage: React.FC = () => {
             onClick={() => navigate('/settings')}
           >
             <Settings className="h-5 w-5 mr-2" />
-            Impostazioni
+            Anagrafica Utente
           </Button>
           
           <Button 
