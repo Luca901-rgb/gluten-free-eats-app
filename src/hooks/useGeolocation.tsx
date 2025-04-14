@@ -1,5 +1,9 @@
-
 import { useState, useEffect, useCallback } from 'react';
+import { toast } from 'sonner';
+
+// Coordinate predefinite (centro di Napoli)
+const FALLBACK_LOCATION: [number, number] = [40.8417, 14.2681];
+const FALLBACK_ERROR_MESSAGE = "Posizione non rilevata. Mostrati ristoranti in Campania.";
 
 interface GeolocationState {
   location: [number, number] | null;
@@ -15,35 +19,44 @@ export function useGeolocation() {
   });
   
   const [permissionAsked, setPermissionAsked] = useState(false);
-  const [dismissedError, setDismissedError] = useState(true); // Default a true per non mostrare errori
+  const [dismissedError, setDismissedError] = useState(false);
 
-  // Funzione per cancellare gli errori
   const clearError = useCallback(() => {
     setState(prev => ({ ...prev, error: null }));
     setDismissedError(true);
-    // Salva nei session storage che l'errore è stato dismesso
     sessionStorage.setItem('geolocationErrorDismissed', 'true');
   }, []);
 
   useEffect(() => {
-    // Controlla se l'autorizzazione è già stata richiesta
     if (sessionStorage.getItem('geolocationPermissionAsked')) {
       setPermissionAsked(true);
     }
     
-    // Imposta di default che l'errore è dismesso
-    setDismissedError(true);
-    sessionStorage.setItem('geolocationErrorDismissed', 'true');
+    if (sessionStorage.getItem('geolocationErrorDismissed')) {
+      setDismissedError(true);
+    }
     
-  }, []);
+    if (state.error && !dismissedError) {
+      const timer = setTimeout(() => {
+        clearError();
+      }, 5000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [state.error, dismissedError, clearError]);
 
   const requestLocation = useCallback(() => {
+    // Se la geolocalizzazione non � supportata, usa la posizione predefinita
     if (!navigator.geolocation) {
-      // Silenziosamente fallisce senza errore visibile
-      setState(prev => ({
-        ...prev,
+      toast.warning("Geolocalizzazione non supportata. Utilizzata posizione predefinita.", {
+        duration: 5000
+      });
+      
+      setState({
+        location: FALLBACK_LOCATION,
+        error: "Geolocalizzazione non supportata.",
         loading: false
-      }));
+      });
       return;
     }
 
@@ -61,7 +74,6 @@ export function useGeolocation() {
           loading: false
         });
         
-        // Salva la posizione in localStorage per uso offline
         localStorage.setItem('lastKnownLocation', JSON.stringify([latitude, longitude]));
         localStorage.setItem('locationTimestamp', Date.now().toString());
       },
@@ -72,24 +84,29 @@ export function useGeolocation() {
         const lastLocation = localStorage.getItem('lastKnownLocation');
         const timestamp = localStorage.getItem('locationTimestamp');
         
+        let selectedLocation = FALLBACK_LOCATION;
+        let errorMessage = FALLBACK_ERROR_MESSAGE;
+
         if (lastLocation && timestamp) {
           const locationAge = Date.now() - parseInt(timestamp);
-          // Usa l'ultima posizione conosciuta se è recente (meno di 1 ora)
+          // Usa l'ultima posizione conosciuta se � recente (meno di 1 ora)
           if (locationAge < 3600000) {
-            setState({
-              location: JSON.parse(lastLocation),
-              error: null, // Nessun messaggio di errore
-              loading: false
-            });
-            return;
+            selectedLocation = JSON.parse(lastLocation);
+            errorMessage = "Utilizzando ultima posizione conosciuta";
           }
         }
-        
-        // Non mostriamo messaggi di errore, semplicemente terminiamo il caricamento
+
+        // Imposta lo stato con la posizione di fallback
         setState({
-          location: null,
-          error: null,
+          location: selectedLocation,
+          error: errorMessage,
           loading: false
+        });
+
+        // Mostra un toast con l'errore
+        toast.warning(errorMessage, {
+          duration: 5000,
+          description: "Stiamo mostrando i ristoranti nella regione Campania."
         });
       },
       {
