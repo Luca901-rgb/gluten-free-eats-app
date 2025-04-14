@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { collection, getDocs, query, where, deleteDoc, doc } from 'firebase/firestore';
 import { db, auth } from '../lib/firebase';
-import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Loader2, Star, MapPin, Trash2 } from 'lucide-react';
+import BottomNavigation from '../components/BottomNavigation';
 
 // Tipo per un elemento preferito
 interface Favorite {
@@ -151,20 +152,32 @@ const FavoritesPage: React.FC = () => {
   
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center p-8 min-h-[60vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="mt-4 text-muted-foreground">Caricamento preferiti...</p>
+      <div className="container mx-auto p-4 min-h-[calc(100vh-4rem)]">
+        <h1 className="text-2xl font-bold mb-6">I miei preferiti</h1>
+        <div className="flex flex-col items-center justify-center h-[50vh]">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+          <p className="text-muted-foreground">Caricamento preferiti...</p>
+        </div>
+        {/* Manteniamo la barra di navigazione visibile anche durante il caricamento */}
       </div>
     );
   }
   
   return (
-    <div className="container mx-auto p-4">
+    <div className="container mx-auto p-4 pb-20 min-h-[calc(100vh-4rem)]">
       <h1 className="text-2xl font-bold mb-6">I miei preferiti</h1>
       
       {error && (
         <div className="bg-destructive/10 text-destructive p-4 rounded-md mb-6">
           {error}
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="ml-4" 
+            onClick={() => setError(null)}
+          >
+            Chiudi
+          </Button>
         </div>
       )}
       
@@ -181,7 +194,7 @@ const FavoritesPage: React.FC = () => {
         </div>
       )}
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {favorites.map((favorite) => (
           <Card key={favorite.id} className="overflow-hidden">
             {favorite.image && (
@@ -190,7 +203,9 @@ const FavoritesPage: React.FC = () => {
                   src={favorite.image} 
                   alt={favorite.name} 
                   className="w-full h-full object-cover transition-transform hover:scale-105"
-                  onError={(e) => (e.currentTarget.src = '/placeholder-restaurant.jpg')}
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = '/placeholder-restaurant.jpg';
+                  }}
                 />
               </div>
             )}
@@ -234,6 +249,9 @@ const FavoritesPage: React.FC = () => {
           </Card>
         ))}
       </div>
+      
+      {/* Assicuriamoci che ci sia spazio sufficiente per la barra di navigazione */}
+      <div className="h-16"></div>
     </div>
   );
 };

@@ -17,10 +17,12 @@ export function useGeolocation() {
   const [permissionAsked, setPermissionAsked] = useState(false);
   const [dismissedError, setDismissedError] = useState(false);
 
-  // Funzione per cancellare i messaggi di errore
+  // Funzione per cancellare gli errori
   const clearError = useCallback(() => {
     setState(prev => ({ ...prev, error: null }));
     setDismissedError(true);
+    // Salva nei session storage che l'errore è stato dismesso
+    sessionStorage.setItem('geolocationErrorDismissed', 'true');
   }, []);
 
   useEffect(() => {
@@ -29,7 +31,12 @@ export function useGeolocation() {
       setPermissionAsked(true);
     }
     
-    // Imposta un timer per pulire automaticamente gli errori dopo 5 secondi
+    // Controlla se l'errore è già stato dismesso in questa sessione
+    if (sessionStorage.getItem('geolocationErrorDismissed')) {
+      setDismissedError(true);
+    }
+    
+    // Auto-dismetti gli errori dopo 5 secondi
     if (state.error && !dismissedError) {
       const timer = setTimeout(() => {
         clearError();
@@ -70,6 +77,15 @@ export function useGeolocation() {
       (error) => {
         console.error("Errore geolocalizzazione:", error.message);
         
+        // Se l'errore è già stato dismesso in questa sessione, non mostrarlo di nuovo
+        if (dismissedError) {
+          setState(prev => ({
+            ...prev,
+            loading: false
+          }));
+          return;
+        }
+        
         // Recupera l'ultima posizione conosciuta se disponibile
         const lastLocation = localStorage.getItem('lastKnownLocation');
         const timestamp = localStorage.getItem('locationTimestamp');
@@ -80,31 +96,31 @@ export function useGeolocation() {
           if (locationAge < 3600000) {
             setState({
               location: JSON.parse(lastLocation),
-              error: "Utilizzando ultima posizione conosciuta. Tocca per chiudere.",
+              error: "Utilizzando ultima posizione conosciuta",
               loading: false
             });
             return;
           }
         }
         
-        let errorMsg = "Accesso alla posizione negato. Puoi attivarlo nelle impostazioni. Tocca per chiudere.";
+        let errorMsg = "Accesso alla posizione negato. Tocca per chiudere.";
         
         switch(error.code) {
           case error.PERMISSION_DENIED:
-            errorMsg = "Accesso alla posizione negato. Puoi attivarlo nelle impostazioni. Tocca per chiudere.";
+            errorMsg = "Accesso alla posizione negato. Tocca per chiudere.";
             break;
           case error.POSITION_UNAVAILABLE:
-            errorMsg = "Informazioni sulla posizione non disponibili. Tocca per chiudere.";
+            errorMsg = "Posizione non disponibile. Tocca per chiudere.";
             break;
           case error.TIMEOUT:
             errorMsg = "Richiesta posizione scaduta. Tocca per chiudere.";
             break;
         }
         
-        // Mostra un toast meno invadente invece di errori persistenti
+        // Notifica breve e non bloccante
         toast.error(errorMsg, {
-          duration: 5000,
-          onDismiss: clearError
+          duration: 3000,
+          dismissible: true
         });
         
         setState({
@@ -112,11 +128,6 @@ export function useGeolocation() {
           error: errorMsg,
           loading: false
         });
-        
-        // Non mostrare lo stesso errore più volte nella stessa sessione
-        if (!sessionStorage.getItem('geolocationErrorShown')) {
-          sessionStorage.setItem('geolocationErrorShown', 'true');
-        }
       },
       {
         enableHighAccuracy: true,
@@ -124,7 +135,7 @@ export function useGeolocation() {
         maximumAge: 60000
       }
     );
-  }, [clearError]);
+  }, [dismissedError]);
 
   return {
     ...state,
