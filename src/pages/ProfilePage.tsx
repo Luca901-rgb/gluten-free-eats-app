@@ -9,13 +9,13 @@ import { Avatar } from '@/components/ui/avatar';
 import { Loader2, LogOut, Settings, User, Shield, Info } from 'lucide-react';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
+import Layout from '@/components/Layout';
 
 const ProfilePage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
-  const [loadAttempts, setLoadAttempts] = useState(0);
 
   useEffect(() => {
     const loadUserProfile = async () => {
@@ -64,14 +64,14 @@ const ProfilePage: React.FC = () => {
         console.error("Errore nel caricamento del profilo:", err);
         setError("Si è verificato un errore nel caricamento del profilo");
       } finally {
-        // Importante: terminiamo lo stato di caricamento anche in caso di errore
+        // Terminiamo lo stato di caricamento anche in caso di errore
         setLoading(false);
       }
     };
     
     loadUserProfile();
     
-    // Timeout di sicurezza - se dopo 5 secondi ancora carica, forziamo la fine
+    // Timeout di sicurezza - se dopo 3 secondi ancora carica, forziamo la fine
     const safetyTimeout = setTimeout(() => {
       if (loading) {
         setLoading(false);
@@ -79,7 +79,7 @@ const ProfilePage: React.FC = () => {
           setError("Timeout nel caricamento del profilo");
         }
       }
-    }, 5000);
+    }, 3000); // Ridotto da 5 a 3 secondi
     
     return () => clearTimeout(safetyTimeout);
   }, [navigate]);
@@ -98,95 +98,101 @@ const ProfilePage: React.FC = () => {
   // Se il caricamento dura più di 3 secondi, mostriamo uno skeleton
   if (loading) {
     return (
-      <div className="container mx-auto p-4">
-        <h1 className="text-2xl font-bold mb-6">Il mio profilo</h1>
-        
-        <Card className="mb-6">
-          <CardHeader className="flex flex-row items-center gap-4">
-            <Skeleton className="h-16 w-16 rounded-full" />
-            <div className="space-y-2">
-              <Skeleton className="h-4 w-24" />
-              <Skeleton className="h-3 w-32" />
-            </div>
-          </CardHeader>
-        </Card>
-        
-        <div className="grid gap-4">
-          <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-10 w-full mt-6" />
+      <Layout>
+        <div className="container mx-auto p-4">
+          <h1 className="text-2xl font-bold mb-6">Il mio profilo</h1>
+          
+          <Card className="mb-6">
+            <CardHeader className="flex flex-row items-center gap-4">
+              <Skeleton className="h-16 w-16 rounded-full" />
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-3 w-32" />
+              </div>
+            </CardHeader>
+          </Card>
+          
+          <div className="grid gap-4">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full mt-6" />
+          </div>
         </div>
-      </div>
+      </Layout>
     );
   }
   
   if (error && !user) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[80vh] p-4">
-        <Info className="h-12 w-12 text-destructive mb-4" />
-        <h2 className="text-xl font-semibold mb-2">Errore</h2>
-        <p className="text-muted-foreground mb-4">{error}</p>
-        <Button onClick={() => navigate('/login')}>Vai al login</Button>
-      </div>
+      <Layout>
+        <div className="flex flex-col items-center justify-center min-h-[80vh] p-4">
+          <Info className="h-12 w-12 text-destructive mb-4" />
+          <h2 className="text-xl font-semibold mb-2">Errore</h2>
+          <p className="text-muted-foreground mb-4">{error}</p>
+          <Button onClick={() => navigate('/login')}>Vai al login</Button>
+        </div>
+      </Layout>
     );
   }
   
   return (
-    <div className="container mx-auto p-4 pb-20">
-      <h1 className="text-2xl font-bold mb-6">Il mio profilo</h1>
-      
-      <Card className="mb-6">
-        <CardHeader className="flex flex-row items-center gap-4">
-          <Avatar className="h-16 w-16">
-            {user?.photoURL ? (
-              <img 
-                src={user.photoURL} 
-                alt={user.displayName || "Utente"} 
-                className="h-full w-full object-cover"
-                onError={(e) => {
-                  e.currentTarget.src = '/placeholder-user.jpg';
-                }}
-              />
-            ) : (
-              <User className="h-10 w-10" />
-            )}
-          </Avatar>
-          <div>
-            <CardTitle>{user?.displayName || "Utente"}</CardTitle>
-            <p className="text-sm text-muted-foreground">{user?.email}</p>
-          </div>
-        </CardHeader>
-      </Card>
-      
-      <div className="grid gap-4">
-        <Button 
-          variant="outline" 
-          className="flex justify-start items-center"
-          onClick={() => navigate('/settings')}
-        >
-          <Settings className="h-5 w-5 mr-2" />
-          Impostazioni
-        </Button>
+    <Layout>
+      <div className="container mx-auto p-4 pb-20">
+        <h1 className="text-2xl font-bold mb-6">Il mio profilo</h1>
         
-        <Button 
-          variant="outline" 
-          className="flex justify-start items-center"
-          onClick={() => navigate('/admin')}
-        >
-          <Shield className="h-5 w-5 mr-2" />
-          Area amministratore
-        </Button>
+        <Card className="mb-6">
+          <CardHeader className="flex flex-row items-center gap-4">
+            <Avatar className="h-16 w-16">
+              {user?.photoURL ? (
+                <img 
+                  src={user.photoURL} 
+                  alt={user.displayName || "Utente"} 
+                  className="h-full w-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.src = '/placeholder-user.jpg';
+                  }}
+                />
+              ) : (
+                <User className="h-10 w-10" />
+              )}
+            </Avatar>
+            <div>
+              <CardTitle>{user?.displayName || "Utente"}</CardTitle>
+              <p className="text-sm text-muted-foreground">{user?.email}</p>
+            </div>
+          </CardHeader>
+        </Card>
         
-        <Button 
-          variant="destructive" 
-          className="mt-6 flex justify-center items-center"
-          onClick={handleLogout}
-        >
-          <LogOut className="h-5 w-5 mr-2" />
-          Disconnetti
-        </Button>
+        <div className="grid gap-4">
+          <Button 
+            variant="outline" 
+            className="flex justify-start items-center"
+            onClick={() => navigate('/settings')}
+          >
+            <Settings className="h-5 w-5 mr-2" />
+            Impostazioni
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            className="flex justify-start items-center"
+            onClick={() => navigate('/admin')}
+          >
+            <Shield className="h-5 w-5 mr-2" />
+            Area amministratore
+          </Button>
+          
+          <Button 
+            variant="destructive" 
+            className="mt-6 flex justify-center items-center"
+            onClick={handleLogout}
+          >
+            <LogOut className="h-5 w-5 mr-2" />
+            Disconnetti
+          </Button>
+        </div>
       </div>
-    </div>
+    </Layout>
   );
 };
 

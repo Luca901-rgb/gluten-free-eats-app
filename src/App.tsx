@@ -12,6 +12,7 @@ import Login from './pages/Login';
 import Index from './pages/Index';
 import SearchPage from './pages/SearchPage';
 import ProfilePage from './pages/ProfilePage';
+import UserSettingsPage from './pages/UserSettingsPage';
 import BookingsPage from './pages/BookingsPage';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminLogin from './pages/AdminLogin';
@@ -50,6 +51,7 @@ function App() {
               />
               <Route path="/login" element={<Login />} />
               <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/settings" element={<UserSettingsPage />} />
               <Route path="/bookings" element={<BookingsPage />} />
               <Route path="/favorites" element={<FavoritesPage />} />
               <Route 

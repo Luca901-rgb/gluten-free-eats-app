@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { collection, getDocs, query, where, deleteDoc, doc, getDoc } from 'firebase/firestore';
@@ -8,6 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "../components/ui/button";
 import { Loader2, Star, MapPin, Trash2 } from 'lucide-react';
 import { Skeleton } from "@/components/ui/skeleton";
+import Layout from '@/components/Layout';
 
 // Tipo per un elemento preferito
 interface Favorite {
@@ -93,13 +93,13 @@ const FavoritesPage: React.FC = () => {
     
     fetchFavorites();
     
-    // Timeout di sicurezza - se dopo 5 secondi ancora carica, forziamo la fine
+    // Timeout di sicurezza - se dopo 3 secondi ancora carica, forziamo la fine
     const safetyTimeout = setTimeout(() => {
       if (loading) {
         setLoading(false);
         console.log("Timeout nel caricamento dei preferiti");
       }
-    }, 5000);
+    }, 3000);
     
     return () => clearTimeout(safetyTimeout);
   }, []);
@@ -146,121 +146,122 @@ const FavoritesPage: React.FC = () => {
   // Se il caricamento dura più di 1 secondo, mostriamo uno skeleton
   if (loading) {
     return (
-      <div className="container mx-auto p-4 min-h-[calc(100vh-4rem)]">
+      <Layout>
+        <div className="container mx-auto p-4 min-h-[calc(100vh-4rem)]">
+          <h1 className="text-2xl font-bold mb-6">I miei preferiti</h1>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {[1, 2, 3, 4].map((item) => (
+              <Card key={item} className="overflow-hidden">
+                <Skeleton className="aspect-video w-full" />
+                <CardHeader>
+                  <Skeleton className="h-5 w-3/4 mb-2" />
+                  <Skeleton className="h-4 w-1/2" />
+                </CardHeader>
+                <CardContent>
+                  <Skeleton className="h-4 w-full mb-2" />
+                  <Skeleton className="h-4 w-4/5" />
+                </CardContent>
+                <CardFooter className="flex justify-between py-4">
+                  <Skeleton className="h-9 w-24" />
+                  <Skeleton className="h-9 w-24" />
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+  
+  return (
+    <Layout>
+      <div className="container mx-auto p-4 pb-20 min-h-[calc(100vh-4rem)]">
         <h1 className="text-2xl font-bold mb-6">I miei preferiti</h1>
+        
+        {error && (
+          <div className="bg-destructive/10 text-destructive p-4 rounded-md mb-6">
+            {error}
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="ml-4" 
+              onClick={() => setError(null)}
+            >
+              Chiudi
+            </Button>
+          </div>
+        )}
+        
+        {!loading && favorites.length === 0 && !error && (
+          <div className="text-center py-10">
+            <Star className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+            <h2 className="text-xl font-semibold mb-2">Nessun preferito</h2>
+            <p className="text-muted-foreground mb-6">
+              Non hai ancora aggiunto ristoranti ai preferiti.
+            </p>
+            <Button onClick={() => navigate('/restaurants')}>
+              Esplora ristoranti
+            </Button>
+          </div>
+        )}
+        
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {[1, 2, 3, 4].map((item) => (
-            <Card key={item} className="overflow-hidden">
-              <Skeleton className="aspect-video w-full" />
+          {favorites.map((favorite) => (
+            <Card key={favorite.id} className="overflow-hidden">
+              {favorite.image && (
+                <div className="aspect-video w-full overflow-hidden">
+                  <img 
+                    src={favorite.image} 
+                    alt={favorite.name} 
+                    className="w-full h-full object-cover transition-transform hover:scale-105"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = '/placeholder-restaurant.jpg';
+                    }}
+                  />
+                </div>
+              )}
+              
               <CardHeader>
-                <Skeleton className="h-5 w-3/4 mb-2" />
-                <Skeleton className="h-4 w-1/2" />
+                <CardTitle>{favorite.name}</CardTitle>
+                {favorite.address && (
+                  <CardDescription className="flex items-center">
+                    <MapPin className="h-4 w-4 mr-1" />
+                    {favorite.address}
+                  </CardDescription>
+                )}
               </CardHeader>
+              
               <CardContent>
-                <Skeleton className="h-4 w-full mb-2" />
-                <Skeleton className="h-4 w-4/5" />
+                {favorite.description && (
+                  <p className="text-sm text-muted-foreground line-clamp-3">
+                    {favorite.description}
+                  </p>
+                )}
               </CardContent>
-              <CardFooter className="flex justify-between py-4">
-                <Skeleton className="h-9 w-24" />
-                <Skeleton className="h-9 w-24" />
+              
+              <CardFooter className="flex justify-between">
+                <Button 
+                  variant="outline" 
+                  onClick={() => favorite.restaurantId && navigateToRestaurant(favorite.restaurantId)}
+                  disabled={!favorite.restaurantId}
+                >
+                  Visualizza
+                </Button>
+                
+                <Button 
+                  variant="ghost" 
+                  className="text-destructive" 
+                  onClick={() => removeFavorite(favorite.id)}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Rimuovi
+                </Button>
               </CardFooter>
             </Card>
           ))}
         </div>
       </div>
-    );
-  }
-  
-  return (
-    <div className="container mx-auto p-4 pb-20 min-h-[calc(100vh-4rem)]">
-      <h1 className="text-2xl font-bold mb-6">I miei preferiti</h1>
-      
-      {error && (
-        <div className="bg-destructive/10 text-destructive p-4 rounded-md mb-6">
-          {error}
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="ml-4" 
-            onClick={() => setError(null)}
-          >
-            Chiudi
-          </Button>
-        </div>
-      )}
-      
-      {!loading && favorites.length === 0 && !error && (
-        <div className="text-center py-10">
-          <Star className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-          <h2 className="text-xl font-semibold mb-2">Nessun preferito</h2>
-          <p className="text-muted-foreground mb-6">
-            Non hai ancora aggiunto ristoranti ai preferiti.
-          </p>
-          <Button onClick={() => navigate('/restaurants')}>
-            Esplora ristoranti
-          </Button>
-        </div>
-      )}
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {favorites.map((favorite) => (
-          <Card key={favorite.id} className="overflow-hidden">
-            {favorite.image && (
-              <div className="aspect-video w-full overflow-hidden">
-                <img 
-                  src={favorite.image} 
-                  alt={favorite.name} 
-                  className="w-full h-full object-cover transition-transform hover:scale-105"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = '/placeholder-restaurant.jpg';
-                  }}
-                />
-              </div>
-            )}
-            
-            <CardHeader>
-              <CardTitle>{favorite.name}</CardTitle>
-              {favorite.address && (
-                <CardDescription className="flex items-center">
-                  <MapPin className="h-4 w-4 mr-1" />
-                  {favorite.address}
-                </CardDescription>
-              )}
-            </CardHeader>
-            
-            <CardContent>
-              {favorite.description && (
-                <p className="text-sm text-muted-foreground line-clamp-3">
-                  {favorite.description}
-                </p>
-              )}
-            </CardContent>
-            
-            <CardFooter className="flex justify-between">
-              <Button 
-                variant="outline" 
-                onClick={() => favorite.restaurantId && navigateToRestaurant(favorite.restaurantId)}
-                disabled={!favorite.restaurantId}
-              >
-                Visualizza
-              </Button>
-              
-              <Button 
-                variant="ghost" 
-                className="text-destructive" 
-                onClick={() => removeFavorite(favorite.id)}
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Rimuovi
-              </Button>
-            </CardFooter>
-          </Card>
-        ))}
-      </div>
-      
-      {/* Assicuriamoci che ci sia spazio sufficiente per la barra di navigazione */}
-      <div className="h-16"></div>
-    </div>
+    </Layout>
   );
 };
 
