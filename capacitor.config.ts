@@ -34,10 +34,11 @@ const config: CapacitorConfig = {
     Geolocation: {
       permissions: {
         android: {
-          highAccuracy: true
+          highAccuracy: true,
+          alwaysPromptForPermission: true // Richiedi sempre il permesso esplicitamente
         },
         ios: {
-          alwaysPromptForPermission: false
+          alwaysPromptForPermission: true // Richiedi sempre il permesso esplicitamente
         }
       }
     }
@@ -55,12 +56,22 @@ const config: CapacitorConfig = {
       keystoreAlias: null,
       keystoreAliasPassword: null,
       releaseType: null
-    }
+    },
+    permissions: [
+      "android.permission.ACCESS_COARSE_LOCATION",
+      "android.permission.ACCESS_FINE_LOCATION"
+    ]
   },
   ios: {
     preferredContentMode: "mobile",
     cordovaSwiftVersion: "5.0",
-    contentInset: "always"
+    contentInset: "always",
+    permissions: {
+      locationWhenInUse: {
+        "title": "Accesso alla tua posizione",
+        "message": "Gluten Free Eats ha bisogno della tua posizione per mostrarti i ristoranti nelle vicinanze"
+      }
+    }
   }
 };
 export default config;

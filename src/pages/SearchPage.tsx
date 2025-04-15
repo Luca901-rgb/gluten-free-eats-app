@@ -3,11 +3,11 @@ import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ChefHat, MapPin, Navigation, Info } from 'lucide-react';
+import { ChefHat, MapPin, Navigation, Info, AlertTriangle } from 'lucide-react';
 import { RestaurantMap } from '@/components/Map/RestaurantMap';
 import { toast } from 'sonner';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { isInAvailableRegion } from '@/utils/geolocation';
+import { isInAvailableRegion, requestGeolocationPermission, checkGeolocationPermission } from '@/utils/geolocation';
 
 const sampleRestaurantLocations = [
   {
@@ -54,68 +54,99 @@ const SearchPage = () => {
   const [locationError, setLocationError] = useState<string | null>(null);
   const [restaurants, setRestaurants] = useState(sampleRestaurantLocations);
   const [inAvailableRegion, setInAvailableRegion] = useState<boolean | null>(null);
+  const [permissionState, setPermissionState] = useState<string | null>(null);
   
-  const getUserLocation = () => {
+  /**
+   * Controlla lo stato dei permessi di geolocalizzazione
+   */
+  const checkPermissionStatus = async () => {
+    const hasPermission = await checkGeolocationPermission();
+    setPermissionState(hasPermission ? 'granted' : 'denied');
+    return hasPermission;
+  };
+  
+  const getUserLocation = async () => {
     setIsLocating(true);
     setLocationError(null);
     
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const pos = {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          };
-          
-          setUserPosition(pos);
-          
-          const regionCheck = isInAvailableRegion(pos);
-          setInAvailableRegion(regionCheck.inRegion);
-          
-          if (regionCheck.inRegion) {
-            toast.success(`Posizione rilevata in ${regionCheck.regionName}!`);
-          } else {
-            toast.warning("La tua posizione è al di fuori dell'area del programma pilota (solo Campania).");
+    try {
+      // Richiedi i permessi esplicitamente (ideale su dispositivi mobili)
+      const permissionGranted = await requestGeolocationPermission();
+      
+      if (!permissionGranted) {
+        setLocationError("Permessi di posizione non concessi. Verifica le impostazioni del dispositivo.");
+        setIsLocating(false);
+        toast.error("Impossibile accedere alla posizione. Controlla i permessi del dispositivo nelle impostazioni.");
+        return;
+      }
+    
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const pos = {
+              lat: position.coords.latitude,
+              lng: position.coords.longitude
+            };
+            
+            setUserPosition(pos);
+            
+            const regionCheck = isInAvailableRegion(pos);
+            setInAvailableRegion(regionCheck.inRegion);
+            
+            if (regionCheck.inRegion) {
+              toast.success(`Posizione rilevata in ${regionCheck.regionName}!`);
+            } else {
+              toast.warning("La tua posizione è al di fuori dell'area del programma pilota (solo Campania).");
+            }
+            
+            setIsLocating(false);
+          },
+          (error) => {
+            console.error('Error getting location:', error);
+            
+            let errorMessage = "Impossibile determinare la tua posizione.";
+            switch (error.code) {
+              case error.PERMISSION_DENIED:
+                errorMessage = "Accesso alla posizione negato. Verifica i permessi del dispositivo nelle impostazioni.";
+                break;
+              case error.POSITION_UNAVAILABLE:
+                errorMessage = "Dati sulla posizione non disponibili.";
+                break;
+              case error.TIMEOUT:
+                errorMessage = "Timeout durante la richiesta della posizione.";
+                break;
+            }
+            
+            setLocationError(errorMessage);
+            setIsLocating(false);
+            toast.error(errorMessage);
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 15000,
+            maximumAge: 0
           }
-          
-          setIsLocating(false);
-        },
-        (error) => {
-          console.error('Error getting location:', error);
-          
-          let errorMessage = "Impossibile determinare la tua posizione.";
-          switch (error.code) {
-            case error.PERMISSION_DENIED:
-              errorMessage = "Accesso alla posizione negato. Verifica i permessi del browser.";
-              break;
-            case error.POSITION_UNAVAILABLE:
-              errorMessage = "Dati sulla posizione non disponibili.";
-              break;
-            case error.TIMEOUT:
-              errorMessage = "Timeout durante la richiesta della posizione.";
-              break;
-          }
-          
-          setLocationError(errorMessage);
-          setIsLocating(false);
-          toast.error(errorMessage);
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 0
-        }
-      );
-    } else {
-      const errorMessage = "Il tuo browser non supporta la geolocalizzazione.";
-      setLocationError(errorMessage);
+        );
+      } else {
+        const errorMessage = "Il tuo browser non supporta la geolocalizzazione.";
+        setLocationError(errorMessage);
+        setIsLocating(false);
+        toast.error(errorMessage);
+      }
+    } catch (error) {
+      console.error("Errore durante la gestione dei permessi:", error);
+      setLocationError("Si è verificato un errore durante l'accesso alla posizione.");
       setIsLocating(false);
-      toast.error(errorMessage);
+      toast.error("Errore durante l'accesso alla posizione");
     }
   };
   
   useEffect(() => {
-    getUserLocation();
+    // Aggiorna lo stato dei permessi all'avvio
+    checkPermissionStatus();
+    
+    // Richiediamo la posizione solo al click per una migliore UX mobile
+    // invece che all'avvio automatico della pagina
   }, []);
   
   const handleToggleFavorite = (id: string) => {
@@ -151,6 +182,17 @@ const SearchPage = () => {
           </Alert>
         )}
         
+        {/* Permission denied alert */}
+        {permissionState === 'denied' && !locationError && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>Permessi posizione non concessi</AlertTitle>
+            <AlertDescription>
+              Per utilizzare tutte le funzionalità dell&apos;app, attiva la geolocalizzazione nelle impostazioni del dispositivo.
+            </AlertDescription>
+          </Alert>
+        )}
+        
         {/* User location and error states */}
         <div className="mb-4">
           <Button 
@@ -176,7 +218,7 @@ const SearchPage = () => {
         </div>
         
         {/* Map and List View - Modified layout */}
-        {inAvailableRegion ? (
+        {inAvailableRegion !== false ? (
           <div className="flex flex-col space-y-4">
             {/* Map takes 50vh - half the screen height */}
             <div className="h-[50vh] rounded-lg border overflow-hidden">

@@ -50,14 +50,42 @@ export const isInAvailableRegion = (coords: Coordinates): { inRegion: boolean; r
 };
 
 /**
+ * Per app mobile: Verifica se l'app ha i permessi di geolocalizzazione
+ */
+export const checkGeolocationPermission = async (): Promise<boolean> => {
+  // Per app web standard
+  if (typeof navigator !== 'undefined' && navigator.permissions) {
+    try {
+      const result = await navigator.permissions.query({ name: 'geolocation' as PermissionName });
+      return result.state === 'granted';
+    } catch (e) {
+      console.error("Errore nel controllo dei permessi:", e);
+      return false;
+    }
+  }
+  
+  // Se non possiamo verificare i permessi, assumiamo che non li abbiamo
+  return false;
+};
+
+/**
  * Ottiene la posizione dell'utente e verifica se è in una regione disponibile
  */
 export const checkUserRegion = (): Promise<{ inRegion: boolean; regionName?: string; error?: string }> => {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     if (!navigator.geolocation) {
       resolve({ 
         inRegion: false, 
         error: "La geolocalizzazione non è supportata dal tuo browser" 
+      });
+      return;
+    }
+    
+    // In modalità di sviluppo, consentiamo sempre l'accesso
+    if (import.meta.env.DEV) {
+      resolve({ 
+        inRegion: true, 
+        regionName: "Campania (Sviluppo)" 
       });
       return;
     }
@@ -79,7 +107,7 @@ export const checkUserRegion = (): Promise<{ inRegion: boolean; regionName?: str
         let errorMessage = "Errore nel recupero della posizione";
         switch (error.code) {
           case error.PERMISSION_DENIED:
-            errorMessage = "L'utente ha negato la richiesta di geolocalizzazione";
+            errorMessage = "Accesso alla posizione negato. Verifica i permessi del dispositivo nelle impostazioni";
             break;
           case error.POSITION_UNAVAILABLE:
             errorMessage = "Le informazioni sulla posizione non sono disponibili";
@@ -89,13 +117,43 @@ export const checkUserRegion = (): Promise<{ inRegion: boolean; regionName?: str
             break;
         }
         
-        console.error("Errore geolocalizzazione:", errorMessage);
+        console.error("Errore geolocalizzazione:", errorMessage, error.code);
         
         // In caso di errore, permettiamo comunque di accedere all'app
+        // per non bloccare completamente l'esperienza utente
         resolve({ 
           inRegion: true, 
           error: errorMessage 
         });
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 15000,  // Aumentato il timeout a 15 secondi
+        maximumAge: 60000  // Cache valida per 1 minuto
+      }
+    );
+  });
+};
+
+/**
+ * Richiede i permessi di geolocalizzazione in modo esplicito
+ * Utile da chiamare in risposta ad un click utente
+ */
+export const requestGeolocationPermission = (): Promise<boolean> => {
+  return new Promise((resolve) => {
+    if (!navigator.geolocation) {
+      resolve(false);
+      return;
+    }
+    
+    navigator.geolocation.getCurrentPosition(
+      () => {
+        // Successo
+        resolve(true);
+      },
+      () => {
+        // Errore
+        resolve(false);
       },
       {
         enableHighAccuracy: true,
