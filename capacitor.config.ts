@@ -1,3 +1,4 @@
+
 import { CapacitorConfig } from '@capacitor/cli';
 const config: CapacitorConfig = {
   appId: 'com.glutenfreeeats.app',
@@ -46,7 +47,7 @@ const config: CapacitorConfig = {
     allowMixedContent: true,
     captureInput: true,
     webContentsDebuggingEnabled: true,
-    minSdkVersion: 22,
+    minSdkVersion: 21,
     hideLogs: false,
     buildOptions: {
       keystorePath: null,
