@@ -34,18 +34,22 @@ export const AVAILABLE_REGIONS: Region[] = [
  * Verifica se le coordinate sono all'interno della regione Campania
  */
 export const isInAvailableRegion = (coords: Coordinates): { inRegion: boolean; regionName?: string } => {
+  console.log("Verifica regione per le coordinate:", coords);
   for (const region of AVAILABLE_REGIONS) {
     const { bounds } = region;
+    console.log(`Verificando confini della regione ${region.name}:`, bounds);
     if (
       coords.lat <= bounds.north &&
       coords.lat >= bounds.south &&
       coords.lng <= bounds.east &&
       coords.lng >= bounds.west
     ) {
+      console.log(`Coordinate in regione: ${region.name}`);
       return { inRegion: true, regionName: region.name };
     }
   }
   
+  console.log("Coordinate NON in regione disponibile");
   return { inRegion: false };
 };
 

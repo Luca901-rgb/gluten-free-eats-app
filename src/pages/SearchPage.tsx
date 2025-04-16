@@ -67,12 +67,17 @@ const SearchPage = () => {
   const fetchRestaurants = async (position?: { lat: number; lng: number }) => {
     setIsLoading(true);
     try {
+      console.log("Posizione utente per fetchRestaurants:", position);
       const restaurantsCollection = collection(db, "restaurants");
       const restaurantsSnapshot = await getDocs(restaurantsCollection);
+      
+      console.log("Numero di ristoranti trovati:", restaurantsSnapshot.docs.length);
       
       let fetchedRestaurants = restaurantsSnapshot.docs.map(doc => {
         const data = doc.data();
         const restaurantLocation = data.location || { lat: 0, lng: 0 };
+        
+        console.log("Ristorante:", data.name, "- Posizione:", restaurantLocation);
         
         // Calcola la distanza solo se l'utente ha condiviso la posizione
         let distanceValue = 0;
@@ -83,6 +88,7 @@ const SearchPage = () => {
             restaurantLocation.lat, 
             restaurantLocation.lng
           );
+          console.log("Distanza calcolata per", data.name, ":", distanceValue.toFixed(1), "km");
         }
         
         return {
@@ -102,9 +108,22 @@ const SearchPage = () => {
       
       // Filtra per distanza massima se l'utente ha impostato la posizione
       if (position) {
+        console.log("Prima del filtro:", fetchedRestaurants.length, "ristoranti");
+        console.log("Distanza massima impostata:", maxDistance, "km");
+        
         fetchedRestaurants = fetchedRestaurants
-          .filter(restaurant => restaurant.distanceValue <= maxDistance)
-          .sort((a, b) => a.distanceValue - b.distanceValue); // Ordina per distanza
+          .filter(restaurant => {
+            const isWithinRange = restaurant.distanceValue <= maxDistance;
+            console.log(
+              "Ristorante:", restaurant.name, 
+              "- Distanza:", restaurant.distanceValue, "km", 
+              "- Entro il raggio?", isWithinRange
+            );
+            return isWithinRange;
+          })
+          .sort((a, b) => (a.distanceValue || 0) - (b.distanceValue || 0)); // Ordina per distanza
+        
+        console.log("Dopo filtro e ordinamento:", fetchedRestaurants.length, "ristoranti");
       }
       
       setRestaurants(fetchedRestaurants);
@@ -218,6 +237,7 @@ const SearchPage = () => {
   };
   
   const handleDistanceChange = (value: number[]) => {
+    console.log("Nuova distanza massima impostata:", value[0], "km");
     setMaxDistance(value[0]);
   };
 

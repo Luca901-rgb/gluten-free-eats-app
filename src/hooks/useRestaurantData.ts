@@ -41,6 +41,7 @@ export const useRestaurantData = (restaurantId?: string) => {
     rating: 4.7,
     totalReviews: 128,
     coverImage: '/placeholder.svg',
+    // Coordinate corrette per Via Toledo 42, Napoli
     location: {
       lat: 40.8388, 
       lng: 14.2488
