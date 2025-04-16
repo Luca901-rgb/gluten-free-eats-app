@@ -1,7 +1,8 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export interface RestaurantData {
+  id?: string;
   name: string;
   description: string;
   address: string;
@@ -15,17 +16,22 @@ export interface RestaurantData {
   rating: number;
   totalReviews: number;
   coverImage: string;
+  location?: {
+    lat: number;
+    lng: number;
+  };
 }
 
 export const useRestaurantData = (restaurantId?: string) => {
-  // In a real app, this would fetch data from an API based on the restaurantId
+  // In una vera app, questo recupererebbe i dati da un'API in base al restaurantId
   const [restaurantData] = useState<RestaurantData>({
-    name: 'La Trattoria Senza Glutine',
-    description: 'Ristorante 100% gluten free specializzato in cucina italiana tradizionale. Il nostro locale è certificato dall\'Associazione Italiana Celiachia e tutto il nostro menù è privo di glutine. Dal pane alla pasta, dalle pizze ai dolci, offriamo un\'esperienza gastronomica completa senza compromessi sul gusto.',
-    address: 'Via Roma 123, Milano, 20100',
-    phone: '+39 02 1234567',
-    email: 'info@trattoriasenzaglutine.it',
-    website: 'www.trattoriasenzaglutine.it',
+    id: '1',
+    name: 'Trattoria Keccabio',
+    description: 'Ristorante 100% gluten free specializzato in cucina campana tradizionale. Il nostro locale è certificato dall\'Associazione Italiana Celiachia e tutto il nostro menù è privo di glutine. Dal pane alla pasta, dalle pizze ai dolci, offriamo un\'esperienza gastronomica completa senza compromessi sul gusto.',
+    address: 'Via Toledo 42, Napoli, 80132',
+    phone: '+39 081 1234567',
+    email: 'keccabio@gmail.com',
+    website: 'www.keccabio.it',
     openingHours: [
       { days: 'Lunedì', hours: 'Chiuso' },
       { days: 'Martedì-Venerdì', hours: '12:00-14:30, 19:00-22:30' },
@@ -34,9 +40,22 @@ export const useRestaurantData = (restaurantId?: string) => {
     ],
     rating: 4.7,
     totalReviews: 128,
-    coverImage: '/placeholder.svg'
+    coverImage: '/placeholder.svg',
+    // Coordinate precise per Via Toledo 42, Napoli
+    location: {
+      lat: 40.8388, 
+      lng: 14.2488
+    }
   });
 
-  // In a real app, we might include loading and error states here
+  // Cache del ristorante nel localStorage per accesso rapido
+  useEffect(() => {
+    try {
+      localStorage.setItem('cachedKeccabioRestaurant', JSON.stringify(restaurantData));
+    } catch (e) {
+      console.error("Errore nel salvataggio cache ristorante:", e);
+    }
+  }, [restaurantData]);
+
   return { restaurantData };
 };

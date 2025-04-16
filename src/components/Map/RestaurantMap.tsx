@@ -26,6 +26,7 @@ interface Restaurant {
   };
   address: string;
   distance: string;
+  distanceValue?: number;
 }
 
 interface RestaurantMapProps {
@@ -47,10 +48,13 @@ export const RestaurantMap: FC<RestaurantMapProps> = ({
   restaurants 
 }) => {
   const navigate = useNavigate();
-  // Default center if no user location is provided (centered on Italy)
-  const defaultCenter: [number, number] = [41.9028, 12.4964];
-  const center: [number, number] = userLocation ? [userLocation.lat, userLocation.lng] : defaultCenter;
-  const zoom = userLocation ? 13 : 6;
+  
+  // Coordiante di Napoli come centro di default per la Campania
+  const campaniaCenter: [number, number] = [40.8518, 14.2681]; // Napoli
+  
+  // Default center if no user location is provided
+  const defaultCenter: [number, number] = userLocation ? [userLocation.lat, userLocation.lng] : campaniaCenter;
+  const zoom = userLocation ? 13 : 9; // Zoom out a bit per mostrare più della Campania quando non c'è posizione utente
   
   // Custom restaurant marker icon
   const restaurantIcon = new L.Icon({
@@ -75,34 +79,50 @@ export const RestaurantMap: FC<RestaurantMapProps> = ({
   const navigateToRestaurant = (restaurantId: string, lat: number, lng: number) => {
     // Navigate to the restaurant details page
     navigate(`/restaurant/${restaurantId}`);
+  };
+  
+  // Funzione specifica per aprire Google Maps
+  const openGoogleMaps = (lat: number, lng: number, e: React.MouseEvent) => {
+    e.stopPropagation(); // Ferma la propagazione dell'evento per non attivare anche navigateToRestaurant
     
-    // In a real app, you might also launch navigation in Google Maps
-    // This code demonstrates how to open Google Maps with directions
     if (userLocation) {
+      // Apri Google Maps con le indicazioni stradali dalla posizione utente
       const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${userLocation.lat},${userLocation.lng}&destination=${lat},${lng}&travelmode=driving`;
       window.open(googleMapsUrl, '_blank');
       toast.success('Apertura navigazione verso il ristorante');
+    } else {
+      // Se non abbiamo la posizione utente, apri semplicemente la posizione del ristorante
+      const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+      window.open(googleMapsUrl, '_blank');
+      toast.success('Apertura mappa del ristorante');
     }
   };
 
   return (
     <div className="h-full w-full">
       <div className="h-full rounded-lg overflow-hidden border border-gray-200 shadow-sm">
-        <MapContainer style={{ height: '100%', width: '100%' }} className="z-0">
+        <MapContainer 
+          style={{ height: '100%', width: '100%' }} 
+          className="z-0"
+          key={`map-${defaultCenter[0]}-${defaultCenter[1]}-${zoom}`} // Force re-render when center/zoom changes
+          // @ts-expect-error - center and zoom are valid props but TypeScript types are incorrect
+          center={defaultCenter} 
+          zoom={zoom}
+        >
           <TileLayer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            // @ts-ignore - attribution is valid but TypeScript doesn't recognize it
+            // @ts-expect-error - attribution is valid but TypeScript types are incorrect
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           />
           
           {/* Dynamic center recalculation when userLocation changes */}
-          <SetMapView center={center} zoom={zoom} />
+          {userLocation && <SetMapView center={[userLocation.lat, userLocation.lng]} zoom={zoom} />}
           
           {/* User location marker */}
           {userLocation && (
             <Marker 
               position={[userLocation.lat, userLocation.lng]}
-              // @ts-ignore - icon is a valid prop but TypeScript doesn't recognize it properly
+              // @ts-expect-error - icon is valid but TypeScript types are incorrect
               icon={userIcon}
             >
               <Popup>
@@ -116,7 +136,7 @@ export const RestaurantMap: FC<RestaurantMapProps> = ({
             <Marker 
               key={restaurant.id} 
               position={[restaurant.location.lat, restaurant.location.lng]}
-              // @ts-ignore - icon is a valid prop but TypeScript doesn't recognize it properly
+              // @ts-expect-error - icon is valid but TypeScript types are incorrect
               icon={restaurantIcon}
             >
               <Popup>
@@ -124,13 +144,23 @@ export const RestaurantMap: FC<RestaurantMapProps> = ({
                   <h5 className="font-medium">{restaurant.name}</h5>
                   <p className="text-sm text-gray-600">{restaurant.address}</p>
                   <p className="text-sm font-medium text-primary">{restaurant.distance}</p>
-                  <Button 
-                    onClick={() => navigateToRestaurant(restaurant.id, restaurant.location.lat, restaurant.location.lng)}
-                    className="mt-2 w-full"
-                    size="sm"
-                  >
-                    <Navigation className="mr-1 h-4 w-4" /> Vai da qui
-                  </Button>
+                  <div className="flex gap-2 mt-2">
+                    <Button 
+                      onClick={() => navigateToRestaurant(restaurant.id, restaurant.location.lat, restaurant.location.lng)}
+                      className="flex-1"
+                      size="sm"
+                    >
+                      Dettagli
+                    </Button>
+                    <Button 
+                      onClick={(e) => openGoogleMaps(restaurant.location.lat, restaurant.location.lng, e)}
+                      className="flex-1"
+                      size="sm"
+                      variant="outline"
+                    >
+                      <Navigation className="mr-1 h-4 w-4" /> Maps
+                    </Button>
+                  </div>
                 </div>
               </Popup>
             </Marker>

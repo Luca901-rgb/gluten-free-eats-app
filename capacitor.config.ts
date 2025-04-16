@@ -1,3 +1,4 @@
+
 import { CapacitorConfig } from '@capacitor/cli';
 const config: CapacitorConfig = {
   appId: 'com.glutenfreeeats.app',
@@ -32,11 +33,13 @@ const config: CapacitorConfig = {
     },
     Geolocation: {
       permissions: {
-        android: {
-          highAccuracy: true
-        },
         ios: {
-          alwaysPromptForPermission: false
+          always: false,
+          whenInUse: true
+        },
+        android: {
+          highAccuracy: true,
+          coarseOnly: false
         }
       }
     }
@@ -46,7 +49,7 @@ const config: CapacitorConfig = {
     allowMixedContent: true,
     captureInput: true,
     webContentsDebuggingEnabled: true,
-    minSdkVersion: 22,
+    minSdkVersion: 21,
     hideLogs: false,
     buildOptions: {
       keystorePath: null,
@@ -54,12 +57,23 @@ const config: CapacitorConfig = {
       keystoreAlias: null,
       keystoreAliasPassword: null,
       releaseType: null
-    }
+    },
+    permissions: [
+      "android.permission.ACCESS_COARSE_LOCATION",
+      "android.permission.ACCESS_FINE_LOCATION",
+      "android.permission.INTERNET"
+    ]
   },
   ios: {
     preferredContentMode: "mobile",
     cordovaSwiftVersion: "5.0",
-    contentInset: "always"
+    contentInset: "always",
+    permissions: {
+      locationWhenInUse: {
+        "title": "Accesso alla tua posizione",
+        "message": "Gluten Free Eats ha bisogno della tua posizione per mostrarti i ristoranti nelle vicinanze"
+      }
+    }
   }
 };
 export default config;
