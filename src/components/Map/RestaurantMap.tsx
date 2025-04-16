@@ -26,6 +26,7 @@ interface Restaurant {
   };
   address: string;
   distance: string;
+  distanceValue?: number;
 }
 
 interface RestaurantMapProps {
@@ -78,23 +79,28 @@ export const RestaurantMap: FC<RestaurantMapProps> = ({
   const navigateToRestaurant = (restaurantId: string, lat: number, lng: number) => {
     // Navigate to the restaurant details page
     navigate(`/restaurant/${restaurantId}`);
+  };
+  
+  // Funzione specifica per aprire Google Maps
+  const openGoogleMaps = (lat: number, lng: number, e: React.MouseEvent) => {
+    e.stopPropagation(); // Ferma la propagazione dell'evento per non attivare anche navigateToRestaurant
     
-    // In a real app, you might also launch navigation in Google Maps
-    // This code demonstrates how to open Google Maps with directions
     if (userLocation) {
+      // Apri Google Maps con le indicazioni stradali dalla posizione utente
       const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${userLocation.lat},${userLocation.lng}&destination=${lat},${lng}&travelmode=driving`;
       window.open(googleMapsUrl, '_blank');
       toast.success('Apertura navigazione verso il ristorante');
+    } else {
+      // Se non abbiamo la posizione utente, apri semplicemente la posizione del ristorante
+      const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+      window.open(googleMapsUrl, '_blank');
+      toast.success('Apertura mappa del ristorante');
     }
   };
 
   return (
     <div className="h-full w-full">
       <div className="h-full rounded-lg overflow-hidden border border-gray-200 shadow-sm">
-        {/* 
-          The issue is with the TypeScript type definitions for react-leaflet.
-          We need to work around the type issues without using ts-ignore.
-        */}
         <MapContainer 
           style={{ height: '100%', width: '100%' }} 
           className="z-0"
@@ -138,13 +144,23 @@ export const RestaurantMap: FC<RestaurantMapProps> = ({
                   <h5 className="font-medium">{restaurant.name}</h5>
                   <p className="text-sm text-gray-600">{restaurant.address}</p>
                   <p className="text-sm font-medium text-primary">{restaurant.distance}</p>
-                  <Button 
-                    onClick={() => navigateToRestaurant(restaurant.id, restaurant.location.lat, restaurant.location.lng)}
-                    className="mt-2 w-full"
-                    size="sm"
-                  >
-                    <Navigation className="mr-1 h-4 w-4" /> Vai da qui
-                  </Button>
+                  <div className="flex gap-2 mt-2">
+                    <Button 
+                      onClick={() => navigateToRestaurant(restaurant.id, restaurant.location.lat, restaurant.location.lng)}
+                      className="flex-1"
+                      size="sm"
+                    >
+                      Dettagli
+                    </Button>
+                    <Button 
+                      onClick={(e) => openGoogleMaps(restaurant.location.lat, restaurant.location.lng, e)}
+                      className="flex-1"
+                      size="sm"
+                      variant="outline"
+                    >
+                      <Navigation className="mr-1 h-4 w-4" /> Maps
+                    </Button>
+                  </div>
                 </div>
               </Popup>
             </Marker>

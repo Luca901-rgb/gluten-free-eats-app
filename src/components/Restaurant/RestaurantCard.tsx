@@ -1,8 +1,10 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Heart } from 'lucide-react';
+import { Heart, Navigation } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import StarRating from '@/components/common/StarRating';
+import { toast } from 'sonner';
 
 export interface Restaurant {
   id: string;
@@ -14,8 +16,13 @@ export interface Restaurant {
   description?: string;
   address?: string;
   distance?: string;
+  location?: {
+    lat: number;
+    lng: number;
+  };
   isFavorite?: boolean;
   hasGlutenFreeOptions?: boolean;
+  distanceValue?: number;
 }
 
 interface RestaurantCardProps {
@@ -28,7 +35,7 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({
   onToggleFavorite 
 }) => {
   const navigate = useNavigate();
-  const { id, name, image, rating, reviews, cuisine, distance, isFavorite } = restaurant;
+  const { id, name, image, rating, reviews, cuisine, distance, isFavorite, location } = restaurant;
 
   const handleCardClick = () => {
     navigate(`/restaurant/${id}`);
@@ -38,6 +45,20 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({
     e.stopPropagation();
     if (onToggleFavorite) {
       onToggleFavorite(id);
+    }
+  };
+  
+  // Funzione per aprire Google Maps
+  const handleNavigateClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Previene l'attivazione dell'onClick del Card
+    
+    if (location) {
+      // Apri Google Maps nella posizione del ristorante
+      const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${location.lat},${location.lng}`;
+      window.open(googleMapsUrl, '_blank');
+      toast.success('Apertura mappa del ristorante');
+    } else {
+      toast.error('Coordinate del ristorante non disponibili');
     }
   };
 
@@ -52,15 +73,30 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({
           alt={name} 
           className="w-full h-full object-cover"
         />
-        <button 
-          className="absolute top-3 right-3 p-2 rounded-full bg-white/80 hover:bg-white transition-colors"
-          onClick={handleFavoriteClick}
-        >
-          <Heart 
-            size={20} 
-            className={isFavorite ? "fill-red-500 text-red-500" : "text-gray-500"} 
-          />
-        </button>
+        <div className="absolute top-3 right-3 flex gap-2">
+          {location && (
+            <button 
+              className="p-2 rounded-full bg-white/80 hover:bg-white transition-colors"
+              onClick={handleNavigateClick}
+              title="Apri in Google Maps"
+            >
+              <Navigation 
+                size={20} 
+                className="text-primary" 
+              />
+            </button>
+          )}
+          <button 
+            className="p-2 rounded-full bg-white/80 hover:bg-white transition-colors"
+            onClick={handleFavoriteClick}
+            title={isFavorite ? "Rimuovi dai preferiti" : "Aggiungi ai preferiti"}
+          >
+            <Heart 
+              size={20} 
+              className={isFavorite ? "fill-red-500 text-red-500" : "text-gray-500"} 
+            />
+          </button>
+        </div>
       </div>
       <CardContent className="p-4">
         <h3 className="font-poppins font-semibold text-lg mb-1 text-primary">{name}</h3>

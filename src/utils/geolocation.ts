@@ -1,3 +1,4 @@
+
 interface Coordinates {
   lat: number;
   lng: number;
@@ -33,29 +34,22 @@ export const AVAILABLE_REGIONS: Region[] = [
  * Verifica se le coordinate sono all'interno della regione Campania
  */
 export const isInAvailableRegion = (coords: Coordinates): { inRegion: boolean; regionName?: string } => {
-  console.log("Verifica regione per le coordinate:", coords);
-  
-  // In modalità di sviluppo, ritorna sempre true
+  // In modalità di sviluppo, ritorna sempre true per velocizzare i test
   if (import.meta.env.DEV) {
-    console.log("Modalità sviluppo: regione sempre disponibile");
     return { inRegion: true, regionName: "Campania (Sviluppo)" };
   }
   
   for (const region of AVAILABLE_REGIONS) {
     const { bounds } = region;
-    console.log(`Verificando confini della regione ${region.name}:`, bounds);
     if (
       coords.lat <= bounds.north &&
       coords.lat >= bounds.south &&
       coords.lng <= bounds.east &&
       coords.lng >= bounds.west
     ) {
-      console.log(`Coordinate in regione: ${region.name}`);
       return { inRegion: true, regionName: region.name };
     }
   }
-  
-  console.log("Coordinate NON in regione disponibile");
   
   // Per testing, permettiamo comunque l'accesso
   return { inRegion: true, regionName: "Fuori Campania (ma permesso per testing)" };
@@ -142,40 +136,62 @@ export const requestGeolocationPermission = (): Promise<boolean> => {
 
 /**
  * Ottiene la posizione dell'utente e verifica se è in una regione disponibile
+ * Versione ottimizzata con cache per prestazioni migliori
  */
 export const checkUserRegion = (): Promise<{ inRegion: boolean; regionName?: string; error?: string }> => {
-  console.log("Verifica della regione utente...");
+  // Cache per migliorare le prestazioni
+  const cachedResult = sessionStorage.getItem('userRegionCheck');
+  if (cachedResult) {
+    try {
+      return Promise.resolve(JSON.parse(cachedResult));
+    } catch (e) {
+      console.error("Errore nel parsing della cache regione:", e);
+      // Continua con il controllo normale se c'è un errore
+    }
+  }
+
+  // In modalità di sviluppo, consentiamo sempre l'accesso
+  if (import.meta.env.DEV) {
+    const result = { inRegion: true, regionName: "Campania (Sviluppo)" };
+    try {
+      sessionStorage.setItem('userRegionCheck', JSON.stringify(result));
+    } catch (e) {
+      console.error("Errore nel salvataggio cache regione:", e);
+    }
+    return Promise.resolve(result);
+  }
+  
   return new Promise((resolve) => {
     if (!navigator.geolocation) {
-      resolve({ 
+      const result = { 
         inRegion: false, 
         error: "La geolocalizzazione non è supportata dal tuo browser" 
-      });
-      return;
-    }
-    
-    // In modalità di sviluppo, consentiamo sempre l'accesso
-    if (import.meta.env.DEV) {
-      resolve({ 
-        inRegion: true, 
-        regionName: "Campania (Sviluppo)" 
-      });
+      };
+      resolve(result);
       return;
     }
     
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        console.log("Posizione ottenuta:", position.coords);
         const coords = {
           lat: position.coords.latitude,
           lng: position.coords.longitude
         };
         
         const regionCheck = isInAvailableRegion(coords);
-        resolve({ 
+        const result = { 
           inRegion: regionCheck.inRegion, 
           regionName: regionCheck.regionName 
-        });
+        };
+
+        // Salva in cache per migliorare le prestazioni future
+        try {
+          sessionStorage.setItem('userRegionCheck', JSON.stringify(result));
+        } catch (e) {
+          console.error("Errore nel salvataggio cache regione:", e);
+        }
+        
+        resolve(result);
       },
       (error) => {
         let errorMessage = "Errore nel recupero della posizione";
@@ -191,19 +207,18 @@ export const checkUserRegion = (): Promise<{ inRegion: boolean; regionName?: str
             break;
         }
         
-        console.error("Errore geolocalizzazione:", errorMessage, "Codice:", error.code);
-        
         // In caso di errore, permettiamo comunque di accedere all'app
         // per non bloccare completamente l'esperienza utente
-        resolve({ 
-          inRegion: false, 
+        const result = { 
+          inRegion: true, // Permettiamo accesso anche con errori
           error: errorMessage 
-        });
+        };
+        resolve(result);
       },
       {
-        enableHighAccuracy: true,
-        timeout: 15000,  // Aumentato il timeout a 15 secondi
-        maximumAge: 0  // Non usare cache
+        enableHighAccuracy: false, // Impostato a false per velocizzare il recupero della posizione
+        timeout: 5000,  // Ridotto a 5 secondi per velocizzare
+        maximumAge: 600000  // Cache per 10 minuti
       }
     );
   });

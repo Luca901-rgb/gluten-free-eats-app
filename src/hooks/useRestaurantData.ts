@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export interface RestaurantData {
   id?: string;
@@ -23,7 +23,7 @@ export interface RestaurantData {
 }
 
 export const useRestaurantData = (restaurantId?: string) => {
-  // In a real app, this would fetch data from an API based on the restaurantId
+  // In una vera app, questo recupererebbe i dati da un'API in base al restaurantId
   const [restaurantData] = useState<RestaurantData>({
     id: '1',
     name: 'Trattoria Keccabio',
@@ -41,13 +41,21 @@ export const useRestaurantData = (restaurantId?: string) => {
     rating: 4.7,
     totalReviews: 128,
     coverImage: '/placeholder.svg',
-    // Coordinate corrette per Via Toledo 42, Napoli
+    // Coordinate precise per Via Toledo 42, Napoli
     location: {
       lat: 40.8388, 
       lng: 14.2488
     }
   });
 
-  // In a real app, we might include loading and error states here
+  // Cache del ristorante nel localStorage per accesso rapido
+  useEffect(() => {
+    try {
+      localStorage.setItem('cachedKeccabioRestaurant', JSON.stringify(restaurantData));
+    } catch (e) {
+      console.error("Errore nel salvataggio cache ristorante:", e);
+    }
+  }, [restaurantData]);
+
   return { restaurantData };
 };
