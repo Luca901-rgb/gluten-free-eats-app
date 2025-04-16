@@ -91,10 +91,20 @@ export const RestaurantMap: FC<RestaurantMapProps> = ({
   return (
     <div className="h-full w-full">
       <div className="h-full rounded-lg overflow-hidden border border-gray-200 shadow-sm">
-        <MapContainer style={{ height: '100%', width: '100%' }} center={defaultCenter} zoom={zoom} className="z-0">
+        {/* 
+          The issue is with the 'center' and 'zoom' props on MapContainer.
+          In recent react-leaflet versions, these are not controllable props.
+          Instead, we need to set the initial center/zoom, then use the SetMapView component for updates.
+        */}
+        <MapContainer 
+          style={{ height: '100%', width: '100%' }} 
+          center={defaultCenter} 
+          zoom={zoom} 
+          className="z-0"
+          key={`map-${defaultCenter[0]}-${defaultCenter[1]}-${zoom}`} // Force re-render when center/zoom changes
+        >
           <TileLayer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            // @ts-ignore - attribution is valid but TypeScript doesn't recognize it
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           />
           
@@ -105,7 +115,6 @@ export const RestaurantMap: FC<RestaurantMapProps> = ({
           {userLocation && (
             <Marker 
               position={[userLocation.lat, userLocation.lng]}
-              // @ts-ignore - icon is a valid prop but TypeScript doesn't recognize it properly
               icon={userIcon}
             >
               <Popup>
@@ -119,7 +128,6 @@ export const RestaurantMap: FC<RestaurantMapProps> = ({
             <Marker 
               key={restaurant.id} 
               position={[restaurant.location.lat, restaurant.location.lng]}
-              // @ts-ignore - icon is a valid prop but TypeScript doesn't recognize it properly
               icon={restaurantIcon}
             >
               <Popup>
