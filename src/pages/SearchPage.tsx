@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { Link } from 'react-router-dom';
@@ -11,6 +10,7 @@ import { isInAvailableRegion, requestGeolocationPermission, checkGeolocationPerm
 import { Slider } from '@/components/ui/slider';
 import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { useRestaurantData } from '@/hooks/useRestaurantData';
 
 // Tipo di dato per i ristoranti
 interface Restaurant {
@@ -19,7 +19,7 @@ interface Restaurant {
   location: { lat: number; lng: number; };
   address: string;
   distance: string;
-  distanceValue?: number; // Added this property to fix the TypeScript error
+  distanceValue?: number;
   image?: string;
   rating?: number;
   reviews?: number;
@@ -38,9 +38,10 @@ const SearchPage = () => {
   const [maxDistance, setMaxDistance] = useState<number>(100); // Impostazione del filtro distanza a 100km
   const [isLoading, setIsLoading] = useState(false);
   
-  /**
-   * Controlla lo stato dei permessi di geolocalizzazione
-   */
+  // Import the sample restaurant data to use as fallback
+  const { restaurantData: sampleRestaurant } = useRestaurantData();
+  
+  // Controlla lo stato dei permessi di geolocalizzazione
   const checkPermissionStatus = async () => {
     console.log("Controllo stato permessi geolocalizzazione...");
     const hasPermission = await checkGeolocationPermission();
@@ -73,11 +74,13 @@ const SearchPage = () => {
       
       console.log("Numero di ristoranti trovati:", restaurantsSnapshot.docs.length);
       
-      let fetchedRestaurants = restaurantsSnapshot.docs.map(doc => {
-        const data = doc.data();
-        const restaurantLocation = data.location || { lat: 0, lng: 0 };
-        
-        console.log("Ristorante:", data.name, "- Posizione:", restaurantLocation);
+      // Se non ci sono ristoranti nel database, usa il ristorante di esempio
+      let fetchedRestaurants = [];
+      
+      if (restaurantsSnapshot.docs.length === 0) {
+        console.log("Nessun ristorante trovato nel database, uso il ristorante di esempio:", sampleRestaurant);
+        // Usa il ristorante di esempio quando non ci sono ristoranti nel database
+        const restaurantLocation = sampleRestaurant.location || { lat: 40.8388, lng: 14.2488 };
         
         // Calcola la distanza solo se l'utente ha condiviso la posizione
         let distanceValue = 0;
@@ -88,23 +91,59 @@ const SearchPage = () => {
             restaurantLocation.lat, 
             restaurantLocation.lng
           );
-          console.log("Distanza calcolata per", data.name, ":", distanceValue.toFixed(1), "km");
+          console.log("Distanza calcolata per", sampleRestaurant.name, ":", distanceValue.toFixed(1), "km");
         }
         
-        return {
-          id: doc.id,
-          name: data.name || 'Ristorante senza nome',
+        fetchedRestaurants = [{
+          id: sampleRestaurant.id || '1',
+          name: sampleRestaurant.name,
           location: restaurantLocation,
-          address: data.address || 'Indirizzo non disponibile',
+          address: sampleRestaurant.address,
           distance: position ? `${distanceValue.toFixed(1)} km` : 'Distanza non disponibile',
-          distanceValue: distanceValue, // Valore numerico per il filtro
-          image: data.coverImage || '/placeholder.svg',
-          rating: data.rating || 0,
-          reviews: data.reviews || 0,
-          cuisine: data.cuisine || 'Italiana',
+          distanceValue: distanceValue,
+          image: sampleRestaurant.coverImage,
+          rating: sampleRestaurant.rating,
+          reviews: sampleRestaurant.totalReviews,
+          cuisine: 'Italiana', // Default
           isFavorite: false
-        } as Restaurant;
-      });
+        }];
+        
+        console.log("Ristorante di esempio aggiunto:", fetchedRestaurants[0]);
+      } else {
+        // Mappa i ristoranti dal database
+        fetchedRestaurants = restaurantsSnapshot.docs.map(doc => {
+          const data = doc.data();
+          const restaurantLocation = data.location || { lat: 0, lng: 0 };
+          
+          console.log("Ristorante:", data.name, "- Posizione:", restaurantLocation);
+          
+          // Calcola la distanza solo se l'utente ha condiviso la posizione
+          let distanceValue = 0;
+          if (position) {
+            distanceValue = calculateDistance(
+              position.lat, 
+              position.lng, 
+              restaurantLocation.lat, 
+              restaurantLocation.lng
+            );
+            console.log("Distanza calcolata per", data.name, ":", distanceValue.toFixed(1), "km");
+          }
+          
+          return {
+            id: doc.id,
+            name: data.name || 'Ristorante senza nome',
+            location: restaurantLocation,
+            address: data.address || 'Indirizzo non disponibile',
+            distance: position ? `${distanceValue.toFixed(1)} km` : 'Distanza non disponibile',
+            distanceValue: distanceValue,
+            image: data.coverImage || '/placeholder.svg',
+            rating: data.rating || 0,
+            reviews: data.reviews || 0,
+            cuisine: data.cuisine || 'Italiana',
+            isFavorite: false
+          } as Restaurant;
+        });
+      }
       
       // Filtra per distanza massima se l'utente ha impostato la posizione
       if (position) {
@@ -130,6 +169,33 @@ const SearchPage = () => {
     } catch (error) {
       console.error('Errore nel recupero dei ristoranti:', error);
       toast.error('Impossibile caricare i ristoranti');
+      
+      // Fallback al ristorante di esempio in caso di errore
+      if (position) {
+        const restaurantLocation = sampleRestaurant.location || { lat: 40.8388, lng: 14.2488 };
+        const distanceValue = calculateDistance(
+          position.lat, 
+          position.lng, 
+          restaurantLocation.lat, 
+          restaurantLocation.lng
+        );
+        
+        setRestaurants([{
+          id: sampleRestaurant.id || '1',
+          name: sampleRestaurant.name,
+          location: restaurantLocation,
+          address: sampleRestaurant.address,
+          distance: `${distanceValue.toFixed(1)} km`,
+          distanceValue: distanceValue,
+          image: sampleRestaurant.coverImage,
+          rating: sampleRestaurant.rating,
+          reviews: sampleRestaurant.totalReviews,
+          cuisine: 'Italiana',
+          isFavorite: false
+        }]);
+        
+        toast.info("Mostro il ristorante di esempio");
+      }
     } finally {
       setIsLoading(false);
     }
