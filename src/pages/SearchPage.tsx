@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ChefHat, MapPin, Navigation, Info, AlertTriangle } from 'lucide-react';
+import { ChefHat, MapPin, Navigation, Info, AlertTriangle, Settings } from 'lucide-react';
 import { RestaurantMap } from '@/components/Map/RestaurantMap';
 import { toast } from 'sonner';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -55,40 +55,51 @@ const SearchPage = () => {
   const [restaurants, setRestaurants] = useState(sampleRestaurantLocations);
   const [inAvailableRegion, setInAvailableRegion] = useState<boolean | null>(null);
   const [permissionState, setPermissionState] = useState<string | null>(null);
+  const [hasRequestedPermission, setHasRequestedPermission] = useState(false);
   
   /**
    * Controlla lo stato dei permessi di geolocalizzazione
    */
   const checkPermissionStatus = async () => {
+    console.log("Controllo stato permessi geolocalizzazione...");
     const hasPermission = await checkGeolocationPermission();
     setPermissionState(hasPermission ? 'granted' : 'denied');
+    console.log("Stato permessi:", hasPermission ? 'granted' : 'denied');
     return hasPermission;
   };
   
   const getUserLocation = async () => {
+    console.log("Richiesta posizione utente...");
     setIsLocating(true);
     setLocationError(null);
+    setHasRequestedPermission(true);
     
     try {
-      // Richiedi i permessi esplicitamente (ideale su dispositivi mobili)
+      // Richiedi i permessi esplicitamente
+      console.log("Richiesta permessi esplicita...");
       const permissionGranted = await requestGeolocationPermission();
       
+      console.log("Permessi concessi?", permissionGranted);
+      
       if (!permissionGranted) {
-        setLocationError("Permessi di posizione non concessi. Verifica le impostazioni del dispositivo.");
+        setLocationError("Permessi di posizione non concessi. Per trovare ristoranti vicini, attiva la geolocalizzazione nelle impostazioni del dispositivo.");
         setIsLocating(false);
-        toast.error("Impossibile accedere alla posizione. Controlla i permessi del dispositivo nelle impostazioni.");
+        setPermissionState('denied');
+        toast.error("Accesso alla posizione negato. Verifica i permessi del dispositivo nelle impostazioni.");
         return;
       }
     
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           (position) => {
+            console.log("Posizione ottenuta:", position.coords);
             const pos = {
               lat: position.coords.latitude,
               lng: position.coords.longitude
             };
             
             setUserPosition(pos);
+            setPermissionState('granted');
             
             const regionCheck = isInAvailableRegion(pos);
             setInAvailableRegion(regionCheck.inRegion);
@@ -102,12 +113,13 @@ const SearchPage = () => {
             setIsLocating(false);
           },
           (error) => {
-            console.error('Error getting location:', error);
+            console.error('Errore durante il recupero della posizione:', error);
             
             let errorMessage = "Impossibile determinare la tua posizione.";
             switch (error.code) {
               case error.PERMISSION_DENIED:
                 errorMessage = "Accesso alla posizione negato. Verifica i permessi del dispositivo nelle impostazioni.";
+                setPermissionState('denied');
                 break;
               case error.POSITION_UNAVAILABLE:
                 errorMessage = "Dati sulla posizione non disponibili.";
@@ -149,6 +161,10 @@ const SearchPage = () => {
     // invece che all'avvio automatico della pagina
   }, []);
   
+  const openSettingsGuide = () => {
+    toast.info("Per attivare la geolocalizzazione: apri le Impostazioni del dispositivo → App → Gluten Free Eats → Autorizzazioni → Posizione → Consenti");
+  };
+  
   const handleToggleFavorite = (id: string) => {
     setRestaurants(restaurants.map(restaurant => 
       restaurant.id === id 
@@ -183,12 +199,20 @@ const SearchPage = () => {
         )}
         
         {/* Permission denied alert */}
-        {permissionState === 'denied' && !locationError && (
+        {(permissionState === 'denied' && hasRequestedPermission) && (
           <Alert variant="destructive" className="mb-4">
             <AlertTriangle className="h-4 w-4" />
             <AlertTitle>Permessi posizione non concessi</AlertTitle>
             <AlertDescription>
               Per utilizzare tutte le funzionalità dell&apos;app, attiva la geolocalizzazione nelle impostazioni del dispositivo.
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={openSettingsGuide}
+                className="mt-2 flex items-center gap-1"
+              >
+                <Settings size={14} /> Apri impostazioni
+              </Button>
             </AlertDescription>
           </Alert>
         )}
@@ -205,8 +229,18 @@ const SearchPage = () => {
           </Button>
           
           {locationError && (
-            <div className="p-2 bg-red-50 border border-red-200 rounded-md text-red-600 text-sm mb-4">
+            <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-600 text-sm mb-4">
               {locationError}
+              {permissionState === 'denied' && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={openSettingsGuide}
+                  className="mt-2 text-red-600 hover:text-red-700 hover:bg-red-100 w-full flex items-center justify-center gap-1"
+                >
+                  <Settings size={14} /> Come attivare la geolocalizzazione
+                </Button>
+              )}
             </div>
           )}
           

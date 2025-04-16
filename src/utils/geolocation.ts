@@ -50,10 +50,11 @@ export const isInAvailableRegion = (coords: Coordinates): { inRegion: boolean; r
 };
 
 /**
- * Per app mobile: Verifica se l'app ha i permessi di geolocalizzazione
+ * Verifica se l'app ha i permessi di geolocalizzazione
+ * Restituisce una promessa che si risolve con un boolean che indica se l'app ha i permessi
  */
 export const checkGeolocationPermission = async (): Promise<boolean> => {
-  // Per app web standard
+  // Verifica per browser web moderni
   if (typeof navigator !== 'undefined' && navigator.permissions) {
     try {
       const result = await navigator.permissions.query({ name: 'geolocation' as PermissionName });
@@ -64,14 +65,74 @@ export const checkGeolocationPermission = async (): Promise<boolean> => {
     }
   }
   
-  // Se non possiamo verificare i permessi, assumiamo che non li abbiamo
-  return false;
+  // Metodo alternativo per verificare i permessi
+  return new Promise((resolve) => {
+    if (!navigator.geolocation) {
+      resolve(false);
+      return;
+    }
+    
+    // Timeout breve per verificare se la geolocalizzazione è disponibile
+    const timeoutId = setTimeout(() => {
+      console.log("Timeout durante il controllo dei permessi di geolocalizzazione");
+      resolve(false);
+    }, 3000);
+    
+    navigator.geolocation.getCurrentPosition(
+      () => {
+        clearTimeout(timeoutId);
+        resolve(true);
+      },
+      (error) => {
+        clearTimeout(timeoutId);
+        console.log("Errore durante il controllo dei permessi:", error.code, error.message);
+        resolve(false);
+      },
+      { timeout: 2000, maximumAge: 0 }
+    );
+  });
+};
+
+/**
+ * Richiede i permessi di geolocalizzazione in modo esplicito
+ * Ideale da chiamare in risposta a un'azione utente come un click
+ */
+export const requestGeolocationPermission = (): Promise<boolean> => {
+  console.log("Richiesta permessi di geolocalizzazione...");
+  return new Promise((resolve) => {
+    if (!navigator.geolocation) {
+      console.error("Geolocalizzazione non supportata");
+      resolve(false);
+      return;
+    }
+    
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        console.log("Permessi di geolocalizzazione concessi, posizione ottenuta:", position.coords);
+        resolve(true);
+      },
+      (error) => {
+        console.error("Permessi di geolocalizzazione negati:", error.code, error.message);
+        // Codici di errore:
+        // 1: PERMISSION_DENIED
+        // 2: POSITION_UNAVAILABLE
+        // 3: TIMEOUT
+        resolve(false);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      }
+    );
+  });
 };
 
 /**
  * Ottiene la posizione dell'utente e verifica se è in una regione disponibile
  */
 export const checkUserRegion = (): Promise<{ inRegion: boolean; regionName?: string; error?: string }> => {
+  console.log("Verifica della regione utente...");
   return new Promise((resolve) => {
     if (!navigator.geolocation) {
       resolve({ 
@@ -92,6 +153,7 @@ export const checkUserRegion = (): Promise<{ inRegion: boolean; regionName?: str
     
     navigator.geolocation.getCurrentPosition(
       (position) => {
+        console.log("Posizione ottenuta:", position.coords);
         const coords = {
           lat: position.coords.latitude,
           lng: position.coords.longitude
@@ -117,48 +179,19 @@ export const checkUserRegion = (): Promise<{ inRegion: boolean; regionName?: str
             break;
         }
         
-        console.error("Errore geolocalizzazione:", errorMessage, error.code);
+        console.error("Errore geolocalizzazione:", errorMessage, "Codice:", error.code);
         
         // In caso di errore, permettiamo comunque di accedere all'app
         // per non bloccare completamente l'esperienza utente
         resolve({ 
-          inRegion: true, 
+          inRegion: false, 
           error: errorMessage 
         });
       },
       {
         enableHighAccuracy: true,
         timeout: 15000,  // Aumentato il timeout a 15 secondi
-        maximumAge: 60000  // Cache valida per 1 minuto
-      }
-    );
-  });
-};
-
-/**
- * Richiede i permessi di geolocalizzazione in modo esplicito
- * Utile da chiamare in risposta ad un click utente
- */
-export const requestGeolocationPermission = (): Promise<boolean> => {
-  return new Promise((resolve) => {
-    if (!navigator.geolocation) {
-      resolve(false);
-      return;
-    }
-    
-    navigator.geolocation.getCurrentPosition(
-      () => {
-        // Successo
-        resolve(true);
-      },
-      () => {
-        // Errore
-        resolve(false);
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
+        maximumAge: 0  // Non usare cache
       }
     );
   });

@@ -47,10 +47,13 @@ export const RestaurantMap: FC<RestaurantMapProps> = ({
   restaurants 
 }) => {
   const navigate = useNavigate();
-  // Default center if no user location is provided (centered on Italy)
-  const defaultCenter: [number, number] = [41.9028, 12.4964];
-  const center: [number, number] = userLocation ? [userLocation.lat, userLocation.lng] : defaultCenter;
-  const zoom = userLocation ? 13 : 6;
+  
+  // Coordiante di Napoli come centro di default per la Campania
+  const campaniaCenter: [number, number] = [40.8518, 14.2681]; // Napoli
+  
+  // Default center if no user location is provided
+  const defaultCenter: [number, number] = userLocation ? [userLocation.lat, userLocation.lng] : campaniaCenter;
+  const zoom = userLocation ? 13 : 9; // Zoom out a bit per mostrare più della Campania quando non c'è posizione utente
   
   // Custom restaurant marker icon
   const restaurantIcon = new L.Icon({
@@ -88,7 +91,7 @@ export const RestaurantMap: FC<RestaurantMapProps> = ({
   return (
     <div className="h-full w-full">
       <div className="h-full rounded-lg overflow-hidden border border-gray-200 shadow-sm">
-        <MapContainer style={{ height: '100%', width: '100%' }} className="z-0">
+        <MapContainer style={{ height: '100%', width: '100%' }} center={defaultCenter} zoom={zoom} className="z-0">
           <TileLayer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             // @ts-ignore - attribution is valid but TypeScript doesn't recognize it
@@ -96,7 +99,7 @@ export const RestaurantMap: FC<RestaurantMapProps> = ({
           />
           
           {/* Dynamic center recalculation when userLocation changes */}
-          <SetMapView center={center} zoom={zoom} />
+          {userLocation && <SetMapView center={[userLocation.lat, userLocation.lng]} zoom={zoom} />}
           
           {/* User location marker */}
           {userLocation && (

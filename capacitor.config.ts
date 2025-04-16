@@ -33,12 +33,13 @@ const config: CapacitorConfig = {
     },
     Geolocation: {
       permissions: {
+        ios: {
+          always: false,
+          whenInUse: true
+        },
         android: {
           highAccuracy: true,
-          alwaysPromptForPermission: true // Richiedi sempre il permesso esplicitamente
-        },
-        ios: {
-          alwaysPromptForPermission: true // Richiedi sempre il permesso esplicitamente
+          coarseOnly: false
         }
       }
     }
@@ -59,7 +60,8 @@ const config: CapacitorConfig = {
     },
     permissions: [
       "android.permission.ACCESS_COARSE_LOCATION",
-      "android.permission.ACCESS_FINE_LOCATION"
+      "android.permission.ACCESS_FINE_LOCATION",
+      "android.permission.INTERNET"
     ]
   },
   ios: {
