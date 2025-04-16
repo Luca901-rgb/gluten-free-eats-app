@@ -19,6 +19,7 @@ interface Restaurant {
   location: { lat: number; lng: number; };
   address: string;
   distance: string;
+  distanceValue?: number; // Added this property to fix the TypeScript error
   image?: string;
   rating?: number;
   reviews?: number;
