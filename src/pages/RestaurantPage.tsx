@@ -43,50 +43,64 @@ const RestaurantPage = () => {
         return;
       }
       
+      // Check if we have cached data first
+      if (cachedRestaurant) {
+        console.log("Using cached restaurant data:", cachedRestaurant);
+      }
+      
       try {
-        // Try to get from Firebase first
+        // Try to get from Firebase only if we're online
         if (navigator.onLine) {
-          const restaurantDoc = await getDoc(doc(db, "restaurants", id));
-          
-          if (restaurantDoc.exists()) {
-            const data = restaurantDoc.data();
+          try {
+            const restaurantDoc = await getDoc(doc(db, "restaurants", id));
             
-            // Fetch additional data like opening hours
-            let openingHours: { days: string; hours: string }[] = [];
-            try {
-              const hoursDoc = await getDoc(doc(db, "restaurants", id, "details", "hours"));
-              if (hoursDoc.exists()) {
-                openingHours = (hoursDoc.data().schedule || []).map((item: any) => ({
-                  days: item.day || item.days,
-                  hours: item.hours
-                }));
+            if (restaurantDoc.exists()) {
+              const data = restaurantDoc.data();
+              
+              // Fetch additional data like opening hours
+              let openingHours: { days: string; hours: string }[] = [];
+              try {
+                const hoursDoc = await getDoc(doc(db, "restaurants", id, "details", "hours"));
+                if (hoursDoc.exists()) {
+                  openingHours = (hoursDoc.data().schedule || []).map((item: any) => ({
+                    days: item.day || item.days,
+                    hours: item.hours
+                  }));
+                }
+              } catch (error) {
+                console.error("Error fetching opening hours:", error);
+                
+                // Use cached hours if available
+                if (cachedRestaurant?.openingHours) {
+                  openingHours = cachedRestaurant.openingHours;
+                }
               }
-            } catch (error) {
-              console.error("Error fetching opening hours:", error);
+              
+              setRestaurant({
+                id,
+                name: data.name || 'Ristorante',
+                description: data.description || 'Descrizione del ristorante non disponibile.',
+                coverImage: data.coverImage || '/placeholder.svg',
+                images: data.gallery || ['/placeholder.svg'],
+                address: data.address || 'Indirizzo non disponibile',
+                phone: data.phone || 'Telefono non disponibile',
+                openingHours,
+                rating: data.rating || 0,
+                reviews: data.reviewCount || 0,
+                hasGlutenFreeOptions: data.hasGlutenFreeOptions || true
+              });
+              
+              setIsLoading(false);
+              return;
             }
-            
-            setRestaurant({
-              id,
-              name: data.name || 'Ristorante',
-              description: data.description || 'Descrizione del ristorante non disponibile.',
-              coverImage: data.coverImage || '/placeholder.svg',
-              images: data.gallery || ['/placeholder.svg'],
-              address: data.address || 'Indirizzo non disponibile',
-              phone: data.phone || 'Telefono non disponibile',
-              openingHours,
-              rating: data.rating || 0,
-              reviews: data.reviewCount || 0,
-              hasGlutenFreeOptions: data.hasGlutenFreeOptions || true
-            });
-            
-            setIsLoading(false);
-            return;
+          } catch (error) {
+            console.error("Firebase error, falling back to cache:", error);
+            // Continue to fallback
           }
         }
         
         // If we're offline or the restaurant wasn't found, use cached data
         if (cachedRestaurant) {
-          console.log("Using cached restaurant data:", cachedRestaurant);
           setRestaurant({
             id: cachedRestaurant.id || id,
             name: cachedRestaurant.name,
@@ -95,37 +109,63 @@ const RestaurantPage = () => {
             images: [cachedRestaurant.coverImage, '/placeholder.svg', '/placeholder.svg'],
             address: cachedRestaurant.address,
             phone: cachedRestaurant.phone || '+39 081 1234567',
-            openingHours: cachedRestaurant.openingHours,
+            openingHours: cachedRestaurant.openingHours || [
+              { days: 'Lunedì', hours: 'Chiuso' },
+              { days: 'Martedì-Venerdì', hours: '12:00-14:30, 19:00-22:30' },
+              { days: 'Sabato', hours: '12:00-15:00, 19:00-23:00' },
+              { days: 'Domenica', hours: '12:00-15:00, 19:00-22:00' },
+            ],
             rating: cachedRestaurant.rating,
             reviews: cachedRestaurant.totalReviews,
             hasGlutenFreeOptions: cachedRestaurant.hasGlutenFreeOptions || true
           });
         } else {
-          // Show error message if neither online data nor cache is available
-          toast.error("Ristorante non trovato");
+          // If no cached data is available, use a default restaurant for demo purposes
+          setRestaurant({
+            id: id || '1',
+            name: 'Trattoria Keccabio',
+            description: 'Ristorante 100% gluten free specializzato in cucina campana tradizionale. Il nostro locale è certificato dall\'Associazione Italiana Celiachia e tutto il nostro menù è privo di glutine. Dal pane alla pasta, dalle pizze ai dolci, offriamo un\'esperienza gastronomica completa senza compromessi sul gusto.',
+            coverImage: '/placeholder.svg',
+            images: ['/placeholder.svg', '/placeholder.svg', '/placeholder.svg'],
+            address: 'Via Toledo 42, Napoli, 80132',
+            phone: '+39 081 1234567',
+            openingHours: [
+              { days: 'Lunedì', hours: 'Chiuso' },
+              { days: 'Martedì-Venerdì', hours: '12:00-14:30, 19:00-22:30' },
+              { days: 'Sabato', hours: '12:00-15:00, 19:00-23:00' },
+              { days: 'Domenica', hours: '12:00-15:00, 19:00-22:00' },
+            ],
+            rating: 4.7,
+            reviews: 128,
+            hasGlutenFreeOptions: true
+          });
+          
+          toast.info("Visualizzazione ristorante demo");
         }
       } catch (error) {
         console.error("Error fetching restaurant details:", error);
         
-        // Use cached data if available when there's an error
-        if (cachedRestaurant) {
-          console.log("Error occurred, using cached restaurant data");
-          setRestaurant({
-            id: cachedRestaurant.id || id,
-            name: cachedRestaurant.name,
-            description: cachedRestaurant.description,
-            coverImage: cachedRestaurant.coverImage,
-            images: [cachedRestaurant.coverImage, '/placeholder.svg', '/placeholder.svg'],
-            address: cachedRestaurant.address,
-            phone: cachedRestaurant.phone || '+39 081 1234567',
-            openingHours: cachedRestaurant.openingHours,
-            rating: cachedRestaurant.rating,
-            reviews: cachedRestaurant.totalReviews,
-            hasGlutenFreeOptions: cachedRestaurant.hasGlutenFreeOptions || true
-          });
-        } else {
-          toast.error("Si è verificato un errore nel caricamento dei dettagli del ristorante");
-        }
+        // Provide a default restaurant in all error cases
+        setRestaurant({
+          id: id || '1',
+          name: 'Trattoria Keccabio',
+          description: 'Ristorante 100% gluten free specializzato in cucina campana tradizionale. Il nostro locale è certificato dall\'Associazione Italiana Celiachia e tutto il nostro menù è privo di glutine. Dal pane alla pasta, dalle pizze ai dolci, offriamo un\'esperienza gastronomica completa senza compromessi sul gusto.',
+          coverImage: '/placeholder.svg',
+          images: ['/placeholder.svg', '/placeholder.svg', '/placeholder.svg'],
+          address: 'Via Toledo 42, Napoli, 80132',
+          phone: '+39 081 1234567',
+          openingHours: [
+            { days: 'Lunedì', hours: 'Chiuso' },
+            { days: 'Martedì-Venerdì', hours: '12:00-14:30, 19:00-22:30' },
+            { days: 'Sabato', hours: '12:00-15:00, 19:00-23:00' },
+            { days: 'Domenica', hours: '12:00-15:00, 19:00-22:00' },
+          ],
+          rating: 4.7,
+          reviews: 128,
+          hasGlutenFreeOptions: true
+        });
+        
+        toast.error("Si è verificato un errore, visualizzazione dati demo");
       } finally {
         setIsLoading(false);
       }
@@ -144,10 +184,20 @@ const RestaurantPage = () => {
     );
   }
   
-  // If restaurant not found, show error
-  if (!restaurant) {
-    return (
-      <Layout>
+  return (
+    <Layout>
+      {isOffline && (
+        <div className="mx-4 mt-2 p-2 bg-amber-50 border border-amber-200 rounded-md text-sm text-amber-700">
+          Stai visualizzando dati in modalità offline. Alcuni dettagli potrebbero non essere aggiornati.
+        </div>
+      )}
+      {restaurant ? (
+        <RestaurantDetails 
+          restaurant={restaurant} 
+          initialBookingCode={bookingCode || ''}
+          initialRestaurantCode={restaurantCode || ''}
+        />
+      ) : (
         <div className="p-4 text-center">
           <h1 className="text-2xl font-bold text-red-500 mb-4">Ristorante non trovato</h1>
           <p className="text-gray-600">Il ristorante che stai cercando non esiste o è stato rimosso.</p>
@@ -157,22 +207,7 @@ const RestaurantPage = () => {
             </div>
           )}
         </div>
-      </Layout>
-    );
-  }
-  
-  return (
-    <Layout>
-      {isOffline && (
-        <div className="mx-4 mt-2 p-2 bg-amber-50 border border-amber-200 rounded-md text-sm text-amber-700">
-          Stai visualizzando dati in modalità offline. Alcuni dettagli potrebbero non essere aggiornati.
-        </div>
       )}
-      <RestaurantDetails 
-        restaurant={restaurant} 
-        initialBookingCode={bookingCode || ''}
-        initialRestaurantCode={restaurantCode || ''}
-      />
     </Layout>
   );
 };
