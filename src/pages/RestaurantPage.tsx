@@ -7,6 +7,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { toast } from 'sonner';
 import { useRestaurantData } from '@/hooks/useRestaurantData';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const RestaurantPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -43,109 +44,33 @@ const RestaurantPage = () => {
         return;
       }
       
-      // Check if we have cached data first
+      // OPTIMIZATION: First immediately set data from cache if available
+      // This ensures we show content within milliseconds
       if (cachedRestaurant) {
-        console.log("Using cached restaurant data:", cachedRestaurant);
-      }
-      
-      try {
-        // Try to get from Firebase only if we're online
-        if (navigator.onLine) {
-          try {
-            const restaurantDoc = await getDoc(doc(db, "restaurants", id));
-            
-            if (restaurantDoc.exists()) {
-              const data = restaurantDoc.data();
-              
-              // Fetch additional data like opening hours
-              let openingHours: { days: string; hours: string }[] = [];
-              try {
-                const hoursDoc = await getDoc(doc(db, "restaurants", id, "details", "hours"));
-                if (hoursDoc.exists()) {
-                  openingHours = (hoursDoc.data().schedule || []).map((item: any) => ({
-                    days: item.day || item.days,
-                    hours: item.hours
-                  }));
-                }
-              } catch (error) {
-                console.error("Error fetching opening hours:", error);
-                
-                // Use cached hours if available
-                if (cachedRestaurant?.openingHours) {
-                  openingHours = cachedRestaurant.openingHours;
-                }
-              }
-              
-              setRestaurant({
-                id,
-                name: data.name || 'Ristorante',
-                description: data.description || 'Descrizione del ristorante non disponibile.',
-                coverImage: data.coverImage || '/placeholder.svg',
-                images: data.gallery || ['/placeholder.svg'],
-                address: data.address || 'Indirizzo non disponibile',
-                phone: data.phone || 'Telefono non disponibile',
-                openingHours,
-                rating: data.rating || 0,
-                reviews: data.reviewCount || 0,
-                hasGlutenFreeOptions: data.hasGlutenFreeOptions || true
-              });
-              
-              setIsLoading(false);
-              return;
-            }
-          } catch (error) {
-            console.error("Firebase error, falling back to cache:", error);
-            // Continue to fallback
-          }
-        }
+        console.log("Using cached restaurant data immediately:", cachedRestaurant);
+        setRestaurant({
+          id: cachedRestaurant.id || id,
+          name: cachedRestaurant.name,
+          description: cachedRestaurant.description,
+          coverImage: cachedRestaurant.coverImage,
+          images: [cachedRestaurant.coverImage, '/placeholder.svg', '/placeholder.svg'],
+          address: cachedRestaurant.address,
+          phone: cachedRestaurant.phone || '+39 081 1234567',
+          openingHours: cachedRestaurant.openingHours || [
+            { days: 'Lunedì', hours: 'Chiuso' },
+            { days: 'Martedì-Venerdì', hours: '12:00-14:30, 19:00-22:30' },
+            { days: 'Sabato', hours: '12:00-15:00, 19:00-23:00' },
+            { days: 'Domenica', hours: '12:00-15:00, 19:00-22:00' },
+          ],
+          rating: cachedRestaurant.rating,
+          reviews: cachedRestaurant.totalReviews,
+          hasGlutenFreeOptions: cachedRestaurant.hasGlutenFreeOptions || true
+        });
         
-        // If we're offline or the restaurant wasn't found, use cached data
-        if (cachedRestaurant) {
-          setRestaurant({
-            id: cachedRestaurant.id || id,
-            name: cachedRestaurant.name,
-            description: cachedRestaurant.description,
-            coverImage: cachedRestaurant.coverImage,
-            images: [cachedRestaurant.coverImage, '/placeholder.svg', '/placeholder.svg'],
-            address: cachedRestaurant.address,
-            phone: cachedRestaurant.phone || '+39 081 1234567',
-            openingHours: cachedRestaurant.openingHours || [
-              { days: 'Lunedì', hours: 'Chiuso' },
-              { days: 'Martedì-Venerdì', hours: '12:00-14:30, 19:00-22:30' },
-              { days: 'Sabato', hours: '12:00-15:00, 19:00-23:00' },
-              { days: 'Domenica', hours: '12:00-15:00, 19:00-22:00' },
-            ],
-            rating: cachedRestaurant.rating,
-            reviews: cachedRestaurant.totalReviews,
-            hasGlutenFreeOptions: cachedRestaurant.hasGlutenFreeOptions || true
-          });
-        } else {
-          // If no cached data is available, use a default restaurant for demo purposes
-          setRestaurant({
-            id: id || '1',
-            name: 'Trattoria Keccabio',
-            description: 'Ristorante 100% gluten free specializzato in cucina campana tradizionale. Il nostro locale è certificato dall\'Associazione Italiana Celiachia e tutto il nostro menù è privo di glutine. Dal pane alla pasta, dalle pizze ai dolci, offriamo un\'esperienza gastronomica completa senza compromessi sul gusto.',
-            coverImage: '/placeholder.svg',
-            images: ['/placeholder.svg', '/placeholder.svg', '/placeholder.svg'],
-            address: 'Via Toledo 42, Napoli, 80132',
-            phone: '+39 081 1234567',
-            openingHours: [
-              { days: 'Lunedì', hours: 'Chiuso' },
-              { days: 'Martedì-Venerdì', hours: '12:00-14:30, 19:00-22:30' },
-              { days: 'Sabato', hours: '12:00-15:00, 19:00-23:00' },
-              { days: 'Domenica', hours: '12:00-15:00, 19:00-22:00' },
-            ],
-            rating: 4.7,
-            reviews: 128,
-            hasGlutenFreeOptions: true
-          });
-          
-          toast.info("Visualizzazione ristorante demo");
-        }
-      } catch (error) {
-        console.error("Error fetching restaurant details:", error);
-        
-        // Provide a default restaurant in all error cases
+        // Stop loading indicator immediately when we show cached data
+        setIsLoading(false);
+      } else {
+        // If no cache is available, use a default restaurant immediately
         setRestaurant({
           id: id || '1',
           name: 'Trattoria Keccabio',
@@ -164,21 +89,108 @@ const RestaurantPage = () => {
           reviews: 128,
           hasGlutenFreeOptions: true
         });
-        
-        toast.error("Si è verificato un errore, visualizzazione dati demo");
-      } finally {
         setIsLoading(false);
+      }
+      
+      // OPTIMIZATION: After showing cached/default data immediately,
+      // try to refresh from Firebase but don't block UI
+      if (navigator.onLine) {
+        try {
+          const restaurantDoc = await getDoc(doc(db, "restaurants", id));
+          
+          if (restaurantDoc.exists()) {
+            const data = restaurantDoc.data();
+            
+            // Instead of nested waiting for hours, set defaults
+            let openingHours = [
+              { days: 'Lunedì', hours: 'Chiuso' },
+              { days: 'Martedì-Venerdì', hours: '12:00-14:30, 19:00-22:30' },
+              { days: 'Sabato', hours: '12:00-15:00, 19:00-23:00' },
+              { days: 'Domenica', hours: '12:00-15:00, 19:00-22:00' },
+            ];
+            
+            // Try to get hours but don't wait on it or block rendering
+            getDoc(doc(db, "restaurants", id, "details", "hours"))
+              .then(hoursDoc => {
+                if (hoursDoc.exists()) {
+                  const scheduleData = hoursDoc.data().schedule || [];
+                  openingHours = scheduleData.map((item: any) => ({
+                    days: item.day || item.days,
+                    hours: item.hours
+                  }));
+                  
+                  // Update only if user is still on the page
+                  setRestaurant(current => {
+                    if (current) {
+                      return {
+                        ...current,
+                        openingHours
+                      };
+                    }
+                    return current;
+                  });
+                }
+              })
+              .catch(err => console.log("Non-blocking hours fetch error:", err));
+            
+            // Update with Firebase data
+            setRestaurant({
+              id,
+              name: data.name || 'Ristorante',
+              description: data.description || 'Descrizione del ristorante non disponibile.',
+              coverImage: data.coverImage || '/placeholder.svg',
+              images: data.gallery || ['/placeholder.svg'],
+              address: data.address || 'Indirizzo non disponibile',
+              phone: data.phone || 'Telefono non disponibile',
+              openingHours,
+              rating: data.rating || 0,
+              reviews: data.reviewCount || 0,
+              hasGlutenFreeOptions: data.hasGlutenFreeOptions || true
+            });
+          }
+        } catch (error) {
+          console.error("Firebase error, already showing cache:", error);
+          // We're already showing cached/default data, so this is non-blocking
+        }
+      } else if (!cachedRestaurant) {
+        // Only show toast if we're offline and didn't have cached data
+        toast.info("Visualizzazione ristorante in modalità offline");
       }
     };
     
     fetchRestaurantDetails();
   }, [id, cachedRestaurant]);
   
+  // FAST LOADING WITH SKELETON SCREENS
   if (isLoading) {
     return (
       <Layout>
-        <div className="flex justify-center items-center min-h-[60vh]">
-          <div className="w-12 h-12 rounded-full border-4 border-primary border-t-transparent animate-spin"></div>
+        <div className="pb-20">
+          <div className="relative h-56 md:h-72">
+            <Skeleton className="w-full h-full" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-4">
+              <div className="space-y-2">
+                <Skeleton className="h-8 w-2/3" />
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-4 w-24" />
+                </div>
+                <Skeleton className="h-4 w-40" />
+              </div>
+            </div>
+          </div>
+          <div className="px-4 mt-4">
+            <div className="flex space-x-2 overflow-x-auto pb-2">
+              {[1, 2, 3, 4].map(i => (
+                <Skeleton key={i} className="h-9 w-24" />
+              ))}
+            </div>
+            <div className="mt-6 space-y-4">
+              <Skeleton className="h-6 w-40" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-4/5" />
+            </div>
+          </div>
         </div>
       </Layout>
     );
