@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import Layout from '@/components/Layout';
@@ -9,10 +8,30 @@ import { toast } from 'sonner';
 import { useRestaurantData } from '@/hooks/useRestaurantData';
 import { Skeleton } from '@/components/ui/skeleton';
 
+// PRECARICAMENTO DEI DATI DEFAULT
+const DEFAULT_RESTAURANT: RestaurantDetailProps = {
+  id: '1',
+  name: 'Trattoria Keccabio',
+  description: 'Ristorante 100% gluten free specializzato in cucina campana tradizionale. Il nostro locale è certificato dall\'Associazione Italiana Celiachia e tutto il nostro menù è privo di glutine. Dal pane alla pasta, dalle pizze ai dolci, offriamo un\'esperienza gastronomica completa senza compromessi sul gusto.',
+  coverImage: '/placeholder.svg',
+  images: ['/placeholder.svg', '/placeholder.svg', '/placeholder.svg'],
+  address: 'Via Toledo 42, Napoli, 80132',
+  phone: '+39 081 1234567',
+  openingHours: [
+    { days: 'Lunedì', hours: 'Chiuso' },
+    { days: 'Martedì-Venerdì', hours: '12:00-14:30, 19:00-22:30' },
+    { days: 'Sabato', hours: '12:00-15:00, 19:00-23:00' },
+    { days: 'Domenica', hours: '12:00-15:00, 19:00-22:00' },
+  ],
+  rating: 4.7,
+  reviews: 128,
+  hasGlutenFreeOptions: true
+};
+
 const RestaurantPage = () => {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false); // CAMBIO IMPORTANTE: inizia con false
   const [restaurant, setRestaurant] = useState<RestaurantDetailProps | null>(null);
   const { restaurantData: cachedRestaurant } = useRestaurantData(id);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
@@ -36,165 +55,96 @@ const RestaurantPage = () => {
     };
   }, []);
   
+  // OTTIMIZZAZIONE: Imposta i dati predefiniti immediatamente
   useEffect(() => {
-    const fetchRestaurantDetails = async () => {
-      if (!id) {
-        toast.error("ID del ristorante non valido");
-        setIsLoading(false);
-        return;
-      }
-      
-      // OPTIMIZATION: First immediately set data from cache if available
-      // This ensures we show content within milliseconds
-      if (cachedRestaurant) {
-        console.log("Using cached restaurant data immediately:", cachedRestaurant);
-        setRestaurant({
-          id: cachedRestaurant.id || id,
-          name: cachedRestaurant.name,
-          description: cachedRestaurant.description,
-          coverImage: cachedRestaurant.coverImage,
-          images: [cachedRestaurant.coverImage, '/placeholder.svg', '/placeholder.svg'],
-          address: cachedRestaurant.address,
-          phone: cachedRestaurant.phone || '+39 081 1234567',
-          openingHours: cachedRestaurant.openingHours || [
-            { days: 'Lunedì', hours: 'Chiuso' },
-            { days: 'Martedì-Venerdì', hours: '12:00-14:30, 19:00-22:30' },
-            { days: 'Sabato', hours: '12:00-15:00, 19:00-23:00' },
-            { days: 'Domenica', hours: '12:00-15:00, 19:00-22:00' },
-          ],
-          rating: cachedRestaurant.rating,
-          reviews: cachedRestaurant.totalReviews,
-          hasGlutenFreeOptions: cachedRestaurant.hasGlutenFreeOptions || true
-        });
-        
-        // Stop loading indicator immediately when we show cached data
-        setIsLoading(false);
-      } else {
-        // If no cache is available, use a default restaurant immediately
-        setRestaurant({
-          id: id || '1',
-          name: 'Trattoria Keccabio',
-          description: 'Ristorante 100% gluten free specializzato in cucina campana tradizionale. Il nostro locale è certificato dall\'Associazione Italiana Celiachia e tutto il nostro menù è privo di glutine. Dal pane alla pasta, dalle pizze ai dolci, offriamo un\'esperienza gastronomica completa senza compromessi sul gusto.',
-          coverImage: '/placeholder.svg',
-          images: ['/placeholder.svg', '/placeholder.svg', '/placeholder.svg'],
-          address: 'Via Toledo 42, Napoli, 80132',
-          phone: '+39 081 1234567',
-          openingHours: [
-            { days: 'Lunedì', hours: 'Chiuso' },
-            { days: 'Martedì-Venerdì', hours: '12:00-14:30, 19:00-22:30' },
-            { days: 'Sabato', hours: '12:00-15:00, 19:00-23:00' },
-            { days: 'Domenica', hours: '12:00-15:00, 19:00-22:00' },
-          ],
-          rating: 4.7,
-          reviews: 128,
-          hasGlutenFreeOptions: true
-        });
-        setIsLoading(false);
-      }
-      
-      // OPTIMIZATION: After showing cached/default data immediately,
-      // try to refresh from Firebase but don't block UI
-      if (navigator.onLine) {
-        try {
-          const restaurantDoc = await getDoc(doc(db, "restaurants", id));
+    // Imposta immediatamente il default o il cached restaurant
+    if (cachedRestaurant) {
+      setRestaurant({
+        id: cachedRestaurant.id || id || '1',
+        name: cachedRestaurant.name,
+        description: cachedRestaurant.description,
+        coverImage: cachedRestaurant.coverImage,
+        images: [cachedRestaurant.coverImage || '/placeholder.svg', '/placeholder.svg', '/placeholder.svg'],
+        address: cachedRestaurant.address,
+        phone: cachedRestaurant.phone || '+39 081 1234567',
+        openingHours: cachedRestaurant.openingHours || DEFAULT_RESTAURANT.openingHours,
+        rating: cachedRestaurant.rating,
+        reviews: cachedRestaurant.totalReviews,
+        hasGlutenFreeOptions: cachedRestaurant.hasGlutenFreeOptions || true
+      });
+    } else {
+      // Se non c'è cache, usa il default restaurant preimpostato
+      setRestaurant({...DEFAULT_RESTAURANT, id: id || '1'});
+    }
+    
+    // FETCH ASINCRONO: Solo dopo aver mostrato qualcosa, prova a caricare da Firebase
+    if (navigator.onLine && id) {
+      // Usa Promise.race con un timeout per garantire una risposta rapida
+      Promise.race([
+        getDoc(doc(db, "restaurants", id)),
+        // Timeout di 2 secondi
+        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 2000))
+      ])
+        .then(response => {
+          if (response instanceof Error) throw response;
           
+          const restaurantDoc = response;
           if (restaurantDoc.exists()) {
             const data = restaurantDoc.data();
             
-            // Instead of nested waiting for hours, set defaults
-            let openingHours = [
-              { days: 'Lunedì', hours: 'Chiuso' },
-              { days: 'Martedì-Venerdì', hours: '12:00-14:30, 19:00-22:30' },
-              { days: 'Sabato', hours: '12:00-15:00, 19:00-23:00' },
-              { days: 'Domenica', hours: '12:00-15:00, 19:00-22:00' },
-            ];
+            // Aggiorna il ristorante con i dati da Firebase
+            setRestaurant(current => {
+              if (!current) return current;
+              
+              return {
+                ...current,
+                id,
+                name: data.name || current.name,
+                description: data.description || current.description, 
+                coverImage: data.coverImage || current.coverImage,
+                images: data.gallery || current.images,
+                address: data.address || current.address,
+                phone: data.phone || current.phone,
+                rating: data.rating || current.rating,
+                reviews: data.reviewCount || current.reviews,
+                hasGlutenFreeOptions: data.hasGlutenFreeOptions !== undefined 
+                  ? data.hasGlutenFreeOptions 
+                  : current.hasGlutenFreeOptions
+              };
+            });
             
-            // Try to get hours but don't wait on it or block rendering
+            // Carica le ore in modo non bloccante
             getDoc(doc(db, "restaurants", id, "details", "hours"))
               .then(hoursDoc => {
                 if (hoursDoc.exists()) {
                   const scheduleData = hoursDoc.data().schedule || [];
-                  openingHours = scheduleData.map((item: any) => ({
+                  const openingHours = scheduleData.map((item: any) => ({
                     days: item.day || item.days,
                     hours: item.hours
                   }));
                   
-                  // Update only if user is still on the page
                   setRestaurant(current => {
                     if (current) {
-                      return {
-                        ...current,
-                        openingHours
-                      };
+                      return { ...current, openingHours };
                     }
                     return current;
                   });
                 }
               })
-              .catch(err => console.log("Non-blocking hours fetch error:", err));
-            
-            // Update with Firebase data
-            setRestaurant({
-              id,
-              name: data.name || 'Ristorante',
-              description: data.description || 'Descrizione del ristorante non disponibile.',
-              coverImage: data.coverImage || '/placeholder.svg',
-              images: data.gallery || ['/placeholder.svg'],
-              address: data.address || 'Indirizzo non disponibile',
-              phone: data.phone || 'Telefono non disponibile',
-              openingHours,
-              rating: data.rating || 0,
-              reviews: data.reviewCount || 0,
-              hasGlutenFreeOptions: data.hasGlutenFreeOptions || true
-            });
+              .catch(() => {/* ignora errori per gli orari */});
           }
-        } catch (error) {
-          console.error("Firebase error, already showing cache:", error);
-          // We're already showing cached/default data, so this is non-blocking
-        }
-      } else if (!cachedRestaurant) {
-        // Only show toast if we're offline and didn't have cached data
-        toast.info("Visualizzazione ristorante in modalità offline");
-      }
-    };
-    
-    fetchRestaurantDetails();
+        })
+        .catch(error => {
+          if (error.message !== 'timeout') {
+            console.error("Errore nel caricamento da Firebase:", error);
+          }
+          // Nessun toast, stiamo già mostrando i dati
+        });
+    }
   }, [id, cachedRestaurant]);
-  
-  // FAST LOADING WITH SKELETON SCREENS
-  if (isLoading) {
-    return (
-      <Layout>
-        <div className="pb-20">
-          <div className="relative h-56 md:h-72">
-            <Skeleton className="w-full h-full" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-4">
-              <div className="space-y-2">
-                <Skeleton className="h-8 w-2/3" />
-                <div className="flex items-center gap-2">
-                  <Skeleton className="h-4 w-24" />
-                </div>
-                <Skeleton className="h-4 w-40" />
-              </div>
-            </div>
-          </div>
-          <div className="px-4 mt-4">
-            <div className="flex space-x-2 overflow-x-auto pb-2">
-              {[1, 2, 3, 4].map(i => (
-                <Skeleton key={i} className="h-9 w-24" />
-              ))}
-            </div>
-            <div className="mt-6 space-y-4">
-              <Skeleton className="h-6 w-40" />
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-4/5" />
-            </div>
-          </div>
-        </div>
-      </Layout>
-    );
-  }
+
+  // OTTIMIZZAZIONE: SALTA COMPLETAMENTE IL LOADING STATE
+  // Il ristorante sarà sempre disponibile immediatamente (default o cached)
   
   return (
     <Layout>
@@ -210,6 +160,7 @@ const RestaurantPage = () => {
           initialRestaurantCode={restaurantCode || ''}
         />
       ) : (
+        // Questo caso non dovrebbe mai verificarsi, ma è buona pratica mantenerlo
         <div className="p-4 text-center">
           <h1 className="text-2xl font-bold text-red-500 mb-4">Ristorante non trovato</h1>
           <p className="text-gray-600">Il ristorante che stai cercando non esiste o è stato rimosso.</p>
