@@ -20,6 +20,8 @@ export interface RestaurantData {
     lat: number;
     lng: number;
   };
+  cuisine?: string;
+  hasGlutenFreeOptions?: boolean;
 }
 
 export const useRestaurantData = (restaurantId?: string) => {
@@ -45,13 +47,43 @@ export const useRestaurantData = (restaurantId?: string) => {
     location: {
       lat: 40.8388, 
       lng: 14.2488
-    }
+    },
+    cuisine: 'Campana Gluten Free',
+    hasGlutenFreeOptions: true
   });
 
   // Cache del ristorante nel localStorage per accesso rapido
   useEffect(() => {
     try {
       localStorage.setItem('cachedKeccabioRestaurant', JSON.stringify(restaurantData));
+      
+      // Aggiunge il ristorante anche al formato di cache utilizzato da useRestaurantList
+      // per assicurare che sia visualizzato in home page
+      const cachedRestaurants = localStorage.getItem('cachedRestaurants');
+      const restaurantsArray = cachedRestaurants ? JSON.parse(cachedRestaurants) : [];
+      
+      // Verifica se il ristorante è già nella cache per evitare duplicati
+      const restaurantExists = restaurantsArray.some((r: any) => r.id === restaurantData.id);
+      
+      if (!restaurantExists) {
+        // Converte il formato per corrispondere a quello di RestaurantCard
+        const cardFormat = {
+          id: restaurantData.id || '1',
+          name: restaurantData.name,
+          image: restaurantData.coverImage,
+          rating: restaurantData.rating,
+          reviews: restaurantData.totalReviews,
+          cuisine: restaurantData.cuisine || 'Campana Gluten Free',
+          description: restaurantData.description,
+          address: restaurantData.address,
+          hasGlutenFreeOptions: true,
+          isFavorite: false,
+          location: restaurantData.location
+        };
+        
+        restaurantsArray.push(cardFormat);
+        localStorage.setItem('cachedRestaurants', JSON.stringify(restaurantsArray));
+      }
     } catch (e) {
       console.error("Errore nel salvataggio cache ristorante:", e);
     }

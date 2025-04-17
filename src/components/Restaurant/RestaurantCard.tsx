@@ -79,6 +79,7 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({
               className="p-2 rounded-full bg-white/80 hover:bg-white transition-colors"
               onClick={handleNavigateClick}
               title="Apri in Google Maps"
+              aria-label="Apri in Google Maps"
             >
               <Navigation 
                 size={20} 
@@ -90,6 +91,7 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({
             className="p-2 rounded-full bg-white/80 hover:bg-white transition-colors"
             onClick={handleFavoriteClick}
             title={isFavorite ? "Rimuovi dai preferiti" : "Aggiungi ai preferiti"}
+            aria-label={isFavorite ? "Rimuovi dai preferiti" : "Aggiungi ai preferiti"}
           >
             <Heart 
               size={20} 
@@ -108,6 +110,13 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({
           <span className="text-sm text-gray-700">{cuisine}</span>
           {distance && <span className="text-sm text-gray-500">{distance}</span>}
         </div>
+        {restaurant.hasGlutenFreeOptions && (
+          <div className="mt-2">
+            <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">
+              100% Gluten Free
+            </span>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

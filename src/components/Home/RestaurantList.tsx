@@ -1,9 +1,10 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Restaurant } from '@/components/Restaurant/RestaurantCard';
 import RestaurantCard from '@/components/Restaurant/RestaurantCard';
 import { MapPin, WifiOff, RefreshCcw, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useRestaurantData } from '@/hooks/useRestaurantData';
 
 interface RestaurantListProps {
   restaurants: Restaurant[];
@@ -27,9 +28,50 @@ const RestaurantList: React.FC<RestaurantListProps> = ({
   onToggleFavorite,
   onRetry
 }) => {
-  console.log("RestaurantList render state:", { isLoading, isOffline, loadingError, restaurants: restaurants.length });
+  // Aggiungi stato locale per gestire i ristoranti visualizzati
+  const [displayedRestaurants, setDisplayedRestaurants] = useState<Restaurant[]>(restaurants);
+  const { restaurantData: sampleRestaurant } = useRestaurantData();
   
-  if (isLoading) {
+  // Assicurati di avere sempre almeno il ristorante di esempio
+  useEffect(() => {
+    // Se non ci sono ristoranti o se stiamo caricando, aggiungi il ristorante di esempio
+    if ((restaurants.length === 0 || isLoading) && sampleRestaurant) {
+      // Se il ristorante di esempio non è già presente nei ristoranti visualizzati
+      const sampleExists = displayedRestaurants.some(r => r.id === sampleRestaurant.id);
+      
+      if (!sampleExists) {
+        const sampleAsRestaurant: Restaurant = {
+          id: sampleRestaurant.id || '1',
+          name: sampleRestaurant.name,
+          image: sampleRestaurant.coverImage,
+          rating: sampleRestaurant.rating,
+          reviews: sampleRestaurant.totalReviews,
+          cuisine: sampleRestaurant.cuisine || 'Campana Gluten Free',
+          description: sampleRestaurant.description,
+          address: sampleRestaurant.address,
+          hasGlutenFreeOptions: true,
+          isFavorite: false,
+          location: sampleRestaurant.location
+        };
+        
+        setDisplayedRestaurants([sampleAsRestaurant]);
+      }
+    } else {
+      // Altrimenti, usa i ristoranti forniti
+      setDisplayedRestaurants(restaurants);
+    }
+  }, [restaurants, isLoading, sampleRestaurant]);
+  
+  console.log("RestaurantList render state:", { 
+    isLoading, 
+    isOffline, 
+    loadingError, 
+    restaurants: restaurants.length,
+    displayedRestaurants: displayedRestaurants.length
+  });
+  
+  // Mostra sempre i ristoranti, anche se stiamo caricando (usa skeleton loader per il resto)
+  if (isLoading && displayedRestaurants.length === 0) {
     return (
       <div className="space-y-4">
         {[...Array(3)].map((_, i) => (
@@ -42,7 +84,7 @@ const RestaurantList: React.FC<RestaurantListProps> = ({
     );
   }
 
-  if (loadingError && !isOffline) {
+  if (loadingError && !isOffline && displayedRestaurants.length === 0) {
     return (
       <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
         <AlertCircle className="mx-auto h-12 w-12 text-orange-500 mb-3" />
@@ -60,7 +102,7 @@ const RestaurantList: React.FC<RestaurantListProps> = ({
     );
   }
 
-  if (isOffline) {
+  if (isOffline && displayedRestaurants.length === 0) {
     return (
       <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
         <WifiOff className="mx-auto h-12 w-12 text-gray-400 mb-3" />
@@ -79,7 +121,7 @@ const RestaurantList: React.FC<RestaurantListProps> = ({
     );
   }
 
-  if (!regionStatus.inRegion && regionStatus.checked) {
+  if (!regionStatus.inRegion && regionStatus.checked && displayedRestaurants.length === 0) {
     return (
       <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
         <MapPin className="mx-auto h-12 w-12 text-gray-400 mb-3" />
@@ -92,17 +134,10 @@ const RestaurantList: React.FC<RestaurantListProps> = ({
     );
   }
 
-  if (restaurants.length === 0) {
-    return (
-      <div className="text-center py-8">
-        <p className="text-gray-500">Nessun ristorante trovato</p>
-      </div>
-    );
-  }
-
+  // Mostra i ristoranti, anche se è vuoto (che non dovrebbe mai accadere grazie all'useEffect)
   return (
     <div className="grid grid-cols-1 gap-4">
-      {restaurants.map(restaurant => (
+      {displayedRestaurants.map(restaurant => (
         <RestaurantCard 
           key={restaurant.id} 
           restaurant={restaurant} 

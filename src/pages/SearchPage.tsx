@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { Link } from 'react-router-dom';
@@ -11,6 +12,7 @@ import { Slider } from '@/components/ui/slider';
 import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useRestaurantData } from '@/hooks/useRestaurantData';
+import { Progress } from '@/components/ui/progress';
 
 // Tipo di dato per i ristoranti
 interface Restaurant {
@@ -29,7 +31,7 @@ interface Restaurant {
 
 const SearchPage = () => {
   const [userPosition, setUserPosition] = useState<{ lat: number; lng: number } | null>(null);
-  const [isLocating, setIsLocating] = useState(false);
+  const [isLocating, setIsLocating] = useState(true); // Inizia cercando subito la posizione
   const [locationError, setLocationError] = useState<string | null>(null);
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [inAvailableRegion, setInAvailableRegion] = useState<boolean | null>(null);
@@ -37,6 +39,7 @@ const SearchPage = () => {
   const [hasRequestedPermission, setHasRequestedPermission] = useState(false);
   const [maxDistance, setMaxDistance] = useState<number>(100); // Impostazione del filtro distanza a 100km
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState(0);
   
   // Import the sample restaurant data to use as fallback
   const { restaurantData: sampleRestaurant } = useRestaurantData();
@@ -67,10 +70,13 @@ const SearchPage = () => {
   // Recupera i ristoranti dal database
   const fetchRestaurants = async (position?: { lat: number; lng: number }) => {
     setIsLoading(true);
+    setLoadingProgress(10);
     try {
       console.log("Posizione utente per fetchRestaurants:", position);
       const restaurantsCollection = collection(db, "restaurants");
+      setLoadingProgress(30);
       const restaurantsSnapshot = await getDocs(restaurantsCollection);
+      setLoadingProgress(60);
       
       console.log("Numero di ristoranti trovati:", restaurantsSnapshot.docs.length);
       
@@ -104,7 +110,7 @@ const SearchPage = () => {
           image: sampleRestaurant.coverImage,
           rating: sampleRestaurant.rating,
           reviews: sampleRestaurant.totalReviews,
-          cuisine: 'Italiana', // Default
+          cuisine: sampleRestaurant.cuisine || 'Italiana', // Default
           isFavorite: false
         }];
         
@@ -145,6 +151,8 @@ const SearchPage = () => {
         });
       }
       
+      setLoadingProgress(80);
+      
       // Filtra per distanza massima se l'utente ha impostato la posizione
       if (position) {
         console.log("Prima del filtro:", fetchedRestaurants.length, "ristoranti");
@@ -152,7 +160,7 @@ const SearchPage = () => {
         
         fetchedRestaurants = fetchedRestaurants
           .filter(restaurant => {
-            const isWithinRange = restaurant.distanceValue <= maxDistance;
+            const isWithinRange = (restaurant.distanceValue || 0) <= maxDistance;
             console.log(
               "Ristorante:", restaurant.name, 
               "- Distanza:", restaurant.distanceValue, "km", 
@@ -166,6 +174,7 @@ const SearchPage = () => {
       }
       
       setRestaurants(fetchedRestaurants);
+      setLoadingProgress(100);
     } catch (error) {
       console.error('Errore nel recupero dei ristoranti:', error);
       toast.error('Impossibile caricare i ristoranti');
@@ -190,7 +199,7 @@ const SearchPage = () => {
           image: sampleRestaurant.coverImage,
           rating: sampleRestaurant.rating,
           reviews: sampleRestaurant.totalReviews,
-          cuisine: 'Italiana',
+          cuisine: sampleRestaurant.cuisine || 'Italiana',
           isFavorite: false
         }]);
         
@@ -201,11 +210,17 @@ const SearchPage = () => {
     }
   };
   
+  // Aggiorna quando cambia la posizione o la distanza massima
   useEffect(() => {
     if (userPosition) {
       fetchRestaurants(userPosition);
     }
-  }, [userPosition, maxDistance]); // Ricarica quando la posizione o la distanza massima cambiano
+  }, [userPosition, maxDistance]);
+  
+  // Avvia l'acquisizione della posizione all'apertura della pagina
+  useEffect(() => {
+    getUserLocation();
+  }, []);
   
   const getUserLocation = async () => {
     console.log("Richiesta posizione utente...");
@@ -225,6 +240,9 @@ const SearchPage = () => {
         setIsLocating(false);
         setPermissionState('denied');
         toast.error("Accesso alla posizione negato. Verifica i permessi del dispositivo nelle impostazioni.");
+        
+        // Mostra comunque il ristorante di esempio anche senza posizione
+        fetchRestaurants();
         return;
       }
     
@@ -248,6 +266,8 @@ const SearchPage = () => {
               fetchRestaurants(pos);
             } else {
               toast.warning("La tua posizione è al di fuori dell'area del programma pilota (solo Campania).");
+              // Mostra comunque i ristoranti anche fuori regione
+              fetchRestaurants(pos);
             }
             
             setIsLocating(false);
@@ -272,6 +292,9 @@ const SearchPage = () => {
             setLocationError(errorMessage);
             setIsLocating(false);
             toast.error(errorMessage);
+            
+            // Mostra comunque il ristorante di esempio anche con errore
+            fetchRestaurants();
           },
           {
             enableHighAccuracy: true,
@@ -284,19 +307,35 @@ const SearchPage = () => {
         setLocationError(errorMessage);
         setIsLocating(false);
         toast.error(errorMessage);
+        
+        // Mostra comunque il ristorante di esempio anche senza geolocalizzazione
+        fetchRestaurants();
       }
     } catch (error) {
       console.error("Errore durante la gestione dei permessi:", error);
       setLocationError("Si è verificato un errore durante l'accesso alla posizione.");
       setIsLocating(false);
       toast.error("Errore durante l'accesso alla posizione");
+      
+      // Mostra comunque il ristorante di esempio anche con errore
+      fetchRestaurants();
     }
   };
   
-  useEffect(() => {
-    // Aggiorna lo stato dei permessi all'avvio
-    checkPermissionStatus();
-  }, []);
+  const handleUserLocationFound = (position: { lat: number; lng: number }) => {
+    console.log("Posizione utente trovata dalla mappa:", position);
+    setUserPosition(position);
+    setPermissionState('granted');
+    
+    const regionCheck = isInAvailableRegion(position);
+    setInAvailableRegion(regionCheck.inRegion);
+    
+    if (regionCheck.inRegion) {
+      toast.success(`Posizione rilevata in ${regionCheck.regionName}!`);
+    }
+    
+    setIsLocating(false);
+  };
   
   const openSettingsGuide = () => {
     toast.info("Per attivare la geolocalizzazione: apri le Impostazioni del dispositivo → App → Gluten Free Eats → Autorizzazioni → Posizione → Consenti");
@@ -305,6 +344,22 @@ const SearchPage = () => {
   const handleDistanceChange = (value: number[]) => {
     console.log("Nuova distanza massima impostata:", value[0], "km");
     setMaxDistance(value[0]);
+  };
+  
+  const openGoogleMaps = (restaurant: Restaurant) => {
+    if (restaurant.location && userPosition) {
+      // Apri Google Maps con le indicazioni stradali dalla posizione utente
+      const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${userPosition.lat},${userPosition.lng}&destination=${restaurant.location.lat},${restaurant.location.lng}&travelmode=driving`;
+      window.open(googleMapsUrl, '_blank');
+      toast.success('Apertura navigazione verso il ristorante');
+    } else if (restaurant.location) {
+      // Se non abbiamo la posizione utente, apri semplicemente la posizione del ristorante
+      const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${restaurant.location.lat},${restaurant.location.lng}`;
+      window.open(googleMapsUrl, '_blank');
+      toast.success('Apertura mappa del ristorante');
+    } else {
+      toast.error('Coordinate del ristorante non disponibili');
+    }
   };
 
   return (
@@ -362,6 +417,13 @@ const SearchPage = () => {
             {isLocating ? "Localizzazione in corso..." : "Trova ristoranti vicino a me"}
           </Button>
           
+          {isLocating && (
+            <div className="mt-2">
+              <Progress value={loadingProgress} className="h-2" />
+              <p className="text-sm text-gray-500 text-center mt-1">Ricerca ristoranti...</p>
+            </div>
+          )}
+          
           {locationError && (
             <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-600 text-sm mb-4">
               {locationError}
@@ -417,6 +479,8 @@ const SearchPage = () => {
               <RestaurantMap 
                 userLocation={userPosition}
                 restaurants={restaurants}
+                onUserLocationFound={handleUserLocationFound}
+                autoFindLocation={true}
               />
             </div>
             
@@ -439,7 +503,10 @@ const SearchPage = () => {
                     <div 
                       key={restaurant.id} 
                       className="bg-white p-3 m-2 rounded-lg shadow-sm flex items-start gap-2 hover:bg-gray-50 cursor-pointer transition-colors"
-                      onClick={() => {/* Navigate to restaurant details */}}
+                      onClick={() => {
+                        // Navigate to restaurant details
+                        window.location.href = `/restaurant/${restaurant.id}`;
+                      }}
                     >
                       <MapPin className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
                       <div className="flex-1">
@@ -447,7 +514,15 @@ const SearchPage = () => {
                         <p className="text-sm text-gray-600">{restaurant.address}</p>
                         <p className="text-sm font-medium text-primary">{restaurant.distance}</p>
                       </div>
-                      <Button variant="outline" size="icon" className="h-8 w-8 flex-shrink-0">
+                      <Button 
+                        variant="outline" 
+                        size="icon" 
+                        className="h-8 w-8 flex-shrink-0"
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent parent click
+                          openGoogleMaps(restaurant);
+                        }}
+                      >
                         <Navigation className="h-4 w-4" />
                       </Button>
                     </div>

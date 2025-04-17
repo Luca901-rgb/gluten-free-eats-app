@@ -32,6 +32,8 @@ interface Restaurant {
 interface RestaurantMapProps {
   userLocation: { lat: number; lng: number } | null;
   restaurants: Restaurant[];
+  onUserLocationFound?: (location: { lat: number; lng: number }) => void;
+  autoFindLocation?: boolean;
 }
 
 // Component to set the map view based on locations
@@ -43,9 +45,32 @@ const SetMapView: FC<{ center: [number, number]; zoom: number }> = ({ center, zo
   return null;
 };
 
+// Component to auto-locate the user
+const AutoLocate: FC<{ onLocationFound: (location: { lat: number; lng: number }) => void }> = ({ onLocationFound }) => {
+  const map = useMap();
+  
+  useEffect(() => {
+    map.locate({ setView: true, maxZoom: 13 });
+    
+    const handleLocationFound = (e: L.LocationEvent) => {
+      onLocationFound({ lat: e.latlng.lat, lng: e.latlng.lng });
+    };
+    
+    map.on('locationfound', handleLocationFound);
+    
+    return () => {
+      map.off('locationfound', handleLocationFound);
+    };
+  }, [map, onLocationFound]);
+  
+  return null;
+};
+
 export const RestaurantMap: FC<RestaurantMapProps> = ({ 
   userLocation, 
-  restaurants 
+  restaurants,
+  onUserLocationFound,
+  autoFindLocation = false
 }) => {
   const navigate = useNavigate();
   
@@ -75,6 +100,12 @@ export const RestaurantMap: FC<RestaurantMapProps> = ({
     popupAnchor: [1, -34],
     shadowSize: [41, 41]
   });
+
+  const handleLocationFound = (location: { lat: number; lng: number }) => {
+    if (onUserLocationFound) {
+      onUserLocationFound(location);
+    }
+  };
 
   const navigateToRestaurant = (restaurantId: string, lat: number, lng: number) => {
     // Navigate to the restaurant details page
@@ -117,6 +148,9 @@ export const RestaurantMap: FC<RestaurantMapProps> = ({
           
           {/* Dynamic center recalculation when userLocation changes */}
           {userLocation && <SetMapView center={[userLocation.lat, userLocation.lng]} zoom={zoom} />}
+          
+          {/* Auto-locate if requested */}
+          {autoFindLocation && !userLocation && <AutoLocate onLocationFound={handleLocationFound} />}
           
           {/* User location marker */}
           {userLocation && (
