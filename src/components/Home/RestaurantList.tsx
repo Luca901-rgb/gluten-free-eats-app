@@ -1,10 +1,10 @@
-
 import React, { useEffect, useState } from 'react';
 import { Restaurant } from '@/components/Restaurant/RestaurantCard';
 import RestaurantCard from '@/components/Restaurant/RestaurantCard';
 import { MapPin, WifiOff, RefreshCcw, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useRestaurantData } from '@/hooks/useRestaurantData';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface RestaurantListProps {
   restaurants: Restaurant[];
@@ -28,18 +28,44 @@ const RestaurantList: React.FC<RestaurantListProps> = ({
   onToggleFavorite,
   onRetry
 }) => {
-  // Aggiungi stato locale per gestire i ristoranti visualizzati
-  const [displayedRestaurants, setDisplayedRestaurants] = useState<Restaurant[]>(restaurants);
+  const [displayedRestaurants, setDisplayedRestaurants] = useState<Restaurant[]>([]);
+  const [showSkeletons, setShowSkeletons] = useState(true);
   const { restaurantData: sampleRestaurant } = useRestaurantData();
   
-  // Assicurati di avere sempre almeno il ristorante di esempio
+  // Effetto per gestire lo stato di caricamento iniziale
   useEffect(() => {
-    // Se non ci sono ristoranti o se stiamo caricando, aggiungi il ristorante di esempio
-    if ((restaurants.length === 0 || isLoading) && sampleRestaurant) {
-      // Se il ristorante di esempio non è già presente nei ristoranti visualizzati
-      const sampleExists = displayedRestaurants.some(r => r.id === sampleRestaurant.id);
-      
-      if (!sampleExists) {
+    // Prima fase: recuperiamo ristoranti dalla cache locale per visualizzazione immediata
+    try {
+      const cachedData = localStorage.getItem('cachedRestaurants');
+      if (cachedData) {
+        const parsedData = JSON.parse(cachedData);
+        if (parsedData && Array.isArray(parsedData) && parsedData.length > 0) {
+          console.log("Caricamento iniziale dai dati in cache", parsedData.length, "ristoranti");
+          setDisplayedRestaurants(parsedData);
+          setShowSkeletons(false);
+        }
+      }
+    } catch (e) {
+      console.error("Errore nel caricamento dati dalla cache:", e);
+    }
+    
+    // Imposta un timeout per mostrare almeno gli skeleton per un tempo minimo
+    const minLoadingTimeout = setTimeout(() => {
+      setShowSkeletons(false);
+    }, 800);
+    
+    return () => clearTimeout(minLoadingTimeout);
+  }, []);
+  
+  // Aggiorna i ristoranti visualizzati quando cambiano i dati dai props
+  useEffect(() => {
+    if (restaurants.length > 0) {
+      console.log("Aggiornamento lista con", restaurants.length, "ristoranti dal backend");
+      setDisplayedRestaurants(restaurants);
+      setShowSkeletons(false);
+    } else if (!isLoading && displayedRestaurants.length === 0) {
+      // Se non ci sono ristoranti dai props e non stiamo caricando, usa il ristorante esempio
+      if (sampleRestaurant) {
         const sampleAsRestaurant: Restaurant = {
           id: sampleRestaurant.id || '1',
           name: sampleRestaurant.name,
@@ -54,31 +80,31 @@ const RestaurantList: React.FC<RestaurantListProps> = ({
           location: sampleRestaurant.location
         };
         
+        console.log("Nessun ristorante dal backend, uso ristorante di esempio");
         setDisplayedRestaurants([sampleAsRestaurant]);
       }
-    } else {
-      // Altrimenti, usa i ristoranti forniti
-      setDisplayedRestaurants(restaurants);
     }
   }, [restaurants, isLoading, sampleRestaurant]);
   
-  console.log("RestaurantList render state:", { 
-    isLoading, 
-    isOffline, 
-    loadingError, 
-    restaurants: restaurants.length,
-    displayedRestaurants: displayedRestaurants.length
-  });
-  
-  // Mostra sempre i ristoranti, anche se stiamo caricando (usa skeleton loader per il resto)
-  if (isLoading && displayedRestaurants.length === 0) {
+  // Renderizza skeleton loaders durante il caricamento iniziale
+  if ((isLoading && displayedRestaurants.length === 0) || showSkeletons) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-4 animate-in fade-in duration-300">
         {[...Array(3)].map((_, i) => (
-          <div 
-            key={i} 
-            className="h-48 bg-gray-200 animate-pulse rounded-lg"
-          />
+          <div key={i} className="rounded-lg overflow-hidden border border-gray-200 bg-white">
+            <div className="h-48 bg-gray-200 animate-pulse"></div>
+            <div className="p-4 space-y-3">
+              <Skeleton className="h-6 w-3/4" />
+              <div className="flex items-center space-x-2">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-4 w-16" />
+              </div>
+              <div className="flex justify-between">
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-4 w-12" />
+              </div>
+            </div>
+          </div>
         ))}
       </div>
     );
@@ -134,9 +160,9 @@ const RestaurantList: React.FC<RestaurantListProps> = ({
     );
   }
 
-  // Mostra i ristoranti, anche se è vuoto (che non dovrebbe mai accadere grazie all'useEffect)
+  // Mostra sempre i ristoranti, anche durante il caricamento (abbiamo già i dati dalla cache)
   return (
-    <div className="grid grid-cols-1 gap-4">
+    <div className="grid grid-cols-1 gap-4 animate-in fade-in duration-300">
       {displayedRestaurants.map(restaurant => (
         <RestaurantCard 
           key={restaurant.id} 
@@ -144,6 +170,12 @@ const RestaurantList: React.FC<RestaurantListProps> = ({
           onToggleFavorite={onToggleFavorite}
         />
       ))}
+      
+      {isLoading && displayedRestaurants.length > 0 && (
+        <div className="p-3 text-center text-sm text-gray-500 bg-gray-50 rounded-lg border border-gray-200">
+          Caricamento altri ristoranti...
+        </div>
+      )}
     </div>
   );
 };

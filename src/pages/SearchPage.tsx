@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Layout from '@/components/Layout';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,7 @@ import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useRestaurantData } from '@/hooks/useRestaurantData';
 import { Progress } from '@/components/ui/progress';
+import { Skeleton } from '@/components/ui/skeleton';
 
 // Tipo di dato per i ristoranti
 interface Restaurant {
@@ -40,21 +41,22 @@ const SearchPage = () => {
   const [maxDistance, setMaxDistance] = useState<number>(100); // Impostazione del filtro distanza a 100km
   const [isLoading, setIsLoading] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
+  const [hasInitializedMap, setHasInitializedMap] = useState(false);
   
   // Import the sample restaurant data to use as fallback
   const { restaurantData: sampleRestaurant } = useRestaurantData();
   
   // Controlla lo stato dei permessi di geolocalizzazione
-  const checkPermissionStatus = async () => {
+  const checkPermissionStatus = useCallback(async () => {
     console.log("Controllo stato permessi geolocalizzazione...");
     const hasPermission = await checkGeolocationPermission();
     setPermissionState(hasPermission ? 'granted' : 'denied');
     console.log("Stato permessi:", hasPermission ? 'granted' : 'denied');
     return hasPermission;
-  };
+  }, []);
   
   // Funzione per calcolare la distanza in km tra due punti geografici
-  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+  const calculateDistance = useCallback((lat1: number, lon1: number, lat2: number, lon2: number): number => {
     const R = 6371; // Raggio della Terra in km
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLon = (lon2 - lon1) * Math.PI / 180;
@@ -63,125 +65,159 @@ const SearchPage = () => {
       Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
       Math.sin(dLon/2) * Math.sin(dLon/2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    const distance = R * c; // Distanza in km
-    return distance;
-  };
+    return R * c; // Distanza in km
+  }, []);
   
-  // Recupera i ristoranti dal database
-  const fetchRestaurants = async (position?: { lat: number; lng: number }) => {
+  // Ottimizzata: funzione memoizzata per il recupero dei ristoranti
+  const fetchRestaurants = useCallback(async (position?: { lat: number; lng: number }) => {
+    if (isLoading) return; // Previene chiamate multiple simultanee
+    
     setIsLoading(true);
     setLoadingProgress(10);
+    
     try {
       console.log("Posizione utente per fetchRestaurants:", position);
-      const restaurantsCollection = collection(db, "restaurants");
-      setLoadingProgress(30);
-      const restaurantsSnapshot = await getDocs(restaurantsCollection);
-      setLoadingProgress(60);
       
-      console.log("Numero di ristoranti trovati:", restaurantsSnapshot.docs.length);
+      // Carica prima dalla cache per visualizzazione immediata
+      try {
+        const cachedData = localStorage.getItem('cachedRestaurants');
+        if (cachedData) {
+          const parsedData = JSON.parse(cachedData);
+          if (position && Array.isArray(parsedData) && parsedData.length > 0) {
+            // Ricalcola la distanza per i ristoranti in cache
+            const withDistance = parsedData.map((restaurant: any) => {
+              if (restaurant.location && position) {
+                const distanceValue = calculateDistance(
+                  position.lat, 
+                  position.lng, 
+                  restaurant.location.lat, 
+                  restaurant.location.lng
+                );
+                return {
+                  ...restaurant,
+                  distance: `${distanceValue.toFixed(1)} km`,
+                  distanceValue
+                };
+              }
+              return restaurant;
+            }).filter((r: any) => (r.distanceValue || 0) <= maxDistance)
+              .sort((a: any, b: any) => (a.distanceValue || 0) - (b.distanceValue || 0));
+              
+            setRestaurants(withDistance);
+            console.log("Mostrando", withDistance.length, "ristoranti dalla cache");
+            setLoadingProgress(40);
+          }
+        }
+      } catch (e) {
+        console.error("Errore nel recupero dati dalla cache:", e);
+      }
       
-      // Se non ci sono ristoranti nel database, usa il ristorante di esempio
-      let fetchedRestaurants = [];
-      
-      if (restaurantsSnapshot.docs.length === 0) {
-        console.log("Nessun ristorante trovato nel database, uso il ristorante di esempio:", sampleRestaurant);
-        // Usa il ristorante di esempio quando non ci sono ristoranti nel database
-        const restaurantLocation = sampleRestaurant.location || { lat: 40.8388, lng: 14.2488 };
+      // Poi carica dal database (se online)
+      if (navigator.onLine) {
+        const restaurantsCollection = collection(db, "restaurants");
+        setLoadingProgress(60);
+        const restaurantsSnapshot = await getDocs(restaurantsCollection);
+        setLoadingProgress(80);
         
-        // Calcola la distanza solo se l'utente ha condiviso la posizione
-        let distanceValue = 0;
-        if (position) {
-          distanceValue = calculateDistance(
-            position.lat, 
-            position.lng, 
-            restaurantLocation.lat, 
-            restaurantLocation.lng
-          );
-          console.log("Distanza calcolata per", sampleRestaurant.name, ":", distanceValue.toFixed(1), "km");
+        console.log("Numero di ristoranti trovati nel DB:", restaurantsSnapshot.docs.length);
+        
+        // Se non ci sono ristoranti nel database, usa il ristorante di esempio
+        let fetchedRestaurants = [];
+        
+        if (restaurantsSnapshot.docs.length === 0) {
+          console.log("Nessun ristorante trovato nel database, uso il ristorante di esempio:", sampleRestaurant);
+          // Usa il ristorante di esempio come fallback
+          if (sampleRestaurant) {
+            const restaurantLocation = sampleRestaurant.location || { lat: 40.8388, lng: 14.2488 };
+            
+            // Calcola la distanza solo se l'utente ha condiviso la posizione
+            let distanceValue = 0;
+            if (position) {
+              distanceValue = calculateDistance(
+                position.lat, 
+                position.lng, 
+                restaurantLocation.lat, 
+                restaurantLocation.lng
+              );
+              console.log("Distanza calcolata per", sampleRestaurant.name, ":", distanceValue.toFixed(1), "km");
+            }
+            
+            fetchedRestaurants = [{
+              id: sampleRestaurant.id || '1',
+              name: sampleRestaurant.name,
+              location: restaurantLocation,
+              address: sampleRestaurant.address,
+              distance: position ? `${distanceValue.toFixed(1)} km` : 'Distanza non disponibile',
+              distanceValue: distanceValue,
+              image: sampleRestaurant.coverImage,
+              rating: sampleRestaurant.rating,
+              reviews: sampleRestaurant.totalReviews,
+              cuisine: sampleRestaurant.cuisine || 'Italiana',
+              isFavorite: false
+            }];
+          }
+        } else {
+          // Mappa i ristoranti dal database
+          fetchedRestaurants = restaurantsSnapshot.docs.map(doc => {
+            const data = doc.data();
+            const restaurantLocation = data.location || { lat: 0, lng: 0 };
+            
+            // Calcola la distanza solo se l'utente ha condiviso la posizione
+            let distanceValue = 0;
+            if (position) {
+              distanceValue = calculateDistance(
+                position.lat, 
+                position.lng, 
+                restaurantLocation.lat, 
+                restaurantLocation.lng
+              );
+            }
+            
+            return {
+              id: doc.id,
+              name: data.name || 'Ristorante senza nome',
+              location: restaurantLocation,
+              address: data.address || 'Indirizzo non disponibile',
+              distance: position ? `${distanceValue.toFixed(1)} km` : 'Distanza non disponibile',
+              distanceValue: distanceValue,
+              image: data.coverImage || '/placeholder.svg',
+              rating: data.rating || 0,
+              reviews: data.reviews || 0,
+              cuisine: data.cuisine || 'Italiana',
+              isFavorite: false
+            } as Restaurant;
+          });
         }
         
-        fetchedRestaurants = [{
-          id: sampleRestaurant.id || '1',
-          name: sampleRestaurant.name,
-          location: restaurantLocation,
-          address: sampleRestaurant.address,
-          distance: position ? `${distanceValue.toFixed(1)} km` : 'Distanza non disponibile',
-          distanceValue: distanceValue,
-          image: sampleRestaurant.coverImage,
-          rating: sampleRestaurant.rating,
-          reviews: sampleRestaurant.totalReviews,
-          cuisine: sampleRestaurant.cuisine || 'Italiana', // Default
-          isFavorite: false
-        }];
+        // Filtra per distanza massima e ordina
+        if (position) {
+          fetchedRestaurants = fetchedRestaurants
+            .filter(restaurant => (restaurant.distanceValue || 0) <= maxDistance)
+            .sort((a, b) => (a.distanceValue || 0) - (b.distanceValue || 0));
+          
+          console.log("Ristoranti filtrati e ordinati:", fetchedRestaurants.length);
+        }
         
-        console.log("Ristorante di esempio aggiunto:", fetchedRestaurants[0]);
-      } else {
-        // Mappa i ristoranti dal database
-        fetchedRestaurants = restaurantsSnapshot.docs.map(doc => {
-          const data = doc.data();
-          const restaurantLocation = data.location || { lat: 0, lng: 0 };
+        // Aggiorna i ristoranti solo se ci sono nuovi dati
+        if (fetchedRestaurants.length > 0) {
+          setRestaurants(fetchedRestaurants);
           
-          console.log("Ristorante:", data.name, "- Posizione:", restaurantLocation);
-          
-          // Calcola la distanza solo se l'utente ha condiviso la posizione
-          let distanceValue = 0;
-          if (position) {
-            distanceValue = calculateDistance(
-              position.lat, 
-              position.lng, 
-              restaurantLocation.lat, 
-              restaurantLocation.lng
-            );
-            console.log("Distanza calcolata per", data.name, ":", distanceValue.toFixed(1), "km");
+          // Aggiorna la cache locale per accesso futuro
+          try {
+            localStorage.setItem('cachedRestaurants', JSON.stringify(fetchedRestaurants));
+          } catch (e) {
+            console.error("Errore nel salvataggio cache:", e);
           }
-          
-          return {
-            id: doc.id,
-            name: data.name || 'Ristorante senza nome',
-            location: restaurantLocation,
-            address: data.address || 'Indirizzo non disponibile',
-            distance: position ? `${distanceValue.toFixed(1)} km` : 'Distanza non disponibile',
-            distanceValue: distanceValue,
-            image: data.coverImage || '/placeholder.svg',
-            rating: data.rating || 0,
-            reviews: data.reviews || 0,
-            cuisine: data.cuisine || 'Italiana',
-            isFavorite: false
-          } as Restaurant;
-        });
+        }
       }
       
-      setLoadingProgress(80);
-      
-      // Filtra per distanza massima se l'utente ha impostato la posizione
-      if (position) {
-        console.log("Prima del filtro:", fetchedRestaurants.length, "ristoranti");
-        console.log("Distanza massima impostata:", maxDistance, "km");
-        
-        fetchedRestaurants = fetchedRestaurants
-          .filter(restaurant => {
-            const isWithinRange = (restaurant.distanceValue || 0) <= maxDistance;
-            console.log(
-              "Ristorante:", restaurant.name, 
-              "- Distanza:", restaurant.distanceValue, "km", 
-              "- Entro il raggio?", isWithinRange
-            );
-            return isWithinRange;
-          })
-          .sort((a, b) => (a.distanceValue || 0) - (b.distanceValue || 0)); // Ordina per distanza
-        
-        console.log("Dopo filtro e ordinamento:", fetchedRestaurants.length, "ristoranti");
-      }
-      
-      setRestaurants(fetchedRestaurants);
       setLoadingProgress(100);
     } catch (error) {
       console.error('Errore nel recupero dei ristoranti:', error);
-      toast.error('Impossibile caricare i ristoranti');
       
-      // Fallback al ristorante di esempio in caso di errore
-      if (position) {
-        const restaurantLocation = sampleRestaurant.location || { lat: 40.8388, lng: 14.2488 };
+      // Fallback al ristorante di esempio se abbiamo la posizione ma non ristoranti
+      if (position && restaurants.length === 0) {
+        const restaurantLocation = sampleRestaurant?.location || { lat: 40.8388, lng: 14.2488 };
         const distanceValue = calculateDistance(
           position.lat, 
           position.lng, 
@@ -190,47 +226,71 @@ const SearchPage = () => {
         );
         
         setRestaurants([{
-          id: sampleRestaurant.id || '1',
-          name: sampleRestaurant.name,
+          id: sampleRestaurant?.id || '1',
+          name: sampleRestaurant?.name || 'Trattoria Keccabio',
           location: restaurantLocation,
-          address: sampleRestaurant.address,
+          address: sampleRestaurant?.address || 'Via Toledo 42, Napoli',
           distance: `${distanceValue.toFixed(1)} km`,
           distanceValue: distanceValue,
-          image: sampleRestaurant.coverImage,
-          rating: sampleRestaurant.rating,
-          reviews: sampleRestaurant.totalReviews,
-          cuisine: sampleRestaurant.cuisine || 'Italiana',
+          image: sampleRestaurant?.coverImage || '/placeholder.svg',
+          rating: sampleRestaurant?.rating || 4.7,
+          reviews: sampleRestaurant?.totalReviews || 128,
+          cuisine: sampleRestaurant?.cuisine || 'Italiana',
           isFavorite: false
         }]);
-        
-        toast.info("Mostro il ristorante di esempio");
       }
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [isLoading, maxDistance, sampleRestaurant, calculateDistance]);
   
-  // Aggiorna quando cambia la posizione o la distanza massima
+  // Avvia l'acquisizione della posizione automaticamente all'apertura della pagina
+  useEffect(() => {
+    getUserLocation();
+    
+    // Carica comunque i ristoranti anche senza posizione per evitare pagina vuota
+    const timer = setTimeout(() => {
+      if (!userPosition && !isLocating && restaurants.length === 0) {
+        console.log("Timeout scaduto, carico ristoranti senza posizione");
+        fetchRestaurants();
+      }
+    }, 2000);
+    
+    return () => clearTimeout(timer);
+  }, []);
+  
+  // Aggiorna la lista quando cambia la posizione o la distanza massima
   useEffect(() => {
     if (userPosition) {
       fetchRestaurants(userPosition);
     }
-  }, [userPosition, maxDistance]);
-  
-  // Avvia l'acquisizione della posizione all'apertura della pagina
-  useEffect(() => {
-    getUserLocation();
-  }, []);
+  }, [userPosition, maxDistance, fetchRestaurants]);
   
   const getUserLocation = async () => {
-    console.log("Richiesta posizione utente...");
+    console.log("Avvio rilevamento posizione...");
     setIsLocating(true);
     setLocationError(null);
     setHasRequestedPermission(true);
     
     try {
-      // Richiedi i permessi esplicitamente
-      console.log("Richiesta permessi esplicita...");
+      // Prima verifica se abbiamo una cache della posizione recente
+      try {
+        const cachedPosition = localStorage.getItem('userPosition');
+        if (cachedPosition) {
+          const parsedPosition = JSON.parse(cachedPosition);
+          const timestamp = parsedPosition.timestamp || 0;
+          // Se la cache è più recente di 30 minuti, usala temporaneamente
+          if (Date.now() - timestamp < 30 * 60 * 1000) {
+            console.log("Usando posizione dalla cache temporaneamente:", parsedPosition);
+            setUserPosition({ lat: parsedPosition.lat, lng: parsedPosition.lng });
+            setHasInitializedMap(true);
+          }
+        }
+      } catch (e) {
+        console.error("Errore nel recupero posizione dalla cache:", e);
+      }
+    
+      // Richiedi comunque i permessi per ottenere la posizione aggiornata
       const permissionGranted = await requestGeolocationPermission();
       
       console.log("Permessi concessi?", permissionGranted);
@@ -239,40 +299,64 @@ const SearchPage = () => {
         setLocationError("Permessi di posizione non concessi. Per trovare ristoranti vicini, attiva la geolocalizzazione nelle impostazioni del dispositivo.");
         setIsLocating(false);
         setPermissionState('denied');
-        toast.error("Accesso alla posizione negato. Verifica i permessi del dispositivo nelle impostazioni.");
         
-        // Mostra comunque il ristorante di esempio anche senza posizione
+        // Carica comunque i ristoranti anche senza posizione
         fetchRestaurants();
         return;
       }
     
       if (navigator.geolocation) {
+        // Imposta un timeout di fallback per non bloccare l'utente
+        const timeoutId = setTimeout(() => {
+          if (isLocating) {
+            console.log("Timeout geolocalizzazione, carico ristoranti senza posizione aggiornata");
+            setIsLocating(false);
+            
+            // Se abbiamo già una posizione iniziale, usiamo quella
+            if (!userPosition) {
+              // Altrimenti carica senza posizione
+              fetchRestaurants();
+            }
+          }
+        }, 8000);
+        
         navigator.geolocation.getCurrentPosition(
           (position) => {
+            clearTimeout(timeoutId);
             console.log("Posizione ottenuta:", position.coords);
             const pos = {
               lat: position.coords.latitude,
               lng: position.coords.longitude
             };
             
+            // Salva la posizione nella cache con timestamp
+            try {
+              localStorage.setItem('userPosition', JSON.stringify({
+                ...pos,
+                timestamp: Date.now()
+              }));
+            } catch (e) {
+              console.error("Errore nel salvataggio posizione in cache:", e);
+            }
+            
             setUserPosition(pos);
             setPermissionState('granted');
+            setHasInitializedMap(true);
             
             const regionCheck = isInAvailableRegion(pos);
             setInAvailableRegion(regionCheck.inRegion);
             
             if (regionCheck.inRegion) {
               toast.success(`Posizione rilevata in ${regionCheck.regionName}!`);
-              fetchRestaurants(pos);
             } else {
-              toast.warning("La tua posizione è al di fuori dell'area del programma pilota (solo Campania).");
-              // Mostra comunque i ristoranti anche fuori regione
-              fetchRestaurants(pos);
+              toast.info("La tua posizione è al di fuori dell'area del programma pilota (solo Campania).");
             }
             
+            fetchRestaurants(pos);
             setIsLocating(false);
           },
           (error) => {
+            clearTimeout(timeoutId);
             console.error('Errore durante il recupero della posizione:', error);
             
             let errorMessage = "Impossibile determinare la tua posizione.";
@@ -291,33 +375,30 @@ const SearchPage = () => {
             
             setLocationError(errorMessage);
             setIsLocating(false);
-            toast.error(errorMessage);
             
-            // Mostra comunque il ristorante di esempio anche con errore
+            // Carica comunque i ristoranti anche con errore
             fetchRestaurants();
           },
           {
             enableHighAccuracy: true,
-            timeout: 15000,
-            maximumAge: 0
+            timeout: 10000,
+            maximumAge: 5 * 60 * 1000 // Accetta posizioni fino a 5 minuti fa per velocità
           }
         );
       } else {
         const errorMessage = "Il tuo browser non supporta la geolocalizzazione.";
         setLocationError(errorMessage);
         setIsLocating(false);
-        toast.error(errorMessage);
         
-        // Mostra comunque il ristorante di esempio anche senza geolocalizzazione
+        // Carica comunque i ristoranti anche senza geolocalizzazione
         fetchRestaurants();
       }
     } catch (error) {
       console.error("Errore durante la gestione dei permessi:", error);
       setLocationError("Si è verificato un errore durante l'accesso alla posizione.");
       setIsLocating(false);
-      toast.error("Errore durante l'accesso alla posizione");
       
-      // Mostra comunque il ristorante di esempio anche con errore
+      // Carica comunque i ristoranti anche con errore
       fetchRestaurants();
     }
   };
@@ -326,6 +407,17 @@ const SearchPage = () => {
     console.log("Posizione utente trovata dalla mappa:", position);
     setUserPosition(position);
     setPermissionState('granted');
+    setHasInitializedMap(true);
+    
+    // Salva la posizione nella cache con timestamp
+    try {
+      localStorage.setItem('userPosition', JSON.stringify({
+        ...position,
+        timestamp: Date.now()
+      }));
+    } catch (e) {
+      console.error("Errore nel salvataggio posizione in cache:", e);
+    }
     
     const regionCheck = isInAvailableRegion(position);
     setInAvailableRegion(regionCheck.inRegion);
@@ -365,7 +457,7 @@ const SearchPage = () => {
   return (
     <Layout>
       <div className="p-4">
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex justify-between items-center mb-4">
           <h1 className="text-2xl font-poppins font-bold text-primary">Cerca Ristoranti</h1>
           <Link to="/restaurant-dashboard">
             <Button variant="outline" size="sm" className="flex items-center gap-2">
@@ -374,6 +466,16 @@ const SearchPage = () => {
             </Button>
           </Link>
         </div>
+        
+        {/* Stato geolocalizzazione - mostrato solo durante caricamento attivo */}
+        {isLocating && (
+          <div className="mb-4">
+            <Progress value={loadingProgress} className="h-2 mb-1" />
+            <p className="text-sm text-center text-gray-600">
+              Localizzazione in corso... {loadingProgress > 0 ? `${loadingProgress}%` : ''}
+            </p>
+          </div>
+        )}
         
         {/* Region availability check */}
         {inAvailableRegion === false && (
@@ -406,53 +508,29 @@ const SearchPage = () => {
           </Alert>
         )}
         
-        {/* User location and error states */}
-        <div className="mb-4">
-          <Button 
-            onClick={getUserLocation} 
-            disabled={isLocating} 
-            className="mb-2 w-full flex items-center justify-center gap-2"
-          >
-            <Navigation size={16} className={isLocating ? "animate-pulse" : ""} />
-            {isLocating ? "Localizzazione in corso..." : "Trova ristoranti vicino a me"}
-          </Button>
-          
-          {isLocating && (
-            <div className="mt-2">
-              <Progress value={loadingProgress} className="h-2" />
-              <p className="text-sm text-gray-500 text-center mt-1">Ricerca ristoranti...</p>
-            </div>
-          )}
-          
-          {locationError && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-600 text-sm mb-4">
-              {locationError}
-              {permissionState === 'denied' && (
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={openSettingsGuide}
-                  className="mt-2 text-red-600 hover:text-red-700 hover:bg-red-100 w-full flex items-center justify-center gap-1"
-                >
-                  <Settings size={14} /> Come attivare la geolocalizzazione
-                </Button>
-              )}
-            </div>
-          )}
-          
-          {userPosition && !locationError && inAvailableRegion && (
-            <div className="p-2 bg-green-50 border border-green-200 rounded-md text-green-600 text-sm mb-4">
-              Posizione rilevata! Mostro i ristoranti vicini.
-            </div>
-          )}
-        </div>
+        {/* Location error message */}
+        {locationError && (
+          <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-600 text-sm mb-4">
+            {locationError}
+            {permissionState === 'denied' && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={openSettingsGuide}
+                className="mt-2 text-red-600 hover:text-red-700 hover:bg-red-100 w-full flex items-center justify-center gap-1"
+              >
+                <Settings size={14} /> Come attivare la geolocalizzazione
+              </Button>
+            )}
+          </div>
+        )}
         
-        {/* Filtro distanza - visibile solo se l'utente ha condiviso la posizione */}
+        {/* Filtro distanza - visibile dopo che abbiamo ottenuto la posizione */}
         {userPosition && (
-          <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+          <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
             <div className="flex items-center gap-2 mb-2">
               <Sliders size={18} className="text-primary" />
-              <h3 className="font-medium">Filtra per distanza massima: {maxDistance} km</h3>
+              <h3 className="font-medium">Distanza massima: {maxDistance} km</h3>
             </div>
             <Slider
               defaultValue={[100]}
@@ -461,7 +539,7 @@ const SearchPage = () => {
               step={1}
               value={[maxDistance]}
               onValueChange={handleDistanceChange}
-              className="my-4"
+              className="my-3"
             />
             <div className="flex justify-between text-sm text-gray-500">
               <span>1 km</span>
@@ -474,63 +552,95 @@ const SearchPage = () => {
         {/* Map and List View - Modified layout */}
         {inAvailableRegion !== false ? (
           <div className="flex flex-col space-y-4">
-            {/* Map takes 50vh - half the screen height */}
-            <div className="h-[50vh] rounded-lg border overflow-hidden">
+            {/* Map takes 40vh - loading is handled internally */}
+            <div className="h-[40vh] rounded-lg border overflow-hidden">
               <RestaurantMap 
                 userLocation={userPosition}
                 restaurants={restaurants}
                 onUserLocationFound={handleUserLocationFound}
-                autoFindLocation={true}
+                autoFindLocation={!hasInitializedMap}
               />
             </div>
             
             {/* Restaurant list below the map */}
             <div className="border border-gray-200 rounded-lg shadow-sm overflow-hidden">
-              <div className="p-3 bg-gray-50 border-b">
+              <div className="p-3 bg-gray-50 border-b flex justify-between items-center">
                 <h4 className="font-medium">
                   {isLoading ? 'Caricamento ristoranti...' : 
                    restaurants.length > 0 ? `Ristoranti trovati (${restaurants.length})` : 
                    'Nessun ristorante trovato'}
                 </h4>
+                {locationError && (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={getUserLocation}
+                    className="text-xs"
+                  >
+                    <MapPin className="mr-1 h-3 w-3" /> Riprova
+                  </Button>
+                )}
               </div>
+              
               <div className="max-h-[40vh] overflow-y-auto">
-                {isLoading ? (
-                  <div className="p-4 text-center">
-                    <div className="animate-pulse h-6 w-24 bg-gray-200 rounded mx-auto"></div>
+                {isLoading && restaurants.length === 0 ? (
+                  // Skeleton loader durante il caricamento iniziale
+                  <div className="p-2 space-y-3">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="bg-white p-3 rounded-lg shadow-sm flex items-start gap-2">
+                        <Skeleton className="h-5 w-5 rounded-full flex-shrink-0" />
+                        <div className="flex-1">
+                          <Skeleton className="h-4 w-3/4 mb-2" />
+                          <Skeleton className="h-3 w-1/2 mb-1" />
+                          <Skeleton className="h-3 w-1/4" />
+                        </div>
+                        <Skeleton className="h-8 w-8 rounded-md flex-shrink-0" />
+                      </div>
+                    ))}
                   </div>
                 ) : restaurants.length > 0 ? (
-                  restaurants.map(restaurant => (
-                    <div 
-                      key={restaurant.id} 
-                      className="bg-white p-3 m-2 rounded-lg shadow-sm flex items-start gap-2 hover:bg-gray-50 cursor-pointer transition-colors"
-                      onClick={() => {
-                        // Navigate to restaurant details
-                        window.location.href = `/restaurant/${restaurant.id}`;
-                      }}
-                    >
-                      <MapPin className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                      <div className="flex-1">
-                        <h5 className="font-medium">{restaurant.name}</h5>
-                        <p className="text-sm text-gray-600">{restaurant.address}</p>
-                        <p className="text-sm font-medium text-primary">{restaurant.distance}</p>
-                      </div>
-                      <Button 
-                        variant="outline" 
-                        size="icon" 
-                        className="h-8 w-8 flex-shrink-0"
-                        onClick={(e) => {
-                          e.stopPropagation(); // Prevent parent click
-                          openGoogleMaps(restaurant);
+                  <div className="p-2 space-y-2">
+                    {restaurants.map(restaurant => (
+                      <div 
+                        key={restaurant.id} 
+                        className="bg-white p-3 rounded-lg shadow-sm flex items-start gap-2 hover:bg-gray-50 cursor-pointer transition-colors"
+                        onClick={() => {
+                          // Navigate to restaurant details
+                          window.location.href = `/restaurant/${restaurant.id}`;
                         }}
                       >
-                        <Navigation className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))
+                        <MapPin className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                        <div className="flex-1">
+                          <h5 className="font-medium">{restaurant.name}</h5>
+                          <p className="text-sm text-gray-600">{restaurant.address}</p>
+                          <p className="text-sm font-medium text-primary">{restaurant.distance}</p>
+                        </div>
+                        <Button 
+                          variant="outline" 
+                          size="icon" 
+                          className="h-8 w-8 flex-shrink-0"
+                          onClick={(e) => {
+                            e.stopPropagation(); // Prevent parent click
+                            openGoogleMaps(restaurant);
+                          }}
+                        >
+                          <Navigation className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
                 ) : (
                   <div className="p-6 text-center text-gray-500">
                     {userPosition ? 'Nessun ristorante trovato entro la distanza selezionata.' : 
                      'Condividi la tua posizione per trovare ristoranti nelle vicinanze.'}
+                  </div>
+                )}
+                
+                {/* Mostra indicatore di caricamento quando stiamo aggiornando la lista */}
+                {isLoading && restaurants.length > 0 && (
+                  <div className="p-3 text-center text-xs text-gray-500">
+                    <div className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-primary border-r-transparent mr-1"></div>
+                    Aggiornamento risultati...
                   </div>
                 )}
               </div>

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import Layout from '@/components/Layout';
 import WelcomeHeader from '@/components/Home/WelcomeHeader';
 import RegionAlert from '@/components/Home/RegionAlert';
@@ -16,8 +16,24 @@ const Index = () => {
     isLoading,
     regionStatus,
     handleSearch,
-    handleToggleFavorite
+    handleToggleFavorite,
+    refreshRestaurants
   } = useRestaurantList();
+
+  // Carica automaticamente i ristoranti all'apertura dell'app
+  useEffect(() => {
+    // Carica immediatamente senza attendere l'interazione utente
+    refreshRestaurants();
+    
+    // Imposta un refresh periodico dei dati ogni 5 minuti se l'utente rimane sulla pagina
+    const refreshInterval = setInterval(() => {
+      if (navigator.onLine) {
+        refreshRestaurants();
+      }
+    }, 5 * 60 * 1000);
+    
+    return () => clearInterval(refreshInterval);
+  }, [refreshRestaurants]);
 
   return (
     <Layout>
@@ -42,6 +58,7 @@ const Index = () => {
             isLoading={isLoading}
             regionStatus={regionStatus}
             onToggleFavorite={handleToggleFavorite}
+            onRetry={refreshRestaurants}
           />
         </div>
 
