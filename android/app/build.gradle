@@ -1,3 +1,4 @@
+
 apply plugin: 'com.android.application'
 
 android {
@@ -19,8 +20,8 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17 // oppure JavaVersion.VERSION_11
-        targetCompatibility JavaVersion.VERSION_17 // oppure JavaVersion.VERSION_11
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 
     buildTypes {
@@ -34,10 +35,12 @@ android {
 repositories {
     google()
     mavenCentral()
-    // Rimuovi o sostituisci flatDir, se possibile.
-    // Se devi usare flatDir, considera di spostare i file in un repository Maven locale.
-    flatDir {
-        dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
+    // Modifica per evitare l'avviso flatDir
+    maven {
+        url "${project.rootDir}/capacitor-cordova-android-plugins/src/main/libs"
+    }
+    maven {
+        url "${project.rootDir}/libs"
     }
 }
 
