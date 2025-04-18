@@ -1,18 +1,10 @@
 
 import { CapacitorConfig } from '@capacitor/cli';
+
 const config: CapacitorConfig = {
   appId: 'com.glutenfreeeats.app',
   appName: 'Gluten Free Eats',
   webDir: 'dist',
-  // La sezione server è stata commentata per rimuovere la dipendenza dal server remoto
-  // server: {
-  //   androidScheme: 'https',
-  //   iosScheme: 'https',
-  //   allowNavigation: ['*'],
-  //   cleartext: true,
-  //   url: 'https://0406988d-f72c-4fb8-9c66-f80fcfc8a946.lovableproject.com?forceHideBadge=true', 
-  //   hostname: 'lovableproject.com'
-  // },
   plugins: {
     SplashScreen: {
       launchShowDuration: 2000,
@@ -26,54 +18,14 @@ const config: CapacitorConfig = {
       resize: "body",
       style: "dark",
       resizeOnFullScreen: true
-    },
-    LocalNotifications: {
-      smallIcon: "ic_stat_restaurant",
-      iconColor: "#FF5733"
-    },
-    Geolocation: {
-      permissions: {
-        ios: {
-          always: false,
-          whenInUse: true
-        },
-        android: {
-          highAccuracy: true,
-          coarseOnly: false
-        }
-      }
     }
   },
   android: {
     backgroundColor: "#FFFFFF",
     allowMixedContent: true,
     captureInput: true,
-    webContentsDebuggingEnabled: true,
-    minSdkVersion: 21,
-    hideLogs: false,
-    buildOptions: {
-      keystorePath: null,
-      keystorePassword: null,
-      keystoreAlias: null,
-      keystoreAliasPassword: null,
-      releaseType: null
-    },
-    permissions: [
-      "android.permission.ACCESS_COARSE_LOCATION",
-      "android.permission.ACCESS_FINE_LOCATION",
-      "android.permission.INTERNET"
-    ]
-  },
-  ios: {
-    preferredContentMode: "mobile",
-    cordovaSwiftVersion: "5.0",
-    contentInset: "always",
-    permissions: {
-      locationWhenInUse: {
-        "title": "Accesso alla tua posizione",
-        "message": "Gluten Free Eats ha bisogno della tua posizione per mostrarti i ristoranti nelle vicinanze"
-      }
-    }
+    webContentsDebuggingEnabled: true
   }
 };
+
 export default config;
