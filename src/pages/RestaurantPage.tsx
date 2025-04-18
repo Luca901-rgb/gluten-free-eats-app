@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import RestaurantDetails, { RestaurantDetailProps } from '@/components/Restaurant/RestaurantDetails';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, DocumentSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { toast } from 'sonner';
 import { useRestaurantData } from '@/hooks/useRestaurantData';
@@ -85,10 +86,12 @@ const RestaurantPage = () => {
         // Timeout di 2 secondi
         new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 2000))
       ])
-        .then(response => {
+        .then((response) => {
           if (response instanceof Error) throw response;
           
-          const restaurantDoc = response;
+          // Esplicitamente tipizzo restaurantDoc come DocumentSnapshot
+          const restaurantDoc = response as DocumentSnapshot;
+          
           if (restaurantDoc.exists()) {
             const data = restaurantDoc.data();
             
@@ -99,15 +102,15 @@ const RestaurantPage = () => {
               return {
                 ...current,
                 id,
-                name: data.name || current.name,
-                description: data.description || current.description, 
-                coverImage: data.coverImage || current.coverImage,
-                images: data.gallery || current.images,
-                address: data.address || current.address,
-                phone: data.phone || current.phone,
-                rating: data.rating || current.rating,
-                reviews: data.reviewCount || current.reviews,
-                hasGlutenFreeOptions: data.hasGlutenFreeOptions !== undefined 
+                name: data?.name || current.name,
+                description: data?.description || current.description, 
+                coverImage: data?.coverImage || current.coverImage,
+                images: data?.gallery || current.images,
+                address: data?.address || current.address,
+                phone: data?.phone || current.phone,
+                rating: data?.rating || current.rating,
+                reviews: data?.reviewCount || current.reviews,
+                hasGlutenFreeOptions: data?.hasGlutenFreeOptions !== undefined 
                   ? data.hasGlutenFreeOptions 
                   : current.hasGlutenFreeOptions
               };
