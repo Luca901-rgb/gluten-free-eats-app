@@ -100,6 +100,13 @@ const RegisterForm = () => {
       localStorage.setItem('userName', formData.name);
       localStorage.setItem('userId', user.uid);
       
+      if (formData.phone) {
+        localStorage.setItem('userPhone', formData.phone);
+      }
+      if (formData.address) {
+        localStorage.setItem('userAddress', formData.address);
+      }
+      
       if (userType === 'restaurant') {
         localStorage.setItem('restaurantName', formData.restaurantName);
         localStorage.setItem('restaurantAddress', formData.address);

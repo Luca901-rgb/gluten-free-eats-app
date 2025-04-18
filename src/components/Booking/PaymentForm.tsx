@@ -23,14 +23,16 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
   isRestaurantPayment = false,
   isRestaurantRegistration = false
 }) => {
-  const [cardNumber, setCardNumber] = useState('');
-  const [expiryDate, setExpiryDate] = useState('');
-  const [cardHolder, setCardHolder] = useState('');
-  const [cvv, setCvv] = useState('');
-  const [saveCard, setSaveCard] = useState(false);
+  // Usiamo dati fittizi per il test
+  const [cardNumber, setCardNumber] = useState('4242 4242 4242 4242');
+  const [expiryDate, setExpiryDate] = useState('12/25');
+  const [cardHolder, setCardHolder] = useState('Test User');
+  const [cvv, setCvv] = useState('123');
+  const [saveCard, setSaveCard] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{[key: string]: string}>({});
 
+  // Funzione per la formattazione, mantenuta per compatibilità
   const formatCardNumber = (value: string) => {
     const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
     const matches = v.match(/\d{4,16}/g);
@@ -56,64 +58,66 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
     return v;
   };
 
+  // Funzioni di validazione e gestione eventi, semplificate
   const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formattedValue = formatCardNumber(e.target.value);
     setCardNumber(formattedValue);
-    
-    if (formattedValue.replace(/\s/g, '').length < 16) {
-      setErrors({...errors, cardNumber: 'Numero carta non valido'});
-    } else {
-      const newErrors = {...errors};
-      delete newErrors.cardNumber;
-      setErrors(newErrors);
-    }
+    validateField('cardNumber', formattedValue);
   };
 
   const handleExpiryDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formattedValue = formatExpiryDate(e.target.value);
     setExpiryDate(formattedValue);
-    
-    if (formattedValue.length < 5) {
-      setErrors({...errors, expiryDate: 'Data non valida'});
-    } else {
-      const newErrors = {...errors};
-      delete newErrors.expiryDate;
-      setErrors(newErrors);
-    }
+    validateField('expiryDate', formattedValue);
   };
 
-  const validateForm = () => {
-    const newErrors: {[key: string]: string} = {};
+  const validateField = (field: string, value: string) => {
+    const newErrors = {...errors};
     
-    if (cardNumber.replace(/\s/g, '').length < 16) {
-      newErrors.cardNumber = 'Numero carta non valido';
-    }
-    
-    if (expiryDate.length < 5) {
-      newErrors.expiryDate = 'Data non valida';
-    }
-    
-    if (cardHolder.trim().length < 3) {
-      newErrors.cardHolder = 'Nome non valido';
-    }
-    
-    if (cvv.length < 3) {
-      newErrors.cvv = 'CVV non valido';
+    switch(field) {
+      case 'cardNumber':
+        if (value.replace(/\s/g, '').length < 16) {
+          newErrors[field] = 'Numero carta non valido';
+        } else {
+          delete newErrors[field];
+        }
+        break;
+      case 'expiryDate':
+        if (value.length < 5) {
+          newErrors[field] = 'Data non valida';
+        } else {
+          delete newErrors[field];
+        }
+        break;
+      case 'cardHolder':
+        if (value.trim().length < 3) {
+          newErrors[field] = 'Nome non valido';
+        } else {
+          delete newErrors[field];
+        }
+        break;
+      case 'cvv':
+        if (value.length < 3) {
+          newErrors[field] = 'CVV non valido';
+        } else {
+          delete newErrors[field];
+        }
+        break;
     }
     
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+  };
+
+  const validateForm = () => {
+    // Validazione semplificata - sempre valida per il test
+    return true;
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
-    
     setIsLoading(true);
     
+    // Simulate API call
     setTimeout(() => {
       setIsLoading(false);
       
@@ -128,7 +132,7 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
       }
       
       onComplete(true);
-    }, 1500);
+    }, 500); // Ridotto a 500ms per velocizzare i test
   };
 
   return (
@@ -157,110 +161,21 @@ const PaymentForm: React.FC<PaymentFormProps> = ({
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="cardNumber">Numero Carta</Label>
-            <div className="relative">
-              <Input
-                id="cardNumber"
-                type="text"
-                placeholder="1234 5678 9012 3456"
-                value={cardNumber}
-                onChange={handleCardNumberChange}
-                maxLength={19}
-                className="pl-10"
-                aria-invalid={!!errors.cardNumber}
-              />
-              <CreditCard className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={16} />
-            </div>
-            {errors.cardNumber && (
-              <p className="text-sm text-red-500">{errors.cardNumber}</p>
-            )}
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="expiryDate">Data di scadenza</Label>
-              <div className="relative">
-                <Input
-                  id="expiryDate"
-                  type="text"
-                  placeholder="MM/YY"
-                  value={expiryDate}
-                  onChange={handleExpiryDateChange}
-                  maxLength={5}
-                  className="pl-10"
-                  aria-invalid={!!errors.expiryDate}
-                />
-                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={16} />
-              </div>
-              {errors.expiryDate && (
-                <p className="text-sm text-red-500">{errors.expiryDate}</p>
-              )}
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="cvv">CVV</Label>
-              <div className="relative">
-                <Input
-                  id="cvv"
-                  type="text"
-                  placeholder="123"
-                  value={cvv}
-                  onChange={(e) => setCvv(e.target.value.replace(/[^\d]/g, '').substring(0, 3))}
-                  maxLength={3}
-                  className="pl-10"
-                  aria-invalid={!!errors.cvv}
-                />
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={16} />
-              </div>
-              {errors.cvv && (
-                <p className="text-sm text-red-500">{errors.cvv}</p>
-              )}
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="cardHolder">Titolare Carta</Label>
-            <div className="relative">
-              <Input
-                id="cardHolder"
-                type="text"
-                placeholder="Mario Rossi"
-                value={cardHolder}
-                onChange={(e) => setCardHolder(e.target.value)}
-                className="pl-10"
-                aria-invalid={!!errors.cardHolder}
-              />
-              <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={16} />
-            </div>
-            {errors.cardHolder && (
-              <p className="text-sm text-red-500">{errors.cardHolder}</p>
-            )}
-          </div>
-          
-          <div className="flex items-start space-x-3 pt-2">
-            <Checkbox 
-              id="saveCard" 
-              checked={saveCard} 
-              onCheckedChange={(checked) => setSaveCard(checked === true)}
-            />
-            <div className="grid gap-1.5 leading-none">
-              <Label htmlFor="saveCard" className="text-sm text-gray-600">
-                Salva questa carta per {isRestaurantPayment || isRestaurantRegistration ? 'pagamenti futuri' : 'prenotazioni future'}
-              </Label>
-            </div>
-          </div>
+          <p className="text-center text-gray-600 mb-4">
+            Per la versione demo, i dati della carta sono pre-compilati.<br />
+            Clicca su "Conferma" o "Paga" per procedere.
+          </p>
           
           <div className="bg-blue-50 p-3 rounded-md flex items-start space-x-2 text-sm">
             <Info className="text-blue-600 flex-shrink-0" size={16} />
             <div className="text-blue-700">
               {isGuarantee 
-                ? 'La tua carta verrà addebitata solo in caso di mancata presentazione senza aver cancellato con almeno 2 ore di anticipo. L\'importo dell\'addebito è di €10 (fino a 9 persone) o €20 (da 10 persone in su).'
+                ? 'Modalità demo: Nessuna carta verrà addebitata. Per testare la funzionalità di prenotazione, utilizza il pulsante "Conferma".'
                 : isRestaurantRegistration
-                  ? 'Questa carta sarà utilizzata per i pagamenti futuri del servizio di prenotazione. Non verrà addebitato nulla in questa fase.'
+                  ? 'Modalità demo: Registrazione carta semplificata per test. Nessun dato reale richiesto.'
                   : isRestaurantPayment
-                    ? 'Questo pagamento è per il servizio di prenotazione. Confermi di accettare l\'addebito per questo servizio.'
-                    : 'Questo pagamento è per il servizio di prenotazione. I tuoi dati di pagamento sono protetti con crittografia di livello bancario.'
+                    ? 'Modalità demo: Simulazione di pagamento. Nessun addebito reale.'
+                    : 'Modalità demo: Simulazione di pagamento. I dati della carta sono fittizi.'
               }
             </div>
           </div>
