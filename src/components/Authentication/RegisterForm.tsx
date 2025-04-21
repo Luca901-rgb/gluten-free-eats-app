@@ -131,7 +131,7 @@ const RegisterForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (formData.password !== formData.confirmPassword) {
       toast.error("Le password non corrispondono");
       return;
@@ -144,16 +144,12 @@ const RegisterForm = () => {
 
     setIsLoading(true);
 
-    if (userType === 'restaurant') {
-      setShowPaymentDialog(true);
-    } else {
-      completeRegistration();
-    }
+    await completeRegistration();
   };
 
   const handleGoogleSignIn = async () => {
     if (!formData.acceptTerms) {
-      toast.error("Accetta i termini e condizioni per continuare");
+      toast.error("Accetta i termini e le condizioni per continuare");
       return;
     }
     
@@ -182,12 +178,8 @@ const RegisterForm = () => {
         uid: user.uid
       });
       
-      if (userType === 'restaurant') {
-        setShowPaymentDialog(true);
-      } else {
-        toast.success("Registrazione con Google completata! Reindirizzamento...");
-        navigate('/');
-      }
+      toast.success("Registrazione con Google completata! Reindirizzamento...");
+      navigate('/');
       
       toast.success("Registrazione con Google effettuata con successo");
     } catch (error: any) {
@@ -694,7 +686,7 @@ const RegisterForm = () => {
             id="password"
             name="password"
             type={showPassword ? "text" : "password"}
-            placeholder="••••••••"
+            placeholder="••••••��•"
             required
             value={formData.password}
             onChange={handleChange}
