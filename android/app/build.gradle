@@ -35,7 +35,6 @@ android {
 repositories {
     google()
     mavenCentral()
-    // Modifica per evitare l'avviso flatDir
     maven {
         url "${project.rootDir}/capacitor-cordova-android-plugins/src/main/libs"
     }
