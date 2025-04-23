@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { Mail, Lock, Eye, EyeOff, LogIn, User, Store } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, LogIn, User, Store, WifiOff } from 'lucide-react';
 import { loginUser, signInWithGoogle } from '@/lib/firebase';
 
 interface LoginFormProps {
@@ -17,10 +18,27 @@ const LoginForm: React.FC<LoginFormProps> = ({ initialUserType = 'customer' }) =
   const [isLoading, setIsLoading] = useState(false);
   const [userType, setUserType] = useState<'customer' | 'restaurant'>(initialUserType);
   const [showPassword, setShowPassword] = useState(false);
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
+  
+  // Monitora lo stato della connessione
+  useEffect(() => {
+    const handleOnlineStatus = () => setIsOffline(!navigator.onLine);
+    
+    window.addEventListener('online', handleOnlineStatus);
+    window.addEventListener('offline', handleOnlineStatus);
+    
+    // Imposta lo stato iniziale
+    setIsOffline(!navigator.onLine);
+    
+    return () => {
+      window.removeEventListener('online', handleOnlineStatus);
+      window.removeEventListener('offline', handleOnlineStatus);
+    };
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -31,6 +49,13 @@ const LoginForm: React.FC<LoginFormProps> = ({ initialUserType = 'customer' }) =
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Controlla se l'app è offline
+    if (isOffline) {
+      toast.error("Non sei connesso a internet. Verifica la tua connessione e riprova.");
+      return;
+    }
+    
     setIsLoading(true);
 
     try {
@@ -52,13 +77,24 @@ const LoginForm: React.FC<LoginFormProps> = ({ initialUserType = 'customer' }) =
         navigate('/home');
       }
     } catch (error: any) {
-      toast.error(`Errore durante il login: ${error.message}`);
+      // Gestione specifica per errori di connessione
+      if (error.code === 'unavailable' || error.message.includes('offline')) {
+        toast.error("Impossibile connettersi al server. Verifica la tua connessione e riprova.");
+      } else {
+        toast.error(`Errore durante il login: ${error.message}`);
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleGoogleSignIn = async () => {
+    // Controlla se l'app è offline
+    if (isOffline) {
+      toast.error("Non sei connesso a internet. Verifica la tua connessione e riprova.");
+      return;
+    }
+    
     setIsLoading(true);
     toast.loading("Accesso con Google in corso...");
     
@@ -89,7 +125,13 @@ const LoginForm: React.FC<LoginFormProps> = ({ initialUserType = 'customer' }) =
     } catch (error: any) {
       console.error("Errore durante l'accesso con Google:", error);
       toast.dismiss();
-      toast.error(`Errore: ${error.message}`);
+      
+      // Gestione specifica per errori di connessione
+      if (error.code === 'unavailable' || error.message.includes('offline')) {
+        toast.error("Impossibile connettersi a Google. Verifica la tua connessione e riprova.");
+      } else {
+        toast.error(`Errore: ${error.message}`);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -98,6 +140,23 @@ const LoginForm: React.FC<LoginFormProps> = ({ initialUserType = 'customer' }) =
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
+  
+  // Mostra avviso se offline
+  if (isOffline) {
+    return (
+      <div className="w-full max-w-md mx-auto p-6 text-center">
+        <WifiOff size={48} className="mx-auto mb-4 text-red-500" />
+        <h2 className="text-2xl font-bold mb-2">Connessione non disponibile</h2>
+        <p className="text-gray-600 mb-6">Impossibile connettersi al server. Verifica la tua connessione internet e riprova.</p>
+        <Button 
+          onClick={() => window.location.reload()}
+          className="w-full bg-primary hover:bg-primary/90"
+        >
+          Riprova
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-md mx-auto p-6">

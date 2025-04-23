@@ -5,6 +5,11 @@ const config: CapacitorConfig = {
   appId: 'com.glutenfreeeats.app',
   appName: 'Gluten Free Eats',
   webDir: 'dist',
+  server: {
+    androidScheme: 'https',
+    allowNavigation: ['*'],
+    cleartext: true
+  },
   plugins: {
     SplashScreen: {
       launchShowDuration: 2000,
