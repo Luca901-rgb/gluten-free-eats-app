@@ -39,6 +39,11 @@ allprojects {
     }
 }
 
+// Fix per Java 17 compatibility
+tasks.withType(JavaCompile).configureEach {
+    options.release = 17
+}
+
 task clean(type: Delete) {
     delete rootProject.buildDir
 }
