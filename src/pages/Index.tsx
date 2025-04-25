@@ -24,6 +24,15 @@ const Index = () => {
   useEffect(() => {
     console.log("Index page - Mounting");
     console.log("Initial restaurants:", restaurants);
+    
+    // Pulizia forzata della cache all'apertura della pagina
+    try {
+      localStorage.removeItem('cachedRestaurants');
+      localStorage.removeItem('lastCacheTime');
+      console.log("Cache forzatamente ripulita all'avvio della pagina");
+    } catch (e) {
+      console.error("Errore nella pulizia della cache:", e);
+    }
   }, []);
 
   // Log quando cambiano i ristoranti
@@ -35,30 +44,21 @@ const Index = () => {
   useEffect(() => {
     console.log("Caricamento ristoranti all'avvio");
     
-    // Pulizia della cache all'avvio per essere sicuri di avere dati freschi
-    try {
-      const cacheTimestamp = localStorage.getItem('lastCacheTime');
-      if (!cacheTimestamp || Date.now() - parseInt(cacheTimestamp) > 10 * 60 * 1000) { // 10 minuti
-        console.log("Cache scaduta o non presente, ricarico i dati");
-        localStorage.removeItem('cachedRestaurants');
-        localStorage.setItem('lastCacheTime', Date.now().toString());
-      } else {
-        console.log("Cache ancora valida");
-      }
-    } catch (e) {
-      console.error("Errore nella gestione della cache:", e);
-    }
+    // Forza ricaricamento dati freschi all'avvio
+    console.log("Forzo ricaricamento dati freschi");
+    localStorage.removeItem('cachedRestaurants');
+    localStorage.setItem('lastCacheTime', Date.now().toString());
     
     // Carica immediatamente senza attendere l'interazione utente
     refreshRestaurants();
     
-    // Imposta un refresh periodico dei dati ogni 5 minuti se l'utente rimane sulla pagina
+    // Imposta un refresh periodico dei dati ogni 3 minuti se l'utente rimane sulla pagina
     const refreshInterval = setInterval(() => {
       if (navigator.onLine) {
         console.log("Aggiornamento periodico dei dati");
         refreshRestaurants();
       }
-    }, 5 * 60 * 1000);
+    }, 3 * 60 * 1000);
     
     return () => clearInterval(refreshInterval);
   }, [refreshRestaurants]);

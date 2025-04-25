@@ -23,13 +23,20 @@ const config: CapacitorConfig = {
       resize: "body",
       style: "dark",
       resizeOnFullScreen: true
+    },
+    // Aggiungiamo configurazione per la cache
+    CapacitorHttp: {
+      enabled: true
     }
   },
   android: {
     backgroundColor: "#FFFFFF",
     allowMixedContent: true,
     captureInput: true,
-    webContentsDebuggingEnabled: true
+    webContentsDebuggingEnabled: true,
+    // Forza l'invalidazione della cache
+    overrideUserAgent: 'GlutenFreeEatsApp-' + new Date().getTime(),
+    minWebviewVersion: 60
   }
 };
 
