@@ -22,6 +22,23 @@ export const useRestaurantList = () => {
     inRegion: false
   });
 
+  const sampleRestaurant: Restaurant = {
+    id: '1',
+    name: 'Trattoria Keccabio',
+    image: '/placeholder.svg', 
+    rating: 4.7,
+    reviews: 128,
+    cuisine: 'Campana Gluten Free',
+    description: 'Ristorante 100% gluten free specializzato in cucina campana tradizionale.',
+    address: 'Via Toledo 42, Napoli, 80132',
+    hasGlutenFreeOptions: true,
+    isFavorite: false,
+    location: {
+      lat: 40.8388, 
+      lng: 14.2488
+    }
+  };
+
   const verifyRegion = useCallback(async () => {
     try {
       const result = await checkUserRegion();
@@ -62,6 +79,7 @@ export const useRestaurantList = () => {
       if (navigator.onLine) {
         await fetchRestaurants();
       } else {
+        setRestaurants([sampleRestaurant]);
         setIsLoading(false);
       }
     };
@@ -75,14 +93,29 @@ export const useRestaurantList = () => {
   }, [verifyRegion]);
 
   const fetchRestaurants = async () => {
+    console.log("Caricamento ristoranti iniziato");
+    
     if (isOffline) {
       const cachedRestaurants = localStorage.getItem('cachedRestaurants');
       if (cachedRestaurants) {
         try {
-          setRestaurants(JSON.parse(cachedRestaurants));
+          let parsedRestaurants = JSON.parse(cachedRestaurants);
+          
+          const hasSampleRestaurant = parsedRestaurants.some((r: Restaurant) => r.id === sampleRestaurant.id);
+          if (!hasSampleRestaurant) {
+            parsedRestaurants = [sampleRestaurant, ...parsedRestaurants];
+          }
+          
+          setRestaurants(parsedRestaurants);
+          console.log("Caricati", parsedRestaurants.length, "ristoranti dalla cache (incluso esempio)");
         } catch (e) {
           console.error("Errore nel parsing dei ristoranti dalla cache:", e);
+          setRestaurants([sampleRestaurant]);
+          console.log("Caricato solo il ristorante di esempio");
         }
+      } else {
+        setRestaurants([sampleRestaurant]);
+        console.log("Nessuna cache disponibile, caricato solo il ristorante di esempio");
       }
       setIsLoading(false);
       return;
@@ -91,7 +124,10 @@ export const useRestaurantList = () => {
     try {
       setIsLoading(true);
       const restaurantsCollection = collection(db, "restaurants");
+      
+      console.log("Tentativo di caricamento ristoranti da Firebase...");
       const restaurantsSnapshot = await getDocs(restaurantsCollection);
+      console.log("Numero di ristoranti trovati nel DB:", restaurantsSnapshot.docs.length);
       
       let userFavorites: string[] = [];
       const currentUser = auth.currentUser;
@@ -107,7 +143,7 @@ export const useRestaurantList = () => {
         }
       }
       
-      const restaurantsData = restaurantsSnapshot.docs.map(doc => {
+      let restaurantsData: Restaurant[] = restaurantsSnapshot.docs.map(doc => {
         const data = doc.data();
         return {
           id: doc.id,
@@ -119,26 +155,53 @@ export const useRestaurantList = () => {
           description: data.description || 'Nessuna descrizione disponibile',
           address: data.address || 'Indirizzo non disponibile',
           hasGlutenFreeOptions: data.hasGlutenFreeOptions || false,
-          isFavorite: userFavorites.includes(doc.id)
+          isFavorite: userFavorites.includes(doc.id),
+          location: data.location || { lat: 40.8518, lng: 14.2681 }
         } as Restaurant;
       });
       
-      localStorage.setItem('cachedRestaurants', JSON.stringify(restaurantsData));
+      if (restaurantsData.length === 0) {
+        restaurantsData = [sampleRestaurant];
+        console.log("DB vuoto, aggiunto ristorante di esempio");
+      } else {
+        const hasSampleRestaurant = restaurantsData.some(r => r.id === sampleRestaurant.id || r.name === sampleRestaurant.name);
+        if (!hasSampleRestaurant) {
+          restaurantsData.unshift(sampleRestaurant);
+          console.log("Aggiunto ristorante di esempio ai risultati del DB");
+        }
+      }
+      
+      try {
+        localStorage.setItem('cachedRestaurants', JSON.stringify(restaurantsData));
+        console.log("Salvati", restaurantsData.length, "ristoranti in cache");
+      } catch (e) {
+        console.error("Errore nel salvataggio dei ristoranti in cache:", e);
+      }
       
       setRestaurants(restaurantsData);
+      console.log("Lista ristoranti aggiornata con", restaurantsData.length, "elementi");
     } catch (error) {
       console.error("Errore durante il recupero dei ristoranti:", error);
       
       const cachedRestaurants = localStorage.getItem('cachedRestaurants');
       if (cachedRestaurants) {
         try {
-          setRestaurants(JSON.parse(cachedRestaurants));
+          let parsedRestaurants = JSON.parse(cachedRestaurants);
+          
+          const hasSampleRestaurant = parsedRestaurants.some((r: Restaurant) => r.id === sampleRestaurant.id);
+          if (!hasSampleRestaurant) {
+            parsedRestaurants = [sampleRestaurant, ...parsedRestaurants];
+          }
+          
+          setRestaurants(parsedRestaurants);
           toast.info("Utilizzando dati ristoranti dalla cache");
         } catch (e) {
           console.error("Errore nel parsing dei ristoranti dalla cache:", e);
+          setRestaurants([sampleRestaurant]);
           toast.error("Impossibile caricare i ristoranti");
         }
       } else {
+        setRestaurants([sampleRestaurant]);
         toast.error("Si è verificato un errore nel caricamento dei ristoranti");
       }
     } finally {

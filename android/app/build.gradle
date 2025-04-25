@@ -1,6 +1,9 @@
 
 apply plugin: 'com.android.application'
 
+// Aggiungiamo una nuova proprietà per forzare la compilazione nuova ad ogni build
+def buildTimestamp = System.currentTimeMillis()
+
 android {
     namespace "com.glutenfreeeats.app"
     compileSdk rootProject.ext.compileSdkVersion
@@ -12,6 +15,8 @@ android {
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        // Aggiungiamo un BuildConfigField per forzare la ricompilazione
+        buildConfigField "long", "BUILD_TIME", "${buildTimestamp}L"
         aaptOptions {
             // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
             // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61

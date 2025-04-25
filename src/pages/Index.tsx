@@ -20,14 +20,42 @@ const Index = () => {
     refreshRestaurants
   } = useRestaurantList();
 
+  // Log per debug
+  useEffect(() => {
+    console.log("Index page - Mounting");
+    console.log("Initial restaurants:", restaurants);
+  }, []);
+
+  // Log quando cambiano i ristoranti
+  useEffect(() => {
+    console.log("Restaurants changed:", restaurants);
+  }, [restaurants]);
+
   // Carica automaticamente i ristoranti all'apertura dell'app
   useEffect(() => {
+    console.log("Caricamento ristoranti all'avvio");
+    
+    // Pulizia della cache all'avvio per essere sicuri di avere dati freschi
+    try {
+      const cacheTimestamp = localStorage.getItem('lastCacheTime');
+      if (!cacheTimestamp || Date.now() - parseInt(cacheTimestamp) > 10 * 60 * 1000) { // 10 minuti
+        console.log("Cache scaduta o non presente, ricarico i dati");
+        localStorage.removeItem('cachedRestaurants');
+        localStorage.setItem('lastCacheTime', Date.now().toString());
+      } else {
+        console.log("Cache ancora valida");
+      }
+    } catch (e) {
+      console.error("Errore nella gestione della cache:", e);
+    }
+    
     // Carica immediatamente senza attendere l'interazione utente
     refreshRestaurants();
     
     // Imposta un refresh periodico dei dati ogni 5 minuti se l'utente rimane sulla pagina
     const refreshInterval = setInterval(() => {
       if (navigator.onLine) {
+        console.log("Aggiornamento periodico dei dati");
         refreshRestaurants();
       }
     }, 5 * 60 * 1000);
