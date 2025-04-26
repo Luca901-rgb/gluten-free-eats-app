@@ -96,22 +96,7 @@ dependencies {
     implementation project(':capacitor-cordova-android-plugins')
 }
 
-// Aggiungiamo una nuova task per pulire ancora più a fondo
-task superClean(dependsOn: 'clean') {
-    doLast {
-        def assetsDir = new File("${project.buildDir}/generated/assets")
-        if (assetsDir.exists()) {
-            println "Deleting generated assets directory"
-            assetsDir.deleteDir()
-        }
-        
-        def webAppDir = new File("${project.projectDir}/app/src/main/assets/public")
-        if (webAppDir.exists()) {
-            println "Deleting web app directory"
-            webAppDir.deleteDir()
-        }
-    }
-}
+// Rimuoviamo il task superClean da qui dato che l'abbiamo spostato nel build.gradle principale
 
 apply from: 'capacitor.build.gradle'
 
@@ -123,3 +108,4 @@ try {
 } catch (Exception e) {
     logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
 }
+

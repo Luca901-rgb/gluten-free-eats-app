@@ -44,6 +44,38 @@ tasks.withType(JavaCompile).configureEach {
     options.release = 17
 }
 
+// Aggiungiamo una task superClean a livello di progetto globale
+task superClean {
+    doLast {
+        println "Esecuzione pulizia profonda del progetto"
+        // Elimina la directory build
+        delete rootProject.buildDir
+        
+        // Pulisci anche le sottodirectory di build nei progetti
+        subprojects.each { subproject ->
+            delete subproject.buildDir
+            
+            def assetsDir = new File("${subproject.projectDir}/build/generated/assets")
+            if (assetsDir.exists()) {
+                println "Eliminazione directory assets generati in ${subproject.name}"
+                assetsDir.deleteDir()
+            }
+            
+            if (subproject.name == 'app') {
+                def webAppDir = new File("${subproject.projectDir}/src/main/assets/public")
+                if (webAppDir.exists()) {
+                    println "Eliminazione directory web app in app/src/main/assets/public"
+                    webAppDir.deleteDir()
+                }
+            }
+        }
+    }
+}
+
+// Fai dipendere superClean dal task clean standard
+superClean.dependsOn clean
+
 task clean(type: Delete) {
     delete rootProject.buildDir
 }
+
