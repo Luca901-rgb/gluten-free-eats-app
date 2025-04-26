@@ -12,7 +12,7 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         // Registriamo il plugin HTTP prima di chiamare il metodo super
-        registerPlugin(com.getcapacitor.community.http.Http.class);
+        registerPlugin(com.capacitor.community.http.Http.class);
         
         // Impostazioni di debug per il WebView
         WebView.setWebContentsDebuggingEnabled(true);
