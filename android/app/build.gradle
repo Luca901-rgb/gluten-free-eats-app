@@ -1,3 +1,4 @@
+
 apply plugin: 'com.android.application'
 
 // Aggiungiamo una nuova proprietà per forzare la compilazione nuova ad ogni build
@@ -12,11 +13,12 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
-        versionName "1.0"
+        versionName "1.0." + buildTimestamp  // Aggiunto timestamp direttamente nella versione
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         // Aggiungiamo un BuildConfigField dinamico per forzare la ricompilazione
         buildConfigField "long", "BUILD_TIME", "${buildTimestamp}L"
         buildConfigField "String", "BUILD_ID", "\"build-${buildTimestamp}\""
+        resValue "string", "build_time_label", "${new Date(buildTimestamp).format('yyyy-MM-dd HH:mm:ss')}"
         aaptOptions {
             // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
             // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
@@ -38,10 +40,14 @@ android {
             // Aggiungiamo un suffisso per rendere ogni build unica
             applicationIdSuffix ".debug"
             versionNameSuffix "-debug-${buildTimestamp}"
+            resValue "string", "app_version", "1.0-d${buildTimestamp}"
+            // Forziamo assets nuovi ad ogni build
+            assetDirs = [new File("${project.buildDir}/generated/assets/debug-${buildTimestamp}")]
         }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            resValue "string", "app_version", "1.0.${buildTimestamp}"
         }
     }
     
@@ -88,6 +94,23 @@ dependencies {
     androidTestImplementation "androidx.test.ext:junit:${rootProject.ext.androidxJunitVersion}"
     androidTestImplementation "androidx.test.espresso:espresso-core:${rootProject.ext.androidxEspressoCoreVersion}"
     implementation project(':capacitor-cordova-android-plugins')
+}
+
+// Aggiungiamo una nuova task per pulire ancora più a fondo
+task superClean(dependsOn: 'clean') {
+    doLast {
+        def assetsDir = new File("${project.buildDir}/generated/assets")
+        if (assetsDir.exists()) {
+            println "Deleting generated assets directory"
+            assetsDir.deleteDir()
+        }
+        
+        def webAppDir = new File("${project.projectDir}/app/src/main/assets/public")
+        if (webAppDir.exists()) {
+            println "Deleting web app directory"
+            webAppDir.deleteDir()
+        }
+    }
 }
 
 apply from: 'capacitor.build.gradle'

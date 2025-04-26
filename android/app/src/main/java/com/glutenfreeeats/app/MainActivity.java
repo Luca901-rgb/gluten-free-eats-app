@@ -4,6 +4,8 @@ package com.glutenfreeeats.app;
 import android.os.Bundle;
 import android.webkit.WebView;
 import android.webkit.WebSettings;
+import android.webkit.WebViewClient;
+import java.util.Date;
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
@@ -17,12 +19,15 @@ public class MainActivity extends BridgeActivity {
         
         super.onCreate(savedInstanceState);
         
+        // Timestamp per forzare il refreshing della cache
+        final long timestamp = new Date().getTime();
+        
         // Impostazioni aggressive di non-caching per il WebView
         bridge.getWebView().clearCache(true);
         bridge.getWebView().clearHistory();
         
         WebSettings webSettings = bridge.getWebView().getSettings();
-        webSettings.setCacheMode(WebView.LOAD_NO_CACHE);
+        webSettings.setCacheMode(WebSettings.LOAD_NO_CACHE);
         webSettings.setAppCacheEnabled(false);
         webSettings.setDomStorageEnabled(true);
         webSettings.setDatabaseEnabled(true);
@@ -33,6 +38,32 @@ public class MainActivity extends BridgeActivity {
         webSettings.setDomStorageEnabled(true);
         webSettings.setAllowFileAccess(true);
         webSettings.setGeolocationDatabasePath(getFilesDir().getPath());
+        
+        // Imposta un UserAgent univoco per ogni sessione
+        String customUserAgent = webSettings.getUserAgentString() + " GlutenFreeApp/" + timestamp;
+        webSettings.setUserAgentString(customUserAgent);
+        
+        // Forza il refresh con un custom WebViewClient
+        bridge.getWebView().setWebViewClient(new WebViewClient() {
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+                
+                // Esegue JavaScript per forzare il refresh dei dati
+                String refreshScript = 
+                    "try {" +
+                    "  localStorage.clear();" +
+                    "  sessionStorage.clear();" +
+                    "  console.log('Storage cleared by native layer');" +
+                    "  if (typeof window.refreshRestaurants === 'function') {" +
+                    "    window.refreshRestaurants();" +
+                    "    console.log('Restaurant data refreshed');" +
+                    "  }" +
+                    "} catch(e) { console.error('Error in refresh script:', e); }";
+                
+                view.evaluateJavascript(refreshScript, null);
+            }
+        });
         
         // Forza il refresh ogni volta che l'app viene aperta
         bridge.getWebView().reload();

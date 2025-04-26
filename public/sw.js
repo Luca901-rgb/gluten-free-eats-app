@@ -1,54 +1,37 @@
 
-// Service Worker per Gluten Free Eats
-const CACHE_NAME = 'gluten-free-eats-cache-v1';
+// Service Worker per Gluten Free Eats - NON CACHING VERSION
+const CACHE_NAME = 'gluten-free-eats-cache-v' + new Date().getTime();
 
-// Files to cache
-const urlsToCache = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/icon-192.png',
-  '/icon-512.png'
-];
-
-// Install the service worker
-self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => {
-        console.log('Cache aperta');
-        return cache.addAll(urlsToCache);
+// Intercept fetch events but don't cache
+self.addEventListener('fetch', event => {
+  event.respondWith(
+    fetch(event.request)
+      .catch(error => {
+        console.error('Fetch error:', error);
+        return new Response('Network error', { status: 408 });
       })
   );
 });
 
-// Fetch events
-self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        // Cache hit - return response
-        if (response) {
-          return response;
-        }
-        return fetch(event.request);
-      }
-    )
-  );
-});
-
-// Update service worker
-self.addEventListener('activate', event => {
-  const cacheWhitelist = [CACHE_NAME];
+// On install, clear all caches
+self.addEventListener('install', event => {
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
-        cacheNames.map(cacheName => {
-          if (cacheWhitelist.indexOf(cacheName) === -1) {
-            return caches.delete(cacheName);
-          }
-        })
+        cacheNames.map(cacheName => caches.delete(cacheName))
       );
-    })
+    }).then(() => self.skipWaiting())
   );
 });
+
+// On activate, clear all caches again
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames.map(cacheName => caches.delete(cacheName))
+      );
+    }).then(() => self.clients.claim())
+  );
+});
+

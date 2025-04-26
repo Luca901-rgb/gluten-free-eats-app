@@ -16,8 +16,8 @@ if ('caches' in window) {
 // Pulizia localStorage per dati vecchi
 function clearOutdatedCache() {
   try {
-    localStorage.removeItem('cachedRestaurants');
-    localStorage.removeItem('lastCacheTime');
+    // Pulisci tutto il localStorage
+    localStorage.clear();
     console.log('Cache locale ripulita all\'avvio');
     
     // Aggiungiamo timestamp di questa build
@@ -27,13 +27,33 @@ function clearOutdatedCache() {
   }
 }
 
+// Esponiamo la funzione di refresh globalmente
+(window as any).refreshRestaurants = () => {
+  try {
+    console.log("Refresh globale dei ristoranti chiamato dalla WebView nativa");
+    localStorage.removeItem('cachedRestaurants');
+    localStorage.removeItem('lastCacheTime');
+    localStorage.setItem('forceRefresh', Date.now().toString());
+    
+    // Se l'app è già caricata, forziamo un refresh della pagina
+    if (document.readyState === 'complete') {
+      console.log("Forzo refresh della pagina");
+      window.location.reload();
+    }
+  } catch (e) {
+    console.error("Errore nel refresh globale:", e);
+  }
+};
+
 // Pulisci la cache all'avvio
 clearOutdatedCache();
 
 // Inizializzazione dell'app con supporto PWA
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(error => {
+    // Forziamo la registrazione di un nuovo service worker con timestamp
+    const swPath = `/sw.js?v=${Date.now()}`;
+    navigator.serviceWorker.register(swPath).catch(error => {
       console.log('Service worker registration failed:', error);
     });
   });

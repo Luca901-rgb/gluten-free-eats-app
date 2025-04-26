@@ -1,60 +1,66 @@
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="it">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
     <title>Gluten Free Eats</title>
-    <meta name="description" content="Trova ristoranti senza glutine vicino a te" />
-    <meta name="author" content="Gluten Free Eats" />
-    <meta name="theme-color" content="#ff5733" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Gluten Free Eats" />
-    <meta http-equiv="Content-Security-Policy" content="default-src * 'self' 'unsafe-inline' 'unsafe-eval' data: gap: content: https://ssl.gstatic.com; style-src * 'self' 'unsafe-inline'; media-src * blob: 'self' 'unsafe-inline'; img-src * 'self' data: content:;">
-
-    <meta property="og:title" content="Gluten Free Eats" />
-    <meta property="og:description" content="Trova ristoranti senza glutine vicino a te" />
-    <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
-
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@glutenfree_eats" />
-    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
-    
-    <link rel="manifest" href="/manifest.json" />
-    <link rel="icon" href="/icon-192.png" type="image/png" />
-    <link rel="apple-touch-icon" href="/icon-192.png" />
-    <style>
-      @supports (padding-top: env(safe-area-inset-top)) {
-        :root {
-          --safe-area-inset-top: env(safe-area-inset-top);
-          --safe-area-inset-right: env(safe-area-inset-right);
-          --safe-area-inset-bottom: env(safe-area-inset-bottom);
-          --safe-area-inset-left: env(safe-area-inset-left);
+    <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
+    <script>
+      // Aggiungi timestamp per prevenire il caching
+      window.BUILD_TIMESTAMP = new Date().getTime();
+      
+      // Pulisci cache all'avvio
+      function clearAllCaches() {
+        // Cancella localStorage
+        try {
+          localStorage.clear();
+          console.log('localStorage cleared');
+        } catch (e) {
+          console.error('Error clearing localStorage:', e);
         }
-        .pt-safe {
-          padding-top: var(--safe-area-inset-top);
+        
+        // Cancella sessionStorage
+        try {
+          sessionStorage.clear();
+          console.log('sessionStorage cleared');
+        } catch (e) {
+          console.error('Error clearing sessionStorage:', e);
         }
-        .px-safe {
-          padding-left: var(--safe-area-inset-left);
-          padding-right: var(--safe-area-inset-right);
-        }
-        .pb-safe {
-          padding-bottom: var(--safe-area-inset-bottom);
+        
+        // Cancella caches API
+        if ('caches' in window) {
+          caches.keys().then(names => {
+            names.forEach(name => {
+              caches.delete(name).then(() => {
+                console.log('Cache deleted:', name);
+              });
+            });
+          });
         }
       }
-      body {
-        -webkit-tap-highlight-color: transparent;
-        -webkit-touch-callout: none;
-      }
-    </style>
+      
+      // Esegui all'avvio
+      clearAllCaches();
+      
+      // Aggiungi un parametro di query con timestamp a tutti gli asset
+      document.addEventListener('DOMContentLoaded', function() {
+        const timestamp = new Date().getTime();
+        document.querySelectorAll('script[src], link[rel="stylesheet"][href]').forEach(el => {
+          const urlAttr = el.src ? 'src' : 'href';
+          if (el[urlAttr] && !el[urlAttr].includes('?v=')) {
+            el[urlAttr] = el[urlAttr] + '?v=' + timestamp;
+          }
+        });
+      });
+    </script>
   </head>
-
   <body>
     <div id="root"></div>
-    <!-- IMPORTANT: DO NOT REMOVE THIS SCRIPT TAG OR THIS VERY COMMENT! -->
-    <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
