@@ -1,7 +1,6 @@
-
 apply plugin: 'com.android.application'
 
-// Aggiungiamo una nuova proprietà per forzare la compilazione nuova ad ogni build
+// Add new property to force new compilation on each build
 def buildTimestamp = System.currentTimeMillis()
 
 android {
@@ -13,15 +12,15 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
-        versionName "1.0." + buildTimestamp  // Aggiunto timestamp direttamente nella versione
+        versionName "1.0." + buildTimestamp  // Added timestamp directly to version
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-        // Aggiungiamo un BuildConfigField dinamico per forzare la ricompilazione
+        // Add a BuildConfigField to force recompilation
         buildConfigField "long", "BUILD_TIME", "${buildTimestamp}L"
         buildConfigField "String", "BUILD_ID", "\"build-${buildTimestamp}\""
         resValue "string", "build_time_label", "${new Date(buildTimestamp).format('yyyy-MM-dd HH:mm:ss')}"
+        
+        // Files and dirs to omit from the packaged assets dir
         aaptOptions {
-            // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
-            // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
             ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
@@ -37,11 +36,11 @@ android {
         debug {
             debuggable true
             minifyEnabled false
-            // Aggiungiamo un suffisso per rendere ogni build unica
+            // Add a suffisso to make each build unique
             applicationIdSuffix ".debug"
             versionNameSuffix "-debug-${buildTimestamp}"
             resValue "string", "app_version", "1.0-d${buildTimestamp}"
-            // Forziamo assets nuovi ad ogni build
+            // Force assets new on each build
             assetDirs = [new File("${project.buildDir}/generated/assets/debug-${buildTimestamp}")]
         }
         release {
@@ -95,8 +94,6 @@ dependencies {
     androidTestImplementation "androidx.test.espresso:espresso-core:${rootProject.ext.androidxEspressoCoreVersion}"
     implementation project(':capacitor-cordova-android-plugins')
 }
-
-// Rimuoviamo il task superClean da qui dato che l'abbiamo spostato nel build.gradle principale
 
 apply from: 'capacitor.build.gradle'
 

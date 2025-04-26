@@ -1,7 +1,7 @@
 
 import { CapacitorConfig } from '@capacitor/cli';
 
-// Aggiungiamo un timestamp per rendere ogni build unica
+// Add timestamp for unique build
 const buildTimestamp = new Date().getTime();
 
 const config: CapacitorConfig = {
@@ -12,7 +12,7 @@ const config: CapacitorConfig = {
     androidScheme: 'https',
     allowNavigation: ['*'],
     cleartext: true,
-    // Forza aggiornamento disabilitando la cache
+    // Force update by disabling cache
     hostname: 'localhost',
     iosScheme: 'https',
     originalUrl: 'https://glutenfreeeats.app',
@@ -32,7 +32,7 @@ const config: CapacitorConfig = {
       style: "dark",
       resizeOnFullScreen: true
     },
-    // Aggiungiamo configurazione per la cache
+    // Add cache configuration
     CapacitorHttp: {
       enabled: true
     },
@@ -48,7 +48,7 @@ const config: CapacitorConfig = {
     allowMixedContent: true,
     captureInput: true,
     webContentsDebuggingEnabled: true,
-    // Forza l'invalidazione della cache
+    // Force invalidation of cache
     overrideUserAgent: 'GlutenFreeEatsApp-' + buildTimestamp,
     minWebviewVersion: 60,
     buildOptions: {
@@ -58,7 +58,7 @@ const config: CapacitorConfig = {
       keyPassword: undefined,
       releaseType: 'APK'
     },
-    // Aggiungiamo anche qui una configurazione per forzare la pulizia della cache
+    // Add configuration to force cache cleaning
     useLegacyBridge: false
   }
 };

@@ -5,7 +5,7 @@ const CACHE_NAME = 'gluten-free-eats-cache-v' + new Date().getTime();
 // Intercept fetch events but don't cache
 self.addEventListener('fetch', event => {
   event.respondWith(
-    fetch(event.request)
+    fetch(event.request, { cache: 'no-store' })
       .catch(error => {
         console.error('Fetch error:', error);
         return new Response('Network error', { status: 408 });
