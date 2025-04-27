@@ -11,52 +11,19 @@
     <title>Gluten Free Eats</title>
     <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
     <script>
-      // Aggiungi timestamp per prevenire il caching
+      // Simple timestamp to prevent caching
       window.BUILD_TIMESTAMP = new Date().getTime();
       
-      // Pulisci cache all'avvio
+      // Simple cache clearing without complex logic
       function clearAllCaches() {
-        // Cancella localStorage
         try {
           localStorage.clear();
-          console.log('localStorage cleared');
-        } catch (e) {
-          console.error('Error clearing localStorage:', e);
-        }
-        
-        // Cancella sessionStorage
-        try {
           sessionStorage.clear();
-          console.log('sessionStorage cleared');
+          console.log('Storage cleared');
         } catch (e) {
-          console.error('Error clearing sessionStorage:', e);
-        }
-        
-        // Cancella caches API
-        if ('caches' in window) {
-          caches.keys().then(names => {
-            names.forEach(name => {
-              caches.delete(name).then(() => {
-                console.log('Cache deleted:', name);
-              });
-            });
-          });
+          console.error('Error clearing storage:', e);
         }
       }
-      
-      // Esegui all'avvio
-      clearAllCaches();
-      
-      // Aggiungi un parametro di query con timestamp a tutti gli asset
-      document.addEventListener('DOMContentLoaded', function() {
-        const timestamp = new Date().getTime();
-        document.querySelectorAll('script[src], link[rel="stylesheet"][href]').forEach(el => {
-          const urlAttr = el.src ? 'src' : 'href';
-          if (el[urlAttr] && !el[urlAttr].includes('?v=')) {
-            el[urlAttr] = el[urlAttr] + '?v=' + timestamp;
-          }
-        });
-      });
     </script>
   </head>
   <body>

@@ -5,10 +5,13 @@ import android.os.Bundle;
 import android.webkit.WebView;
 import android.webkit.WebSettings;
 import android.webkit.WebViewClient;
+import android.util.Log;
 import java.util.Date;
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
+    private static final String TAG = "GlutenFreeEats";
+    
     @Override
     public void onCreate(Bundle savedInstanceState) {
         // Register HTTP plugin before super call
@@ -17,62 +20,73 @@ public class MainActivity extends BridgeActivity {
         // Enable WebView debugging
         WebView.setWebContentsDebuggingEnabled(true);
         
-        super.onCreate(savedInstanceState);
-        
-        // Timestamp to force cache refresh
-        final long timestamp = new Date().getTime();
-        
-        // Aggressive non-caching settings for WebView
-        bridge.getWebView().clearCache(true);
-        bridge.getWebView().clearHistory();
-        
-        WebSettings webSettings = bridge.getWebView().getSettings();
-        webSettings.setCacheMode(WebSettings.LOAD_NO_CACHE);
-        webSettings.setAppCacheEnabled(false);
-        webSettings.setDomStorageEnabled(true);
-        webSettings.setDatabaseEnabled(true);
-        
-        // Disable all caching
-        webSettings.setGeolocationEnabled(true);
-        webSettings.setJavaScriptEnabled(true);
-        webSettings.setDomStorageEnabled(true);
-        webSettings.setAllowFileAccess(true);
-        webSettings.setGeolocationDatabasePath(getFilesDir().getPath());
-        
-        // Set unique UserAgent for each session
-        String customUserAgent = webSettings.getUserAgentString() + " GlutenFreeApp/" + timestamp;
-        webSettings.setUserAgentString(customUserAgent);
-        
-        // Force refresh with custom WebViewClient
-        bridge.getWebView().setWebViewClient(new WebViewClient() {
-            @Override
-            public void onPageFinished(WebView view, String url) {
-                super.onPageFinished(view, url);
+        try {
+            super.onCreate(savedInstanceState);
+            
+            // Timestamp to force cache refresh
+            final long timestamp = new Date().getTime();
+            
+            Log.d(TAG, "Initializing WebView with cache clearing");
+            
+            // Ensure WebView is properly initialized
+            if (bridge != null && bridge.getWebView() != null) {
+                // Clear WebView cache
+                bridge.getWebView().clearCache(true);
+                bridge.getWebView().clearHistory();
                 
-                // Execute JavaScript to force data refresh
-                String refreshScript = 
-                    "try {" +
-                    "  localStorage.clear();" +
-                    "  sessionStorage.clear();" +
-                    "  console.log('Storage cleared by native layer');" +
-                    "  if (typeof window.refreshRestaurants === 'function') {" +
-                    "    window.refreshRestaurants();" +
-                    "    console.log('Restaurant data refreshed');" +
-                    "  }" +
-                    "} catch(e) { console.error('Error in refresh script:', e); }";
+                WebSettings webSettings = bridge.getWebView().getSettings();
+                webSettings.setCacheMode(WebSettings.LOAD_NO_CACHE);
+                webSettings.setAppCacheEnabled(false);
+                webSettings.setDomStorageEnabled(true);
+                webSettings.setDatabaseEnabled(true);
                 
-                view.evaluateJavascript(refreshScript, null);
+                // Enable JavaScript and other required settings
+                webSettings.setJavaScriptEnabled(true);
+                webSettings.setDomStorageEnabled(true);
+                webSettings.setAllowFileAccess(true);
+                
+                // Set unique UserAgent to bypass cache
+                String customUserAgent = webSettings.getUserAgentString() + " GlutenFreeApp/" + timestamp;
+                webSettings.setUserAgentString(customUserAgent);
+                
+                Log.d(TAG, "Setting custom user agent: " + customUserAgent);
+                
+                // Use a simple WebViewClient - the complex one might be causing issues
+                bridge.getWebView().setWebViewClient(new WebViewClient() {
+                    @Override
+                    public void onPageFinished(WebView view, String url) {
+                        super.onPageFinished(view, url);
+                        Log.d(TAG, "Page loaded: " + url);
+                        
+                        // Simple script to clear storage without complex logic
+                        view.evaluateJavascript(
+                            "localStorage.clear(); sessionStorage.clear(); console.log('Storage cleared');", 
+                            null
+                        );
+                    }
+                });
+                
+                Log.d(TAG, "WebView initialization complete");
+            } else {
+                Log.e(TAG, "WebView or bridge is null");
             }
-        });
-        
-        // Force refresh every time app is opened
-        bridge.getWebView().reload();
+        } catch (Exception e) {
+            Log.e(TAG, "Error during MainActivity initialization", e);
+        }
     }
     
     @Override
     public void onResume() {
-        super.onResume();
-        // Reload WebView every time app resumes activity
-        bridge.getWebView().reload();
+        try {
+            super.onResume();
+            
+            // Use lighter approach - only reload if needed
+            if (bridge != null && bridge.getWebView() != null) {
+                Log.d(TAG, "Activity resumed, reloading WebView");
+                bridge.getWebView().reload();
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error during onResume", e);
+        }
     }
 }

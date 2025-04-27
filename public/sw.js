@@ -1,36 +1,27 @@
 
-// Service Worker per Gluten Free Eats - NON CACHING VERSION
+// Service Worker for Gluten Free Eats - Modified to be lightweight and non-blocking
 const CACHE_NAME = 'gluten-free-eats-cache-v' + new Date().getTime();
 
-// Intercept fetch events but don't cache
+// Only handle fetch events without caching
 self.addEventListener('fetch', event => {
-  event.respondWith(
-    fetch(event.request, { cache: 'no-store' })
-      .catch(error => {
-        console.error('Fetch error:', error);
-        return new Response('Network error', { status: 408 });
-      })
-  );
+  // Don't intercept fetch requests to prevent blocking app startup
+  // Just let the browser handle the request normally
 });
 
-// On install, clear all caches
+// On install, clear all caches and activate immediately
 self.addEventListener('install', event => {
+  self.skipWaiting();
+  
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
         cacheNames.map(cacheName => caches.delete(cacheName))
       );
-    }).then(() => self.skipWaiting())
+    })
   );
 });
 
-// On activate, clear all caches again
+// On activate, claim clients immediately
 self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.map(cacheName => caches.delete(cacheName))
-      );
-    }).then(() => self.clients.claim())
-  );
+  event.waitUntil(self.clients.claim());
 });
