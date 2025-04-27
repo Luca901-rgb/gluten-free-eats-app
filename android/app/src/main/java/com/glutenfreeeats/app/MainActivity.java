@@ -17,76 +17,47 @@ public class MainActivity extends BridgeActivity {
         // Register HTTP plugin before super call
         registerPlugin(com.capacitor.community.http.Http.class);
         
-        // Enable WebView debugging
-        WebView.setWebContentsDebuggingEnabled(true);
-        
         try {
             super.onCreate(savedInstanceState);
             
-            // Timestamp to force cache refresh
-            final long timestamp = new Date().getTime();
+            Log.d(TAG, "MainActivity onCreate started");
             
-            Log.d(TAG, "Initializing WebView with cache clearing");
-            
-            // Ensure WebView is properly initialized
+            // Configure WebView if available
             if (bridge != null && bridge.getWebView() != null) {
-                // Clear WebView cache
-                bridge.getWebView().clearCache(true);
-                bridge.getWebView().clearHistory();
+                WebView webView = bridge.getWebView();
                 
-                WebSettings webSettings = bridge.getWebView().getSettings();
+                // Clear any existing cache
+                webView.clearCache(true);
+                webView.clearHistory();
+                
+                WebSettings webSettings = webView.getSettings();
                 webSettings.setCacheMode(WebSettings.LOAD_NO_CACHE);
-                webSettings.setAppCacheEnabled(false);
-                webSettings.setDomStorageEnabled(true);
-                webSettings.setDatabaseEnabled(true);
-                
-                // Enable JavaScript and other required settings
                 webSettings.setJavaScriptEnabled(true);
                 webSettings.setDomStorageEnabled(true);
                 webSettings.setAllowFileAccess(true);
+                webSettings.setAppCacheEnabled(false);
                 
-                // Set unique UserAgent to bypass cache
-                String customUserAgent = webSettings.getUserAgentString() + " GlutenFreeApp/" + timestamp;
-                webSettings.setUserAgentString(customUserAgent);
-                
-                Log.d(TAG, "Setting custom user agent: " + customUserAgent);
-                
-                // Use a simple WebViewClient - the complex one might be causing issues
-                bridge.getWebView().setWebViewClient(new WebViewClient() {
+                // Set a simpler WebViewClient to avoid potential issues
+                webView.setWebViewClient(new WebViewClient() {
                     @Override
                     public void onPageFinished(WebView view, String url) {
                         super.onPageFinished(view, url);
                         Log.d(TAG, "Page loaded: " + url);
-                        
-                        // Simple script to clear storage without complex logic
-                        view.evaluateJavascript(
-                            "localStorage.clear(); sessionStorage.clear(); console.log('Storage cleared');", 
-                            null
-                        );
+                    }
+                    
+                    @Override
+                    public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
+                        super.onReceivedError(view, errorCode, description, failingUrl);
+                        Log.e(TAG, "WebView error: " + errorCode + " " + description + " (" + failingUrl + ")");
                     }
                 });
                 
-                Log.d(TAG, "WebView initialization complete");
+                Log.d(TAG, "WebView configured successfully");
             } else {
-                Log.e(TAG, "WebView or bridge is null");
+                Log.e(TAG, "Bridge or WebView is null");
             }
         } catch (Exception e) {
-            Log.e(TAG, "Error during MainActivity initialization", e);
-        }
-    }
-    
-    @Override
-    public void onResume() {
-        try {
-            super.onResume();
-            
-            // Use lighter approach - only reload if needed
-            if (bridge != null && bridge.getWebView() != null) {
-                Log.d(TAG, "Activity resumed, reloading WebView");
-                bridge.getWebView().reload();
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Error during onResume", e);
+            Log.e(TAG, "Exception during MainActivity initialization", e);
         }
     }
 }

@@ -10,24 +10,12 @@
     <meta http-equiv="Expires" content="0" />
     <title>Gluten Free Eats</title>
     <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
-    <script>
-      // Simple timestamp to prevent caching
-      window.BUILD_TIMESTAMP = new Date().getTime();
-      
-      // Simple cache clearing without complex logic
-      function clearAllCaches() {
-        try {
-          localStorage.clear();
-          sessionStorage.clear();
-          console.log('Storage cleared');
-        } catch (e) {
-          console.error('Error clearing storage:', e);
-        }
-      }
-    </script>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <noscript>
+      <p>Questa applicazione richiede JavaScript abilitato per funzionare.</p>
+    </noscript>
   </body>
 </html>
