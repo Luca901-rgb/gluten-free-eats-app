@@ -1,14 +1,20 @@
 
-// Simple service worker that doesn't interfere with app startup
+// Service worker semplificato e più affidabile
 self.addEventListener('install', event => {
+  console.log('Service Worker: Installing...');
   self.skipWaiting();
 });
 
 self.addEventListener('activate', event => {
+  console.log('Service Worker: Activating...');
   event.waitUntil(self.clients.claim());
 });
 
-// Don't intercept any network requests to avoid blocking the app
+// Non intercetta richieste di rete per evitare problemi di caching
 self.addEventListener('fetch', event => {
-  // Pass through all requests without caching
+  // Bypass caching per tutte le richieste
+  return;
 });
+
+// Per debug
+console.log('Service Worker v2 caricato');

@@ -7,16 +7,20 @@ const config: CapacitorConfig = {
   webDir: 'dist',
   server: {
     androidScheme: 'https',
-    cleartext: true
+    cleartext: true,
+    hostname: 'app'
   },
   plugins: {
     SplashScreen: {
-      launchShowDuration: 2000,
+      launchShowDuration: 3000,
       backgroundColor: "#FFFFFF",
-      launchAutoHide: true
+      launchAutoHide: true,
+      splashFullScreen: true,
+      splashImmersive: false
     },
     Keyboard: {
-      resize: "body"
+      resize: "body",
+      resizeOnFullScreen: true
     },
     CapacitorHttp: {
       enabled: true
@@ -25,7 +29,14 @@ const config: CapacitorConfig = {
   android: {
     allowMixedContent: true,
     captureInput: true,
-    webContentsDebuggingEnabled: true
+    webContentsDebuggingEnabled: true,
+    initialFocus: true,
+    minWebViewVersion: 60
+  },
+  ios: {
+    contentInset: "always",
+    cordovaSwiftVersion: "5.1",
+    preferredContentMode: "mobile"
   }
 };
 

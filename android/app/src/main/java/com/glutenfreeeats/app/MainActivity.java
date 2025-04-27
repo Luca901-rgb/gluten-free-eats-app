@@ -6,7 +6,6 @@ import android.webkit.WebView;
 import android.webkit.WebSettings;
 import android.webkit.WebViewClient;
 import android.util.Log;
-import java.util.Date;
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
@@ -14,19 +13,18 @@ public class MainActivity extends BridgeActivity {
     
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        // Register HTTP plugin before super call
-        registerPlugin(com.capacitor.community.http.Http.class);
-        
         try {
+            // Registriamo il plugin HTTP prima della chiamata super
+            registerPlugin(com.capacitor.community.http.Http.class);
+            
             super.onCreate(savedInstanceState);
             
-            Log.d(TAG, "MainActivity onCreate started");
+            Log.d(TAG, "MainActivity onCreate iniziato");
             
-            // Configure WebView if available
             if (bridge != null && bridge.getWebView() != null) {
                 WebView webView = bridge.getWebView();
                 
-                // Clear any existing cache
+                // Pulizia completa della cache
                 webView.clearCache(true);
                 webView.clearHistory();
                 
@@ -36,28 +34,29 @@ public class MainActivity extends BridgeActivity {
                 webSettings.setDomStorageEnabled(true);
                 webSettings.setAllowFileAccess(true);
                 webSettings.setAppCacheEnabled(false);
+                webSettings.setMediaPlaybackRequiresUserGesture(false);
                 
-                // Set a simpler WebViewClient to avoid potential issues
+                // WebViewClient semplificato con gestione degli errori migliorata
                 webView.setWebViewClient(new WebViewClient() {
                     @Override
                     public void onPageFinished(WebView view, String url) {
                         super.onPageFinished(view, url);
-                        Log.d(TAG, "Page loaded: " + url);
+                        Log.d(TAG, "Pagina caricata: " + url);
                     }
                     
                     @Override
                     public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
                         super.onReceivedError(view, errorCode, description, failingUrl);
-                        Log.e(TAG, "WebView error: " + errorCode + " " + description + " (" + failingUrl + ")");
+                        Log.e(TAG, "Errore WebView: " + errorCode + " " + description + " (" + failingUrl + ")");
                     }
                 });
                 
-                Log.d(TAG, "WebView configured successfully");
+                Log.d(TAG, "WebView configurato con successo");
             } else {
-                Log.e(TAG, "Bridge or WebView is null");
+                Log.e(TAG, "Bridge o WebView è null");
             }
         } catch (Exception e) {
-            Log.e(TAG, "Exception during MainActivity initialization", e);
+            Log.e(TAG, "Eccezione durante l'inizializzazione di MainActivity", e);
         }
     }
 }

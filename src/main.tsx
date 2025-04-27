@@ -3,24 +3,49 @@ import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
 
-console.log("App initializing at", new Date().toISOString());
+console.log("App inizializzazione alle", new Date().toISOString());
 
-// Simple error boundary
+// Gestione degli errori globale migliorata
 window.onerror = function(message, source, lineno, colno, error) {
-  console.error("Global error caught:", message, error);
+  console.error("Errore globale rilevato:", message);
+  console.error("Dettagli:", { source, lineno, colno });
+  if (error && error.stack) {
+    console.error("Stack:", error.stack);
+  }
   return false;
 };
 
-// Initialize app with error handling
+// Cattura anche le promise non gestite
+window.addEventListener('unhandledrejection', function(event) {
+  console.error('Promessa non gestita:', event.reason);
+});
+
+// Inizializza l'app con una gestione robusta degli errori
 try {
   const rootElement = document.getElementById("root");
   if (rootElement) {
-    console.log("Root element found, rendering app...");
-    createRoot(rootElement).render(<App />);
-    console.log("App rendered successfully");
+    console.log("Elemento root trovato, rendering app...");
+    const root = createRoot(rootElement);
+    
+    // Avvolgiamo il rendering in un try-catch aggiuntivo
+    try {
+      root.render(<App />);
+      console.log("App renderizzata con successo");
+    } catch (renderError) {
+      console.error("Errore durante il rendering dell'app:", renderError);
+      
+      // Fallback in caso di errore di rendering
+      rootElement.innerHTML = `
+        <div style="padding: 20px; text-align: center;">
+          <h1>Si è verificato un errore</h1>
+          <p>L'app non può essere caricata. Prova a ricaricare.</p>
+          <button onclick="window.location.reload()">Ricarica app</button>
+        </div>
+      `;
+    }
   } else {
-    console.error("Root element not found");
+    console.error("Elemento root non trovato");
   }
 } catch (e) {
-  console.error("Critical error rendering app:", e);
+  console.error("Errore critico durante l'inizializzazione dell'app:", e);
 }
