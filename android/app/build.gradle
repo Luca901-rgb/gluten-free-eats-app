@@ -1,3 +1,4 @@
+
 apply plugin: 'com.android.application'
 
 // Add new property to force new compilation on each build
@@ -67,6 +68,39 @@ android {
     
     buildFeatures {
         buildConfig true
+    }
+}
+
+// Aggiungiamo una task per una pulizia più sicura che non fallirà se i file sono bloccati
+task safeCleaner {
+    doLast {
+        println "Esecuzione della pulizia sicura che ignora i file bloccati"
+        def buildDir = new File("${project.buildDir}")
+        if (buildDir.exists()) {
+            try {
+                buildDir.eachFile { file ->
+                    try {
+                        if (file.isDirectory()) {
+                            file.deleteDir()
+                        } else {
+                            file.delete()
+                        }
+                    } catch (Exception e) {
+                        println "Impossibile eliminare ${file.path}, lo salterà: ${e.message}"
+                    }
+                }
+            } catch (Exception e) {
+                println "Pulizia parziale completata, alcuni file potrebbero essere stati saltati: ${e.message}"
+            }
+        }
+    }
+}
+
+// Sostituire la task clean standard con la nostra versione sicura
+tasks.named("clean") {
+    dependsOn safeCleaner
+    doLast {
+        println "Clean completato con sicurezza"
     }
 }
 

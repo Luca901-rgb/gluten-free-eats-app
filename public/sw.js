@@ -1,5 +1,5 @@
 
-// Service worker semplificato e più affidabile
+// Service worker ridotto al minimo per evitare problemi
 self.addEventListener('install', event => {
   console.log('Service Worker: Installing...');
   self.skipWaiting();
@@ -10,11 +10,10 @@ self.addEventListener('activate', event => {
   event.waitUntil(self.clients.claim());
 });
 
-// Non intercetta richieste di rete per evitare problemi di caching
+// Non intercettiamo richieste di rete per evitare problemi
 self.addEventListener('fetch', event => {
-  // Bypass caching per tutte le richieste
+  // Non facciamo nulla, lasciamo che il browser gestisca normalmente le richieste
   return;
 });
 
-// Per debug
-console.log('Service Worker v2 caricato');
+console.log('Service Worker v3 caricato con successo');

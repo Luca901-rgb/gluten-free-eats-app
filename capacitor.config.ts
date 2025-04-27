@@ -12,7 +12,7 @@ const config: CapacitorConfig = {
   },
   plugins: {
     SplashScreen: {
-      launchShowDuration: 3000,
+      launchShowDuration: 2000,
       backgroundColor: "#FFFFFF",
       launchAutoHide: true,
       splashFullScreen: true,
@@ -37,7 +37,8 @@ const config: CapacitorConfig = {
     contentInset: "always",
     cordovaSwiftVersion: "5.1",
     preferredContentMode: "mobile"
-  }
+  },
+  loggingBehavior: "debug"
 };
 
 export default config;
