@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import RestaurantCardRegistration from '@/components/Restaurant/RestaurantCardRegistration';
 import RestaurantRegistrationPayment from '@/components/Restaurant/RestaurantRegistrationPayment';
 import { useNavigate } from 'react-router-dom';
-import { Store, CreditCard, Clipboard } from 'lucide-react';
+import { Store, CreditCard, Clipboard, Check } from 'lucide-react';
 
 const RestaurantRegister = () => {
   const navigate = useNavigate();

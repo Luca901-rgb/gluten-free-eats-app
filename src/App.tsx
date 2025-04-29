@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import Index from '@/pages/Index';
@@ -7,8 +8,6 @@ import RestaurantLogin from '@/pages/RestaurantLogin';
 import ForgotPassword from '@/pages/ForgotPassword';
 import RestaurantPage from '@/pages/RestaurantPage';
 import RestaurantDashboard from '@/pages/RestaurantDashboard';
-import UserProfile from '@/pages/UserProfile';
-import BookingConfirmation from '@/pages/BookingConfirmation';
 import RestaurantRegister from '@/pages/RestaurantRegister';
 import { Toaster } from 'sonner';
 
@@ -32,8 +31,6 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/restaurant/:id" element={<RestaurantPage />} />
         <Route path="/restaurant-dashboard" element={<RestaurantDashboard />} />
-        <Route path="/user-profile" element={<UserProfile />} />
-        <Route path="/booking-confirmation" element={<BookingConfirmation />} />
       </Routes>
     </>
   );
