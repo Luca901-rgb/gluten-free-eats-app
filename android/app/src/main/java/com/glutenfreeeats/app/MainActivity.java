@@ -24,18 +24,22 @@ public class MainActivity extends BridgeActivity {
             if (bridge != null && bridge.getWebView() != null) {
                 WebView webView = bridge.getWebView();
                 
-                // Non puliamo aggressivamente la cache ad ogni avvio
-                // webView.clearCache(true);  
-                // webView.clearHistory();
-                
                 WebSettings webSettings = webView.getSettings();
-                webSettings.setCacheMode(WebSettings.LOAD_DEFAULT); // Cambiato da LOAD_NO_CACHE
+                webSettings.setCacheMode(WebSettings.LOAD_DEFAULT);
                 webSettings.setJavaScriptEnabled(true);
                 webSettings.setDomStorageEnabled(true);
                 webSettings.setAllowFileAccess(true);
-                webSettings.setAppCacheEnabled(true); // Abilitato invece di disabilitato
+                webSettings.setAppCacheEnabled(true);
                 webSettings.setMediaPlaybackRequiresUserGesture(false);
                 webSettings.setDatabaseEnabled(true);
+                webSettings.setLoadWithOverviewMode(true);
+                webSettings.setUseWideViewPort(true);
+                
+                // Aggiungiamo proprietà aggiuntive per garantire il corretto funzionamento
+                webSettings.setAllowContentAccess(true);
+                webSettings.setAllowFileAccessFromFileURLs(true);
+                webSettings.setAllowUniversalAccessFromFileURLs(true);
+                webSettings.setJavaScriptCanOpenWindowsAutomatically(true);
                 
                 // WebViewClient semplificato con gestione degli errori migliorata
                 webView.setWebViewClient(new WebViewClient() {

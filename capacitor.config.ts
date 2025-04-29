@@ -6,7 +6,8 @@ const config: CapacitorConfig = {
   appName: 'Gluten Free Eats',
   webDir: 'dist',
   server: {
-    androidScheme: 'https'
+    androidScheme: 'https',
+    cleartext: true
   },
   plugins: {
     SplashScreen: {
@@ -27,7 +28,9 @@ const config: CapacitorConfig = {
   android: {
     allowMixedContent: true,
     captureInput: true,
-    webContentsDebuggingEnabled: true
+    webContentsDebuggingEnabled: true,
+    useLegacyBridge: true,
+    initialFocus: true
   },
   ios: {
     contentInset: "always",
