@@ -2,6 +2,7 @@
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
+import { BrowserRouter } from 'react-router-dom'
 
 console.log("App inizializzazione alle", new Date().toISOString());
 
@@ -29,7 +30,11 @@ try {
     
     // Avvolgiamo il rendering in un try-catch aggiuntivo
     try {
-      root.render(<App />);
+      root.render(
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      );
       console.log("App renderizzata con successo");
     } catch (renderError) {
       console.error("Errore durante il rendering dell'app:", renderError);
