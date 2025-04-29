@@ -2,7 +2,8 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Check } from 'lucide-react';
+import { Check, CreditCard } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface RestaurantRegistrationPaymentProps {
   onComplete?: (success: boolean) => void;
@@ -10,7 +11,9 @@ interface RestaurantRegistrationPaymentProps {
 
 const RestaurantRegistrationPayment: React.FC<RestaurantRegistrationPaymentProps> = ({ onComplete }) => {
   const handleContinue = () => {
-    // Simula un successo immediato senza richiedere il pagamento
+    // Simula un successo immediato e passa alla registrazione del ristorante
+    toast.success("Programma pilota attivato correttamente");
+    
     if (onComplete) {
       onComplete(true);
     }
@@ -20,7 +23,10 @@ const RestaurantRegistrationPayment: React.FC<RestaurantRegistrationPaymentProps
     <div className="w-full max-w-md mx-auto">
       <Card>
         <CardHeader>
-          <CardTitle>Programma Pilota Attivo</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <CreditCard className="h-5 w-5" />
+            Programma Pilota Gluten Free Eats
+          </CardTitle>
           <CardDescription>
             Stai partecipando al programma pilota gratuito per i prossimi 6 mesi
           </CardDescription>
