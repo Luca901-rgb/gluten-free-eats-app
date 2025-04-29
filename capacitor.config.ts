@@ -1,13 +1,12 @@
-
 import { CapacitorConfig } from '@capacitor/cli';
-
 const config: CapacitorConfig = {
   appId: 'com.glutenfreeeats.app',
   appName: 'Gluten Free Eats',
   webDir: 'dist',
   server: {
     androidScheme: 'https',
-    cleartext: true
+    cleartext: true,
+    url: 'file:///android_asset/public/index.html'
   },
   plugins: {
     SplashScreen: {
@@ -38,5 +37,4 @@ const config: CapacitorConfig = {
     preferredContentMode: "mobile"
   }
 };
-
 export default config;
