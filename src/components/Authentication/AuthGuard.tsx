@@ -15,8 +15,25 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
   const location = useLocation();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [userType, setUserType] = useState<string | null>(null);
+  const [storageAvailable, setStorageAvailable] = useState<boolean>(true);
   
   useEffect(() => {
+    // Verifica se localStorage è disponibile
+    try {
+      const testKey = '__storage_test__';
+      localStorage.setItem(testKey, testKey);
+      localStorage.removeItem(testKey);
+      setStorageAvailable(true);
+    } catch (e) {
+      setStorageAvailable(false);
+      console.warn('localStorage non disponibile:', e);
+      
+      // Se localStorage non è disponibile, mostra un messaggio e reindirizza al login
+      toast.error("Accesso non disponibile: impossibile verificare l'autenticazione");
+      setIsAuthenticated(false);
+      return;
+    }
+    
     // Verifica se l'utente è autenticato
     const authStatus = localStorage.getItem('isAuthenticated');
     const storedUserType = localStorage.getItem('userType');
@@ -30,9 +47,13 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
     return <div className="flex items-center justify-center h-screen">Verifica accesso...</div>;
   }
 
-  // Se l'utente non è autenticato, lo reindirizziamo al login
-  if (!isAuthenticated) {
-    toast.error("Accesso richiesto per visualizzare questa pagina");
+  // Se storage non è disponibile o l'utente non è autenticato, lo reindirizziamo al login
+  if (!storageAvailable || !isAuthenticated) {
+    if (!storageAvailable) {
+      toast.error("Accesso non disponibile: impossibile verificare l'autenticazione");
+    } else {
+      toast.error("Accesso richiesto per visualizzare questa pagina");
+    }
     
     // Determina la pagina di login in base al tipo di utente richiesto
     const loginPath = requiredUserType === 'restaurant' 

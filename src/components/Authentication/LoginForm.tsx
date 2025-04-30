@@ -24,6 +24,22 @@ const LoginForm: React.FC<LoginFormProps> = ({ initialUserType = 'customer' }) =
     password: '',
   });
   
+  // Check if localStorage is available
+  const [isStorageAvailable, setIsStorageAvailable] = useState<boolean>(true);
+  
+  useEffect(() => {
+    // Test localStorage availability
+    try {
+      const testKey = '__storage_test__';
+      localStorage.setItem(testKey, testKey);
+      localStorage.removeItem(testKey);
+      setIsStorageAvailable(true);
+    } catch (e) {
+      setIsStorageAvailable(false);
+      console.warn('localStorage non disponibile:', e);
+    }
+  }, []);
+  
   // Monitora lo stato della connessione
   useEffect(() => {
     const handleOnlineStatus = () => setIsOffline(!navigator.onLine);
@@ -39,6 +55,33 @@ const LoginForm: React.FC<LoginFormProps> = ({ initialUserType = 'customer' }) =
       window.removeEventListener('offline', handleOnlineStatus);
     };
   }, []);
+
+  // Safe storage function
+  const safeStorage = {
+    setItem: (key: string, value: string) => {
+      if (isStorageAvailable) {
+        try {
+          localStorage.setItem(key, value);
+        } catch (e) {
+          console.warn(`Errore nel salvare ${key} in localStorage:`, e);
+        }
+      } else {
+        // Fallback to memory storage when localStorage is not available
+        console.log(`localStorage non disponibile, dato non salvato: ${key}`);
+      }
+    },
+    getItem: (key: string) => {
+      if (isStorageAvailable) {
+        try {
+          return localStorage.getItem(key);
+        } catch (e) {
+          console.warn(`Errore nel recuperare ${key} da localStorage:`, e);
+          return null;
+        }
+      }
+      return null;
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -62,11 +105,11 @@ const LoginForm: React.FC<LoginFormProps> = ({ initialUserType = 'customer' }) =
       // Login con Firebase
       const user = await loginUser(formData.email, formData.password);
       
-      // Salva i dati utente nel localStorage
-      localStorage.setItem('userType', userType);
-      localStorage.setItem('isAuthenticated', 'true');
-      localStorage.setItem('userEmail', formData.email);
-      localStorage.setItem('userId', user.uid);
+      // Usa safeStorage per salvare i dati in modo sicuro
+      safeStorage.setItem('userType', userType);
+      safeStorage.setItem('isAuthenticated', 'true');
+      safeStorage.setItem('userEmail', formData.email);
+      safeStorage.setItem('userId', user.uid);
       
       toast.success("Accesso effettuato con successo");
       
@@ -106,12 +149,12 @@ const LoginForm: React.FC<LoginFormProps> = ({ initialUserType = 'customer' }) =
         throw new Error("Dati utente non validi o incompleti");
       }
       
-      // Salva i dati utente nel localStorage
-      localStorage.setItem('userType', userType);
-      localStorage.setItem('isAuthenticated', 'true');
-      localStorage.setItem('userEmail', user.email || '');
-      localStorage.setItem('userName', user.displayName || '');
-      localStorage.setItem('userId', user.uid);
+      // Usa safeStorage per salvare i dati in modo sicuro
+      safeStorage.setItem('userType', userType);
+      safeStorage.setItem('isAuthenticated', 'true');
+      safeStorage.setItem('userEmail', user.email || '');
+      safeStorage.setItem('userName', user.displayName || '');
+      safeStorage.setItem('userId', user.uid);
       
       toast.dismiss();
       toast.success("Accesso con Google effettuato con successo");
@@ -141,6 +184,29 @@ const LoginForm: React.FC<LoginFormProps> = ({ initialUserType = 'customer' }) =
     setShowPassword(!showPassword);
   };
   
+  // Mostra avviso se localStorage non è disponibile
+  if (!isStorageAvailable) {
+    return (
+      <div className="w-full max-w-md mx-auto p-6 text-center">
+        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-yellow-500" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-yellow-700">
+                Attenzione: Impossibile salvare dati sul dispositivo. Alcune funzionalità potrebbero non funzionare correttamente.
+              </p>
+            </div>
+          </div>
+        </div>
+        {renderLoginForm()}
+      </div>
+    );
+  }
+  
   // Mostra avviso se offline
   if (isOffline) {
     return (
@@ -158,8 +224,9 @@ const LoginForm: React.FC<LoginFormProps> = ({ initialUserType = 'customer' }) =
     );
   }
 
-  return (
-    <div className="w-full max-w-md mx-auto p-6">
+  // Extract the form rendering to a method for reuse
+  const renderLoginForm = () => (
+    <>
       <div className="text-center mb-8">
         <h1 className="text-2xl font-bold text-primary font-poppins">Accedi</h1>
         <p className="text-gray-600 mt-2">Benvenuto su Gluten Free Eats</p>
@@ -256,6 +323,12 @@ const LoginForm: React.FC<LoginFormProps> = ({ initialUserType = 'customer' }) =
           </Link>
         </p>
       </div>
+    </>
+  );
+
+  return (
+    <div className="w-full max-w-md mx-auto p-6">
+      {renderLoginForm()}
     </div>
   );
 };

@@ -42,6 +42,58 @@ googleProvider.setCustomParameters({
   prompt: 'select_account'
 });
 
+// Helper function per verificare se localStorage è disponibile
+export const isStorageAvailable = () => {
+  try {
+    const testKey = '__storage_test__';
+    localStorage.setItem(testKey, testKey);
+    localStorage.removeItem(testKey);
+    return true;
+  } catch (e) {
+    console.warn('localStorage non disponibile:', e);
+    return false;
+  }
+};
+
+// Helper function per accedere in sicurezza a localStorage
+export const safeStorage = {
+  setItem: (key: string, value: string) => {
+    if (isStorageAvailable()) {
+      try {
+        localStorage.setItem(key, value);
+        return true;
+      } catch (e) {
+        console.warn(`Errore nel salvare ${key} in localStorage:`, e);
+        return false;
+      }
+    }
+    return false;
+  },
+  getItem: (key: string) => {
+    if (isStorageAvailable()) {
+      try {
+        return localStorage.getItem(key);
+      } catch (e) {
+        console.warn(`Errore nel recuperare ${key} da localStorage:`, e);
+        return null;
+      }
+    }
+    return null;
+  },
+  removeItem: (key: string) => {
+    if (isStorageAvailable()) {
+      try {
+        localStorage.removeItem(key);
+        return true;
+      } catch (e) {
+        console.warn(`Errore nel rimuovere ${key} da localStorage:`, e);
+        return false;
+      }
+    }
+    return false;
+  }
+};
+
 // Persistenza offline per Firestore
 try {
   enableIndexedDbPersistence(db)
@@ -80,7 +132,14 @@ export const loginUser = async (email: string, password: string) => {
 export const logoutUser = async () => {
   try {
     await signOut(auth);
-    localStorage.removeItem('user');
+    
+    // Usa safeStorage per rimuovere i dati utente
+    safeStorage.removeItem('userType');
+    safeStorage.removeItem('isAuthenticated');
+    safeStorage.removeItem('userEmail');
+    safeStorage.removeItem('userName');
+    safeStorage.removeItem('userId');
+    
     sessionStorage.removeItem('authAttempted');
   } catch (error: any) {
     console.error("Errore durante il logout:", error);
@@ -105,7 +164,7 @@ export const signInWithGoogle = async () => {
     const user = result.user;
     
     // Salva l'utente nel localStorage per accesso offline
-    localStorage.setItem('user', JSON.stringify({
+    safeStorage.setItem('user', JSON.stringify({
       uid: user.uid,
       email: user.email,
       displayName: user.displayName || "Utente",
@@ -163,7 +222,7 @@ const createMockGoogleUser = () => {
   };
   
   // Salva l'utente in localStorage per accesso offline
-  localStorage.setItem('user', JSON.stringify({
+  safeStorage.setItem('user', JSON.stringify({
     uid: mockUser.uid,
     email: mockUser.email,
     displayName: mockUser.displayName,
