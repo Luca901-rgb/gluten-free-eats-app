@@ -1,13 +1,14 @@
 import { CapacitorConfig } from '@capacitor/cli';
+
 const config: CapacitorConfig = {
   appId: 'com.glutenfreeeats.app',
   appName: 'Gluten Free Eats',
   webDir: 'dist',
   server: {
     androidScheme: 'https',
-    cleartext: true
-    // Rimozione dell'URL hardcoded che potrebbe causare problemi
-    // url: 'file:///android_asset/public/index.html'
+    cleartext: true,
+    // ✅ Se usi un dev server (es: Vite), decommenta e modifica con l'IP corretto
+    // url: 'http://10.0.2.2:5173'
   },
   plugins: {
     SplashScreen: {
@@ -29,8 +30,6 @@ const config: CapacitorConfig = {
     allowMixedContent: true,
     captureInput: true,
     webContentsDebuggingEnabled: true,
-    // Rimozione di useLegacyBridge che potrebbe causare incompatibilità
-    // useLegacyBridge: true,
     initialFocus: true
   },
   ios: {
@@ -39,4 +38,5 @@ const config: CapacitorConfig = {
     preferredContentMode: "mobile"
   }
 };
+
 export default config;
