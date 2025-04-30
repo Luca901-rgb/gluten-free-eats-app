@@ -5,8 +5,9 @@ const config: CapacitorConfig = {
   webDir: 'dist',
   server: {
     androidScheme: 'https',
-    cleartext: true,
-    url: 'file:///android_asset/public/index.html'
+    cleartext: true
+    // Rimozione dell'URL hardcoded che potrebbe causare problemi
+    // url: 'file:///android_asset/public/index.html'
   },
   plugins: {
     SplashScreen: {
@@ -28,7 +29,8 @@ const config: CapacitorConfig = {
     allowMixedContent: true,
     captureInput: true,
     webContentsDebuggingEnabled: true,
-    useLegacyBridge: true,
+    // Rimozione di useLegacyBridge che potrebbe causare incompatibilità
+    // useLegacyBridge: true,
     initialFocus: true
   },
   ios: {
