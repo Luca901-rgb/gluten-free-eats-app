@@ -1,67 +1,58 @@
-
 package com.glutenfreeeats.app;
 
 import android.os.Bundle;
 import android.webkit.WebView;
 import android.webkit.WebSettings;
-import android.webkit.WebViewClient;
-import android.util.Log;
 import com.getcapacitor.BridgeActivity;
+import android.util.Log;
 
 public class MainActivity extends BridgeActivity {
-    private static final String TAG = "GlutenFreeEats";
-    
+    private static final String TAG = "MainActivity";
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        
+        // Configura il bridge e lascia che si inizializzi correttamente
+        // NON manipolare la WebView qui
+    }
+    
+    @Override
+    public void onStart() {
+        super.onStart();
+        
         try {
-            // Registriamo il plugin HTTP prima della chiamata super
-            registerPlugin(com.capacitor.community.http.Http.class);
-            
-            super.onCreate(savedInstanceState);
-            
-            Log.d(TAG, "MainActivity onCreate iniziato");
-            
-            if (bridge != null && bridge.getWebView() != null) {
-                WebView webView = bridge.getWebView();
+            // Ora è sicuro accedere alla WebView, dopo che il Bridge è stato inizializzato
+            if (getBridge() != null && getBridge().getWebView() != null) {
+                WebView webView = getBridge().getWebView();
+                webView.clearCache(true);
+                webView.clearHistory();
                 
                 WebSettings webSettings = webView.getSettings();
-                webSettings.setCacheMode(WebSettings.LOAD_DEFAULT);
-                webSettings.setJavaScriptEnabled(true);
+                webSettings.setCacheMode(WebSettings.LOAD_NO_CACHE);
+                
+                // Nota: disabilitare DOMStorage potrebbe causare problemi con molte app web
+                // Consiglio di mantenere queste impostazioni abilitate
                 webSettings.setDomStorageEnabled(true);
-                webSettings.setAllowFileAccess(true);
-                webSettings.setAppCacheEnabled(true);
-                webSettings.setMediaPlaybackRequiresUserGesture(false);
                 webSettings.setDatabaseEnabled(true);
-                webSettings.setLoadWithOverviewMode(true);
-                webSettings.setUseWideViewPort(true);
-                
-                // Aggiungiamo proprietà aggiuntive per garantire il corretto funzionamento
-                webSettings.setAllowContentAccess(true);
-                webSettings.setAllowFileAccessFromFileURLs(true);
-                webSettings.setAllowUniversalAccessFromFileURLs(true);
-                webSettings.setJavaScriptCanOpenWindowsAutomatically(true);
-                
-                // WebViewClient semplificato con gestione degli errori migliorata
-                webView.setWebViewClient(new WebViewClient() {
-                    @Override
-                    public void onPageFinished(WebView view, String url) {
-                        super.onPageFinished(view, url);
-                        Log.d(TAG, "Pagina caricata: " + url);
-                    }
-                    
-                    @Override
-                    public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
-                        super.onReceivedError(view, errorCode, description, failingUrl);
-                        Log.e(TAG, "Errore WebView: " + errorCode + " " + description + " (" + failingUrl + ")");
-                    }
-                });
-                
-                Log.d(TAG, "WebView configurato con successo");
-            } else {
-                Log.e(TAG, "Bridge o WebView è null");
             }
         } catch (Exception e) {
-            Log.e(TAG, "Eccezione durante l'inizializzazione di MainActivity", e);
+            Log.e(TAG, "Errore durante la configurazione della WebView", e);
+        }
+    }
+    
+    @Override
+    public void onResume() {
+        super.onResume();
+        
+        try {
+            // Assicurati che il bridge sia inizializzato prima di usare la WebView
+            if (getBridge() != null && getBridge().getWebView() != null) {
+                WebView webView = getBridge().getWebView();
+                webView.reload();
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Errore durante il reload della WebView", e);
         }
     }
 }
