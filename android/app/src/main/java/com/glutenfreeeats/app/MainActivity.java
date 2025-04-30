@@ -9,6 +9,7 @@ import android.util.Log;
 
 public class MainActivity extends BridgeActivity {
     private static final String TAG = "MainActivity";
+    private WebView webView = null;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -25,7 +26,7 @@ public class MainActivity extends BridgeActivity {
         try {
             // Ora è sicuro accedere alla WebView, dopo che il Bridge è stato inizializzato
             if (getBridge() != null && getBridge().getWebView() != null) {
-                WebView webView = getBridge().getWebView();
+                webView = getBridge().getWebView();
                 webView.clearCache(true);
                 webView.clearHistory();
                 
@@ -49,11 +50,30 @@ public class MainActivity extends BridgeActivity {
         try {
             // Assicurati che il bridge sia inizializzato prima di usare la WebView
             if (getBridge() != null && getBridge().getWebView() != null) {
-                WebView webView = getBridge().getWebView();
-                webView.reload();
+                if (webView != null) {
+                    webView.reload();
+                }
             }
         } catch (Exception e) {
             Log.e(TAG, "Errore durante il reload della WebView", e);
         }
+    }
+    
+    @Override
+    public void onDestroy() {
+        try {
+            // Rilascia esplicitamente la WebView per evitare memory leak
+            if (webView != null) {
+                webView.stopLoading();
+                webView.clearHistory();
+                webView.clearCache(true);
+                webView.clearFormData();
+                webView.destroy();
+                webView = null;
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Errore durante la pulizia della WebView", e);
+        }
+        super.onDestroy();
     }
 }

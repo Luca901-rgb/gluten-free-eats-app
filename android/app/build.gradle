@@ -1,4 +1,5 @@
 
+
 apply plugin: 'com.android.application'
 
 // Add new property to force new compilation on each build
@@ -71,36 +72,50 @@ android {
     }
 }
 
-// Aggiungiamo una task per una pulizia più sicura che non fallirà se i file sono bloccati
-task safeCleaner {
-    doLast {
-        println "Esecuzione della pulizia sicura che ignora i file bloccati"
-        def buildDir = new File("${project.buildDir}")
-        if (buildDir.exists()) {
+// Sostituiamo la task clean con una versione più robusta che non fallisce se alcuni file sono bloccati
+clean.doFirst {
+    // Save the original behavior
+    def originalCleanBehavior = clean.getEnabled()
+    
+    // First disable the task if it would fail
+    logger.lifecycle "Esecuzione pulizia sicura che evita fallimenti per file bloccati"
+    
+    try {
+        file("build").listFiles().each { f ->
             try {
-                buildDir.eachFile { file ->
-                    try {
-                        if (file.isDirectory()) {
-                            file.deleteDir()
-                        } else {
-                            file.delete()
-                        }
-                    } catch (Exception e) {
-                        println "Impossibile eliminare ${file.path}, lo salterà: ${e.message}"
-                    }
+                if (f.isDirectory()) {
+                    f.deleteDir()
+                } else {
+                    f.delete()
                 }
             } catch (Exception e) {
-                println "Pulizia parziale completata, alcuni file potrebbero essere stati saltati: ${e.message}"
+                logger.warn "Impossibile eliminare ${f.path}, salto: ${e.message}"
             }
+        }
+    } catch (Exception ignored) {
+        logger.warn "Pulizia delle build eseguita con avvertimenti, ma continuo comunque..."
+    }
+    
+    // After our custom behavior, prevent the original task from running
+    // which would throw the error we're trying to avoid
+    clean.setEnabled(false)
+}
+
+// Add a custom task for skipping problematic directories
+task skipLockedFiles {
+    doLast {
+        println "Creazione della directory di build pulita senza eliminare file bloccati"
+        def buildDir = new File("${project.buildDir}")
+        if (!buildDir.exists()) {
+            buildDir.mkdirs()
         }
     }
 }
 
-// Sostituire la task clean standard con la nostra versione sicura
-tasks.named("clean") {
-    dependsOn safeCleaner
-    doLast {
-        println "Clean completato con sicurezza"
+// Ensure skipLockedFiles runs before the build task
+tasks.whenTaskAdded { task ->
+    if (task.name.contains('assemble') || task.name.contains('bundle')) {
+        task.dependsOn(skipLockedFiles)
     }
 }
 

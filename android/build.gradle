@@ -44,63 +44,51 @@ tasks.withType(JavaCompile).configureEach {
     options.release = 17
 }
 
-// Aggiungiamo una task superClean a livello di progetto globale che sia più robusta
-task superClean {
-    doLast {
-        println "Esecuzione pulizia profonda del progetto (versione sicura)"
-        try {
-            // Elimina la directory build principale in modo sicuro
-            rootProject.buildDir.deleteDir()
-        } catch (Exception e) {
-            println "Pulizia root parziale: ${e.message}"
-        }
+// Renderemo sicura l'operazione di clean principale
+tasks.named('clean') { task ->
+    onlyIf {
+        def toClean = []
         
-        // Pulisci anche le sottodirectory di build nei progetti in modo sicuro
-        subprojects.each { subproject ->
+        project.buildDir.eachFile { file ->
             try {
-                subproject.buildDir.deleteDir()
-                
-                def assetsDir = new File("${subproject.projectDir}/build/generated/assets")
-                if (assetsDir.exists()) {
-                    try {
-                        println "Eliminazione directory assets generati in ${subproject.name}"
-                        assetsDir.deleteDir()
-                    } catch (Exception e) {
-                        println "Impossibile pulire completamente assets in ${subproject.name}: ${e.message}"
-                    }
-                }
-                
-                if (subproject.name == 'app') {
-                    def webAppDir = new File("${subproject.projectDir}/src/main/assets/public")
-                    if (webAppDir.exists()) {
-                        try {
-                            println "Eliminazione directory web app in app/src/main/assets/public"
-                            webAppDir.deleteDir()
-                        } catch (Exception e) {
-                            println "Impossibile pulire directory web app: ${e.message}"
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                println "Pulizia parziale per ${subproject.name}: ${e.message}"
+                toClean << file
+            } catch (Exception ignored) {
+                // Skip file if we can't even access it
             }
         }
-    }
-}
-
-// Fai dipendere superClean dal task clean standard ma renderla più robusta
-tasks.register('cleanSafe') {
-    doLast {
-        try {
-            delete rootProject.buildDir
-            println "Pulizia rootProject completata"
-        } catch (Exception e) {
-            println "Pulizia rootProject parziale: ${e.message}"
+        
+        // Try to clean what we can
+        toClean.each { file ->
+            try {
+                if (file.isDirectory()) {
+                    file.deleteDir()
+                } else {
+                    file.delete()
+                }
+            } catch (Exception e) {
+                logger.warn("Non è stato possibile eliminare: ${file.path}")
+            }
         }
+        
+        // Always return false to skip the original task
+        // We've already done what we could
+        return false
     }
 }
 
-// Sostituisci il task clean standard con una versione più robusta
-tasks.named("clean") {
-    dependsOn cleanSafe
+// Aggiungiamo una nuova task che bypassa completamente il clean
+task buildWithoutClean {
+    doLast {
+        logger.lifecycle "Esecuzione della build senza pulizia per evitare errori con file bloccati"
+    }
+}
+
+// Modifichiamo le dipendenze delle task di assembling per saltare il clean quando necessario
+gradle.projectsEvaluated {
+    tasks.matching { it.name.contains('assembleDebug') || it.name.contains('assembleRelease') }.each { task ->
+        // Rimuoviamo la dipendenza da clean
+        task.dependsOn.remove('clean')
+        // Aggiungiamo la dipendenza dalla nostra task sicura
+        task.dependsOn(buildWithoutClean)
+    }
 }
