@@ -19,6 +19,7 @@ import {
 } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { toast } from 'sonner';
+import safeStorage from './safeStorage';
 
 // La tua configurazione Firebase
 const firebaseConfig = {
@@ -41,58 +42,6 @@ const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({
   prompt: 'select_account'
 });
-
-// Helper function per verificare se localStorage è disponibile
-export const isStorageAvailable = () => {
-  try {
-    const testKey = '__storage_test__';
-    localStorage.setItem(testKey, testKey);
-    localStorage.removeItem(testKey);
-    return true;
-  } catch (e) {
-    console.warn('localStorage non disponibile:', e);
-    return false;
-  }
-};
-
-// Helper function per accedere in sicurezza a localStorage
-export const safeStorage = {
-  setItem: (key: string, value: string) => {
-    if (isStorageAvailable()) {
-      try {
-        localStorage.setItem(key, value);
-        return true;
-      } catch (e) {
-        console.warn(`Errore nel salvare ${key} in localStorage:`, e);
-        return false;
-      }
-    }
-    return false;
-  },
-  getItem: (key: string) => {
-    if (isStorageAvailable()) {
-      try {
-        return localStorage.getItem(key);
-      } catch (e) {
-        console.warn(`Errore nel recuperare ${key} da localStorage:`, e);
-        return null;
-      }
-    }
-    return null;
-  },
-  removeItem: (key: string) => {
-    if (isStorageAvailable()) {
-      try {
-        localStorage.removeItem(key);
-        return true;
-      } catch (e) {
-        console.warn(`Errore nel rimuovere ${key} da localStorage:`, e);
-        return false;
-      }
-    }
-    return false;
-  }
-};
 
 // Persistenza offline per Firestore
 try {
@@ -163,7 +112,7 @@ export const signInWithGoogle = async () => {
     const result = await signInWithPopup(auth, googleProvider);
     const user = result.user;
     
-    // Salva l'utente nel localStorage per accesso offline
+    // Salva l'utente nel safeStorage per accesso offline
     safeStorage.setItem('user', JSON.stringify({
       uid: user.uid,
       email: user.email,
@@ -221,7 +170,7 @@ const createMockGoogleUser = () => {
     }]
   };
   
-  // Salva l'utente in localStorage per accesso offline
+  // Salva l'utente in safeStorage per accesso offline
   safeStorage.setItem('user', JSON.stringify({
     uid: mockUser.uid,
     email: mockUser.email,
@@ -243,8 +192,8 @@ export const loginAdmin = async (email: string, password: string) => {
         return userCredential.user;
       } catch (error) {
         console.log("Accesso Firebase fallito, usando modalità offline");
-        localStorage.setItem('adminEmail', email);
-        localStorage.setItem('isAdmin', 'true');
+        safeStorage.setItem('adminEmail', email);
+        safeStorage.setItem('isAdmin', 'true');
         return { email, uid: 'offline-admin' };
       }
     } else {
@@ -260,8 +209,8 @@ export const isUserAdmin = async (email: string) => {
   if (!email) return false;
   
   try {
-    const localAdminEmail = localStorage.getItem('adminEmail');
-    const isLocalAdmin = localStorage.getItem('isAdmin') === 'true';
+    const localAdminEmail = safeStorage.getItem('adminEmail');
+    const isLocalAdmin = safeStorage.getItem('isAdmin') === 'true';
     
     if (localAdminEmail === email && isLocalAdmin) {
       return true;
@@ -273,8 +222,8 @@ export const isUserAdmin = async (email: string) => {
   } catch (error: any) {
     console.error("Errore nella verifica dello stato admin:", error);
     
-    const localAdminEmail = localStorage.getItem('adminEmail');
-    const isLocalAdmin = localStorage.getItem('isAdmin') === 'true';
+    const localAdminEmail = safeStorage.getItem('adminEmail');
+    const isLocalAdmin = safeStorage.getItem('isAdmin') === 'true';
     
     return (localAdminEmail === email && isLocalAdmin);
   }
@@ -283,9 +232,9 @@ export const isUserAdmin = async (email: string) => {
 export const setSpecificUserAsAdmin = async () => {
   const adminEmail = "lcammarota24@gmail.com";
   
-  localStorage.setItem('adminEmail', adminEmail);
-  localStorage.setItem('isAdmin', 'true');
-  console.log("Admin impostato in localStorage per modalità offline");
+  safeStorage.setItem('adminEmail', adminEmail);
+  safeStorage.setItem('isAdmin', 'true');
+  console.log("Admin impostato in safeStorage per modalità offline");
   
   try {
     const isAlreadyAdmin = await isUserAdmin(adminEmail);
