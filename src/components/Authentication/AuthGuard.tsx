@@ -21,7 +21,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
   useEffect(() => {
     const checkAuth = () => {
       try {
-        console.log("AuthGuard: Verifico autenticazione...");
+        console.log("AuthGuard: Verifica autenticazione...");
         // Verifica se l'utente è autenticato usando safeStorage
         const authStatus = safeStorage.getItem('isAuthenticated');
         const storedUserType = safeStorage.getItem('userType');
@@ -39,7 +39,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
         if (!isAuth && !sessionStorage.getItem('authAttempted')) {
           console.log("Utente non autenticato, reindirizzamento necessario");
         } else {
-          console.log("Utente autenticato:", isAuth);
+          console.log("Utente autenticato:", isAuth, "con tipo:", storedUserType);
         }
       } catch (error) {
         console.error("Errore nel controllo autenticazione:", error);
@@ -88,6 +88,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
 
   // Se è richiesto un tipo specifico di utente, verifica che corrisponda
   if (requiredUserType && userType !== requiredUserType) {
+    // Se l'utente è autenticato ma con tipo errato, mostriamo un messaggio
     if (!sessionStorage.getItem('userTypeRedirectNotified')) {
       toast.error(`Accesso come ${requiredUserType} richiesto`);
       sessionStorage.setItem('userTypeRedirectNotified', 'true');
@@ -95,15 +96,18 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
       setTimeout(() => sessionStorage.removeItem('userTypeRedirectNotified'), 5000);
     }
     
-    // Determina la pagina di login in base al tipo di utente richiesto
-    const loginPath = requiredUserType === 'restaurant' 
-      ? '/restaurant-login'
-      : requiredUserType === 'admin'
-      ? '/admin-login'
-      : '/login';
+    // Reindirizzamento alla pagina principale appropriata in base al tipo attuale dell'utente
+    let redirectPath = '/';
+    if (userType === 'restaurant') {
+      redirectPath = '/restaurant-dashboard';
+    } else if (userType === 'customer') {
+      redirectPath = '/home';
+    } else if (userType === 'admin') {
+      redirectPath = '/admin-dashboard';
+    }
     
-    console.log(`Reindirizzamento a ${loginPath} - Tipo utente non corretto`);
-    return <Navigate to={loginPath} state={{ from: location }} replace />;
+    console.log(`Reindirizzamento a ${redirectPath} - Tipo utente non corretto (è ${userType}, richiesto ${requiredUserType})`);
+    return <Navigate to={redirectPath} state={{ from: location }} replace />;
   }
 
   // Se l'utente è autenticato e ha il tipo corretto, mostra il contenuto

@@ -2,7 +2,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Home, Search, Heart, Calendar, Wheat, Utensils, UserRound } from 'lucide-react';
+import { Home, Search, Heart, Calendar, UserRound } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { buttonVariants } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';

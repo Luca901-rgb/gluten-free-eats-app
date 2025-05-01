@@ -13,6 +13,10 @@ import ProfilePage from '@/pages/ProfilePage';
 import UserSettingsPage from '@/pages/UserSettingsPage';
 import { Toaster } from 'sonner';
 import AuthGuard from '@/components/Authentication/AuthGuard';
+import NotFound from '@/pages/NotFound';
+import SearchPage from '@/pages/SearchPage';
+import FavoritesPage from '@/pages/FavoritesPage';
+import BookingsPage from '@/pages/BookingsPage';
 
 function App() {
   const location = useLocation();
@@ -34,6 +38,17 @@ function App() {
         <Route path="/restaurant-login" element={<RestaurantLogin />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/restaurant/:id" element={<RestaurantPage />} />
+        <Route path="/search" element={<SearchPage />} />
+        <Route path="/favorites" element={
+          <AuthGuard requiredUserType="customer">
+            <FavoritesPage />
+          </AuthGuard>
+        } />
+        <Route path="/bookings" element={
+          <AuthGuard requiredUserType="customer">
+            <BookingsPage />
+          </AuthGuard>
+        } />
         <Route path="/restaurant-dashboard" element={
           <AuthGuard requiredUserType="restaurant">
             <RestaurantDashboard />
@@ -49,6 +64,7 @@ function App() {
             <UserSettingsPage />
           </AuthGuard>
         } />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </>
   );
