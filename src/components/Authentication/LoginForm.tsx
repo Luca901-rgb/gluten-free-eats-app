@@ -25,7 +25,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ initialUserType = 'customer' }) =
     email: '',
     password: '',
   });
-
+  
   // Controlla lo stato online/offline
   useEffect(() => {
     const handleOnlineStatus = () => {
@@ -34,6 +34,16 @@ const LoginForm: React.FC<LoginFormProps> = ({ initialUserType = 'customer' }) =
     
     window.addEventListener('online', handleOnlineStatus);
     window.addEventListener('offline', handleOnlineStatus);
+    
+    // Verifica se localStorage è accessibile
+    try {
+      if (!safeStorage.isAvailable) {
+        setStorageError("Attenzione: Storage del browser non disponibile. Alcune funzionalità potrebbero essere limitate.");
+      }
+    } catch (e) {
+      console.error("Errore accesso storage:", e);
+      setStorageError("Errore accesso storage del browser");
+    }
     
     // Imposta lo stato iniziale
     setIsOffline(!navigator.onLine);
@@ -61,10 +71,15 @@ const LoginForm: React.FC<LoginFormProps> = ({ initialUserType = 'customer' }) =
     }
     
     setIsLoading(true);
+    
+    // Segna che c'è stato un tentativo di autenticazione
+    sessionStorage.setItem('authAttempted', 'true');
 
     try {
       // Login con Firebase
       const user = await loginUser(formData.email, formData.password);
+      
+      console.log("Login riuscito, user:", user);
       
       // Usa safeStorage per salvare i dati in modo sicuro
       safeStorage.setItem('userType', userType);
@@ -72,12 +87,17 @@ const LoginForm: React.FC<LoginFormProps> = ({ initialUserType = 'customer' }) =
       safeStorage.setItem('userEmail', formData.email);
       safeStorage.setItem('userId', user.uid);
       
+      if (user.displayName) {
+        safeStorage.setItem('userName', user.displayName);
+      }
+      
       toast.success("Accesso effettuato con successo");
       
       // Reindirizza in base al tipo di utente
       if (userType === 'restaurant') {
         navigate('/restaurant-dashboard');
       } else {
+        // Usa '/' come fallback se '/home' fallisce
         navigate('/home');
       }
     } catch (error: any) {
@@ -104,6 +124,9 @@ const LoginForm: React.FC<LoginFormProps> = ({ initialUserType = 'customer' }) =
     setIsLoading(true);
     toast.loading("Accesso con Google in corso...");
     
+    // Segna che c'è stato un tentativo di autenticazione
+    sessionStorage.setItem('authAttempted', 'true');
+    
     try {
       const user = await signInWithGoogle();
       
@@ -111,6 +134,8 @@ const LoginForm: React.FC<LoginFormProps> = ({ initialUserType = 'customer' }) =
       if (!user || !user.uid) {
         throw new Error("Dati utente non validi o incompleti");
       }
+      
+      console.log("Login con Google riuscito, user:", user);
       
       // Usa safeStorage per salvare i dati in modo sicuro
       safeStorage.setItem('userType', userType);
@@ -147,7 +172,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ initialUserType = 'customer' }) =
     setShowPassword(!showPassword);
   };
   
-  // Definisco la funzione renderLoginForm qui prima di usarla
+  // Definisco la funzione renderLoginForm
   const renderLoginForm = () => (
     <>
       <div className="text-center mb-6">

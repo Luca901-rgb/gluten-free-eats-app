@@ -12,6 +12,7 @@ import RestaurantRegister from '@/pages/RestaurantRegister';
 import ProfilePage from '@/pages/ProfilePage';
 import UserSettingsPage from '@/pages/UserSettingsPage';
 import { Toaster } from 'sonner';
+import AuthGuard from '@/components/Authentication/AuthGuard';
 
 function App() {
   const location = useLocation();
@@ -26,15 +27,28 @@ function App() {
       <Toaster />
       <Routes>
         <Route path="/" element={<Index />} />
+        <Route path="/home" element={<Index />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/restaurant-register" element={<RestaurantRegister />} />
         <Route path="/restaurant-login" element={<RestaurantLogin />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/restaurant/:id" element={<RestaurantPage />} />
-        <Route path="/restaurant-dashboard" element={<RestaurantDashboard />} />
-        <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/settings" element={<UserSettingsPage />} />
+        <Route path="/restaurant-dashboard" element={
+          <AuthGuard requiredUserType="restaurant">
+            <RestaurantDashboard />
+          </AuthGuard>
+        } />
+        <Route path="/profile" element={
+          <AuthGuard requiredUserType="customer">
+            <ProfilePage />
+          </AuthGuard>
+        } />
+        <Route path="/settings" element={
+          <AuthGuard>
+            <UserSettingsPage />
+          </AuthGuard>
+        } />
       </Routes>
     </>
   );

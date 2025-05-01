@@ -6,7 +6,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar } from '@/components/ui/avatar';
-import { Loader2, LogOut, Settings, User, Shield } from 'lucide-react';
+import { Loader2, LogOut, Settings, User, Shield, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
 import Layout from '@/components/Layout';
@@ -24,19 +24,24 @@ const ProfilePage: React.FC = () => {
         setLoading(true);
         setError(null);
         
+        console.log("ProfilePage - Caricamento profilo utente...");
+        
         // Usa sia localStorage che auth.currentUser per massima compatibilità
         const currentUser = auth.currentUser;
         const userIdFromStorage = safeStorage.getItem('userId');
         const userEmailFromStorage = safeStorage.getItem('userEmail');
         const userNameFromStorage = safeStorage.getItem('userName');
+        const isAuthenticated = safeStorage.getItem('isAuthenticated');
         
         console.log("ProfilePage - currentUser:", currentUser);
         console.log("ProfilePage - userIdFromStorage:", userIdFromStorage);
         console.log("ProfilePage - userEmailFromStorage:", userEmailFromStorage);
+        console.log("ProfilePage - isAuthenticated:", isAuthenticated);
         
         // Se non c'è un utente autenticato né in storage, reindirizza al login
-        if (!currentUser && !userIdFromStorage && !userEmailFromStorage) {
+        if ((!currentUser && !userIdFromStorage && !userEmailFromStorage) || isAuthenticated !== 'true') {
           console.log("Nessun utente autenticato trovato, reindirizzo al login");
+          toast.error("Effettua il login per visualizzare il profilo");
           setTimeout(() => navigate('/login'), 500);
           return;
         }
@@ -50,27 +55,42 @@ const ProfilePage: React.FC = () => {
         };
         
         // Se siamo online, prova a recuperare altri dati da Firestore
-        if (currentUser && navigator.onLine) {
+        if (navigator.onLine) {
           try {
-            const userDoc = await getDoc(doc(db, "users", currentUser.uid));
-            
-            if (userDoc.exists()) {
-              userData = {
-                ...userData,
-                ...userDoc.data()
-              };
+            if (currentUser) {
+              const userDoc = await getDoc(doc(db, "users", currentUser.uid));
               
-              // Salva dati importanti nel safeStorage per accesso offline
-              safeStorage.setItem('userName', userData.displayName);
-              safeStorage.setItem('userEmail', userData.email);
-              if (userData.photoURL) safeStorage.setItem('userPhotoURL', userData.photoURL);
+              if (userDoc.exists()) {
+                userData = {
+                  ...userData,
+                  ...userDoc.data()
+                };
+                
+                // Salva dati importanti nel safeStorage per accesso offline
+                safeStorage.setItem('userName', userData.displayName);
+                safeStorage.setItem('userEmail', userData.email);
+                if (userData.photoURL) safeStorage.setItem('userPhotoURL', userData.photoURL);
+              }
+            } else if (userIdFromStorage) {
+              // Prova a caricare dati usando l'ID utente in storage
+              try {
+                const userDoc = await getDoc(doc(db, "users", userIdFromStorage));
+                if (userDoc.exists()) {
+                  userData = {
+                    ...userData,
+                    ...userDoc.data()
+                  };
+                }
+              } catch (e) {
+                console.warn("Errore nel caricamento dati utente da Firestore usando ID in storage", e);
+              }
             }
           } catch (firestoreError) {
             console.error("Errore nel caricamento dati da Firestore:", firestoreError);
-            // Non blocchiamo il flusso, usiamo i dati di base disponibili
           }
         }
         
+        console.log("ProfilePage - userData caricato:", userData);
         setUser(userData);
       } catch (err) {
         console.error("Errore nel caricamento del profilo:", err);
@@ -147,9 +167,26 @@ const ProfilePage: React.FC = () => {
     return (
       <Layout>
         <div className="container mx-auto p-4 text-center">
-          <h1 className="text-2xl font-bold mb-6">Errore</h1>
-          <p className="mb-4">{error}</p>
-          <Button onClick={() => window.location.reload()}>Riprova</Button>
+          <AlertTriangle size={48} className="mx-auto text-amber-500 mb-4" />
+          <h1 className="text-2xl font-bold mb-4">Errore</h1>
+          <p className="mb-6">{error}</p>
+          <div className="flex gap-4 justify-center">
+            <Button onClick={() => window.location.reload()}>Riprova</Button>
+            <Button variant="outline" onClick={() => navigate('/login')}>Torna al login</Button>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+  
+  if (!user) {
+    return (
+      <Layout>
+        <div className="container mx-auto p-4 text-center">
+          <AlertTriangle size={48} className="mx-auto text-amber-500 mb-4" />
+          <h1 className="text-2xl font-bold mb-4">Sessione non valida</h1>
+          <p className="mb-6">La tua sessione è scaduta o non sei connesso.</p>
+          <Button onClick={() => navigate('/login')}>Accedi</Button>
         </div>
       </Layout>
     );
