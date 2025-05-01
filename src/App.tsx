@@ -1,73 +1,76 @@
 
-import React, { useEffect } from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
-import Index from '@/pages/Index';
-import Login from '@/pages/Login';
-import Register from '@/pages/Register';
-import RestaurantLogin from '@/pages/RestaurantLogin';
-import ForgotPassword from '@/pages/ForgotPassword';
-import RestaurantPage from '@/pages/RestaurantPage';
-import RestaurantDashboard from '@/pages/RestaurantDashboard';
-import RestaurantRegister from '@/pages/RestaurantRegister';
-import ProfilePage from '@/pages/ProfilePage';
-import UserSettingsPage from '@/pages/UserSettingsPage';
-import { Toaster } from 'sonner';
-import AuthGuard from '@/components/Authentication/AuthGuard';
-import NotFound from '@/pages/NotFound';
-import SearchPage from '@/pages/SearchPage';
-import FavoritesPage from '@/pages/FavoritesPage';
-import BookingsPage from '@/pages/BookingsPage';
+import React, { Suspense } from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { auth } from "./lib/firebase";
+import Index from "./pages/Index";
+import SearchPage from "./pages/SearchPage";
+import FavoritesPage from "./pages/FavoritesPage";
+import BookingsPage from "./pages/BookingsPage";
+import ProfilePage from "./pages/ProfilePage";
+import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/RegisterPage";
+import RestaurantPage from "./pages/RestaurantPage";
+import RestaurantLoginPage from "./pages/RestaurantLoginPage";
+import RestaurantDashboardPage from "./pages/RestaurantDashboardPage";
+import LoadingScreen from "./components/LoadingScreen";
+import NotFoundPage from "./pages/NotFoundPage";
+import AuthGuard from "./components/Auth/AuthGuard";
 
-function App() {
-  const location = useLocation();
+const App: React.FC = () => {
+  const [user, loading] = useAuthState(auth);
 
-  useEffect(() => {
-    // Track page view
-    console.log('Page view:', location.pathname);
-  }, [location]);
+  if (loading) {
+    return <LoadingScreen />;
+  }
 
   return (
-    <>
-      <Toaster />
-      <Routes>
-        <Route path="/" element={<Index />} />
-        <Route path="/home" element={<Index />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/restaurant-register" element={<RestaurantRegister />} />
-        <Route path="/restaurant-login" element={<RestaurantLogin />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/restaurant/:id" element={<RestaurantPage />} />
-        <Route path="/search" element={<SearchPage />} />
-        <Route path="/favorites" element={
-          <AuthGuard requiredUserType="customer">
-            <FavoritesPage />
-          </AuthGuard>
-        } />
-        <Route path="/bookings" element={
-          <AuthGuard requiredUserType="customer">
-            <BookingsPage />
-          </AuthGuard>
-        } />
-        <Route path="/restaurant-dashboard" element={
-          <AuthGuard requiredUserType="restaurant">
-            <RestaurantDashboard />
-          </AuthGuard>
-        } />
-        <Route path="/profile" element={
-          <AuthGuard requiredUserType="customer">
-            <ProfilePage />
-          </AuthGuard>
-        } />
-        <Route path="/settings" element={
-          <AuthGuard>
-            <UserSettingsPage />
-          </AuthGuard>
-        } />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </>
+    <Router>
+      <Suspense fallback={<LoadingScreen />}>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<Navigate to="/home" replace />} />
+          <Route path="/home" element={<Index />} />
+          <Route path="/search" element={<SearchPage />} />
+          <Route path="/restaurant/:id" element={<RestaurantPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/restaurant-login" element={<RestaurantLoginPage />} />
+
+          {/* Protected Customer Routes */}
+          <Route path="/favorites" element={
+            <AuthGuard allowedUserTypes={["customer"]}>
+              <FavoritesPage />
+            </AuthGuard>
+          } />
+          <Route path="/bookings" element={
+            <AuthGuard allowedUserTypes={["customer"]}>
+              <BookingsPage />
+            </AuthGuard>
+          } />
+          <Route path="/profile" element={
+            <AuthGuard allowedUserTypes={["customer", "restaurant"]}>
+              <ProfilePage />
+            </AuthGuard>
+          } />
+
+          {/* Protected Restaurant Routes */}
+          <Route path="/restaurant-dashboard/*" element={
+            <AuthGuard allowedUserTypes={["restaurant"]}>
+              <RestaurantDashboardPage />
+            </AuthGuard>
+          } />
+          <Route path="/dashboard/*" element={
+            <AuthGuard allowedUserTypes={["restaurant"]}>
+              <RestaurantDashboardPage />
+            </AuthGuard>
+          } />
+
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </Suspense>
+    </Router>
   );
-}
+};
 
 export default App;
