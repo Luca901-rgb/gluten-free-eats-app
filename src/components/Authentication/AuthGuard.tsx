@@ -18,12 +18,24 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
   const [userType, setUserType] = useState<string | null>(null);
   
   useEffect(() => {
-    // Verifica se l'utente è autenticato usando safeStorage
-    const authStatus = safeStorage.getItem('isAuthenticated');
-    const storedUserType = safeStorage.getItem('userType');
-    
-    setIsAuthenticated(authStatus === 'true');
-    setUserType(storedUserType);
+    // Aggiungiamo un timeout breve per garantire che localStorage sia pronto
+    setTimeout(() => {
+      try {
+        // Verifica se l'utente è autenticato usando safeStorage
+        const authStatus = safeStorage.getItem('isAuthenticated');
+        const storedUserType = safeStorage.getItem('userType');
+        
+        console.log("Auth status:", authStatus);
+        console.log("User type:", storedUserType);
+        
+        setIsAuthenticated(authStatus === 'true');
+        setUserType(storedUserType);
+      } catch (error) {
+        console.error("Errore nel controllo autenticazione:", error);
+        // Fallback per modalità offline
+        setIsAuthenticated(false);
+      }
+    }, 100);
   }, []);
 
   // Mentre verifichiamo l'autenticazione, mostriamo un loader
@@ -33,7 +45,13 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
 
   // Se l'utente non è autenticato, lo reindirizziamo al login
   if (!isAuthenticated) {
-    toast.error("Accesso richiesto per visualizzare questa pagina");
+    // Evitiamo toast ripetuti
+    if (!sessionStorage.getItem('authRedirectNotified')) {
+      toast.error("Accesso richiesto per visualizzare questa pagina");
+      sessionStorage.setItem('authRedirectNotified', 'true');
+      // Reset dopo 5 secondi
+      setTimeout(() => sessionStorage.removeItem('authRedirectNotified'), 5000);
+    }
     
     // Determina la pagina di login in base al tipo di utente richiesto
     const loginPath = requiredUserType === 'restaurant' 
@@ -47,7 +65,12 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
 
   // Se è richiesto un tipo specifico di utente, verifica che corrisponda
   if (requiredUserType && userType !== requiredUserType) {
-    toast.error(`Accesso come ${requiredUserType} richiesto`);
+    if (!sessionStorage.getItem('userTypeRedirectNotified')) {
+      toast.error(`Accesso come ${requiredUserType} richiesto`);
+      sessionStorage.setItem('userTypeRedirectNotified', 'true');
+      // Reset dopo 5 secondi
+      setTimeout(() => sessionStorage.removeItem('userTypeRedirectNotified'), 5000);
+    }
     
     // Determina la pagina di login in base al tipo di utente richiesto
     const loginPath = requiredUserType === 'restaurant' 

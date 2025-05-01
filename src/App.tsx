@@ -9,6 +9,8 @@ import ForgotPassword from '@/pages/ForgotPassword';
 import RestaurantPage from '@/pages/RestaurantPage';
 import RestaurantDashboard from '@/pages/RestaurantDashboard';
 import RestaurantRegister from '@/pages/RestaurantRegister';
+import ProfilePage from '@/pages/ProfilePage';
+import UserSettingsPage from '@/pages/UserSettingsPage';
 import { Toaster } from 'sonner';
 
 function App() {
@@ -31,6 +33,8 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/restaurant/:id" element={<RestaurantPage />} />
         <Route path="/restaurant-dashboard" element={<RestaurantDashboard />} />
+        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/settings" element={<UserSettingsPage />} />
       </Routes>
     </>
   );

@@ -10,6 +10,7 @@ import { Loader2, LogOut, Settings, User, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
 import Layout from '@/components/Layout';
+import safeStorage from '@/lib/safeStorage';
 
 const ProfilePage: React.FC = () => {
   const [loading, setLoading] = useState(true);
@@ -23,37 +24,51 @@ const ProfilePage: React.FC = () => {
         setLoading(true);
         setError(null);
         
-        // Controlla se l'utente è autenticato
+        // Usa sia localStorage che auth.currentUser per massima compatibilità
         const currentUser = auth.currentUser;
+        const userIdFromStorage = safeStorage.getItem('userId');
+        const userEmailFromStorage = safeStorage.getItem('userEmail');
+        const userNameFromStorage = safeStorage.getItem('userName');
         
-        if (!currentUser) {
-          // Se non è autenticato, reindirizza al login
-          console.log("Utente non autenticato, reindirizzo al login");
-          navigate('/login');
+        console.log("ProfilePage - currentUser:", currentUser);
+        console.log("ProfilePage - userIdFromStorage:", userIdFromStorage);
+        console.log("ProfilePage - userEmailFromStorage:", userEmailFromStorage);
+        
+        // Se non c'è un utente autenticato né in storage, reindirizza al login
+        if (!currentUser && !userIdFromStorage && !userEmailFromStorage) {
+          console.log("Nessun utente autenticato trovato, reindirizzo al login");
+          setTimeout(() => navigate('/login'), 500);
           return;
         }
         
-        // Crea un oggetto utente minimo usando i dati di auth
+        // Crea un oggetto utente minimo usando i dati disponibili
         let userData = {
-          uid: currentUser.uid,
-          email: currentUser.email,
-          displayName: currentUser.displayName || "Utente",
-          photoURL: currentUser.photoURL
+          uid: currentUser?.uid || userIdFromStorage || 'guest-user',
+          email: currentUser?.email || userEmailFromStorage || 'Utente offline',
+          displayName: currentUser?.displayName || userNameFromStorage || "Utente",
+          photoURL: currentUser?.photoURL || null
         };
         
-        // Prova a recuperare altri dati da Firestore
-        try {
-          const userDoc = await getDoc(doc(db, "users", currentUser.uid));
-          
-          if (userDoc.exists()) {
-            userData = {
-              ...userData,
-              ...userDoc.data()
-            };
+        // Se siamo online, prova a recuperare altri dati da Firestore
+        if (currentUser && navigator.onLine) {
+          try {
+            const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+            
+            if (userDoc.exists()) {
+              userData = {
+                ...userData,
+                ...userDoc.data()
+              };
+              
+              // Salva dati importanti nel safeStorage per accesso offline
+              safeStorage.setItem('userName', userData.displayName);
+              safeStorage.setItem('userEmail', userData.email);
+              if (userData.photoURL) safeStorage.setItem('userPhotoURL', userData.photoURL);
+            }
+          } catch (firestoreError) {
+            console.error("Errore nel caricamento dati da Firestore:", firestoreError);
+            // Non blocchiamo il flusso, usiamo i dati di base disponibili
           }
-        } catch (firestoreError) {
-          console.error("Errore nel caricamento dati da Firestore:", firestoreError);
-          // Non blocchiamo il flusso, usiamo i dati di base disponibili
         }
         
         setUser(userData);
@@ -67,12 +82,17 @@ const ProfilePage: React.FC = () => {
     
     loadUserProfile();
     
-    // Timeout di sicurezza - se dopo 1 secondo ancora carica, forziamo la fine
+    // Timeout di sicurezza - se dopo 2 secondi ancora carica, forziamo la fine
     const safetyTimeout = setTimeout(() => {
       if (loading) {
         setLoading(false);
+        setUser({
+          displayName: safeStorage.getItem('userName') || "Utente",
+          email: safeStorage.getItem('userEmail') || "utente@esempio.com",
+          photoURL: safeStorage.getItem('userPhotoURL') || null
+        });
       }
-    }, 1000);
+    }, 2000);
     
     return () => clearTimeout(safetyTimeout);
   }, [navigate]);
@@ -84,7 +104,16 @@ const ProfilePage: React.FC = () => {
       navigate('/login');
     } catch (error) {
       console.error("Errore durante il logout:", error);
-      toast.error("Errore durante il logout");
+      
+      // Fallback per logout offline
+      safeStorage.removeItem('isAuthenticated');
+      safeStorage.removeItem('userType');
+      safeStorage.removeItem('userId');
+      safeStorage.removeItem('userEmail');
+      safeStorage.removeItem('userName');
+      
+      toast.success("Logout effettuato");
+      navigate('/login');
     }
   };
   
@@ -109,6 +138,18 @@ const ProfilePage: React.FC = () => {
             <Skeleton className="h-10 w-full" />
             <Skeleton className="h-10 w-full mt-6" />
           </div>
+        </div>
+      </Layout>
+    );
+  }
+  
+  if (error) {
+    return (
+      <Layout>
+        <div className="container mx-auto p-4 text-center">
+          <h1 className="text-2xl font-bold mb-6">Errore</h1>
+          <p className="mb-4">{error}</p>
+          <Button onClick={() => window.location.reload()}>Riprova</Button>
         </div>
       </Layout>
     );
