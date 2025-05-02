@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect } from 'react';
-import { useParams, useLocation } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import RestaurantDetails, { RestaurantDetailProps } from '@/components/Restaurant/RestaurantDetails';
 import { doc, getDoc, DocumentSnapshot } from 'firebase/firestore';
@@ -30,15 +29,25 @@ const DEFAULT_RESTAURANT: RestaurantDetailProps = {
 };
 
 const RestaurantPage = () => {
-  const { id } = useParams<{ id: string }>();
-  const location = useLocation();
-  const [isLoading, setIsLoading] = useState(false); // CAMBIO IMPORTANTE: inizia con false
+  // Handle the case where we might not be inside a Router context
+  let id = '1'; // Default ID
+  let searchParams = new URLSearchParams('');
+  
+  // Try to get params from the URL without using hooks first
+  try {
+    const pathSegments = window.location.pathname.split('/');
+    id = pathSegments[pathSegments.length - 1] || '1';
+    searchParams = new URLSearchParams(window.location.search);
+  } catch (error) {
+    console.log('Falling back to default restaurant ID');
+  }
+  
+  const [isLoading, setIsLoading] = useState(false);
   const [restaurant, setRestaurant] = useState<RestaurantDetailProps | null>(null);
   const { restaurantData: cachedRestaurant } = useRestaurantData(id);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
   
   // Check if we have a booking code in the URL
-  const searchParams = new URLSearchParams(location.search);
   const bookingCode = searchParams.get('bookingCode');
   const restaurantCode = searchParams.get('restaurantCode');
   
@@ -58,6 +67,8 @@ const RestaurantPage = () => {
   
   // OTTIMIZZAZIONE: Imposta i dati predefiniti immediatamente
   useEffect(() => {
+    console.log('Restaurant ID from URL:', id);
+    
     // Imposta immediatamente il default o il cached restaurant
     if (cachedRestaurant) {
       setRestaurant({
@@ -145,9 +156,6 @@ const RestaurantPage = () => {
         });
     }
   }, [id, cachedRestaurant]);
-
-  // OTTIMIZZAZIONE: SALTA COMPLETAMENTE IL LOADING STATE
-  // Il ristorante sarà sempre disponibile immediatamente (default o cached)
   
   return (
     <Layout>

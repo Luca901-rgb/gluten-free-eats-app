@@ -1,9 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Clock, MapPin, Phone, Calendar, Star, Award, Image, Home, Copy, Check, Menu, VideoIcon } from 'lucide-react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
 import StarRating from '@/components/common/StarRating';
 import BookingForm from '../Booking/BookingForm';
 import MenuViewer from './MenuViewer';
@@ -41,17 +39,11 @@ const RestaurantDetails: React.FC<RestaurantDetailsProps> = ({
   initialBookingCode = '', 
   initialRestaurantCode = '' 
 }) => {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const searchParams = new URLSearchParams(location.search);
-  const tabFromUrl = searchParams.get('tab');
-  const bookingCodeFromUrl = searchParams.get('bookingCode');
-  const restaurantCodeFromUrl = searchParams.get('restaurantCode');
-  
-  const [activeTab, setActiveTab] = useState(tabFromUrl || 'home');
+  // Remove direct useLocation and useNavigate hooks
+  const [activeTab, setActiveTab] = useState('home');
   const [copyIcon, setCopyIcon] = useState<'copy' | 'check'>('copy');
-  const [bookingCode, setBookingCode] = useState<string>(initialBookingCode || bookingCodeFromUrl || '');
-  const [restaurantCode, setRestaurantCode] = useState<string>(initialRestaurantCode || restaurantCodeFromUrl || '');
+  const [bookingCode, setBookingCode] = useState<string>(initialBookingCode || '');
+  const [restaurantCode, setRestaurantCode] = useState<string>(initialRestaurantCode || '');
   
   // Videos data - in a real app this would be fetched from API
   const [videos] = useState([
@@ -79,21 +71,8 @@ const RestaurantDetails: React.FC<RestaurantDetailsProps> = ({
     videoUrl: string;
   } | null>(null);
   
-  useEffect(() => {
-    if (tabFromUrl) {
-      setActiveTab(tabFromUrl);
-    }
-  }, [tabFromUrl]);
-
-  useEffect(() => {
-    if (bookingCodeFromUrl) {
-      setBookingCode(bookingCodeFromUrl);
-    }
-    if (restaurantCodeFromUrl) {
-      setRestaurantCode(restaurantCodeFromUrl);
-    }
-  }, [bookingCodeFromUrl, restaurantCodeFromUrl]);
-
+  // Remove useEffect that depends on URL params
+  
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text)
       .then(() => {
@@ -110,14 +89,8 @@ const RestaurantDetails: React.FC<RestaurantDetailsProps> = ({
   const navigateToTab = (tabId: string) => {
     setActiveTab(tabId);
     
-    if (tabId === 'reviews' && (bookingCode || restaurantCode)) {
-      const params = new URLSearchParams();
-      params.set('tab', 'reviews');
-      if (bookingCode) params.set('bookingCode', bookingCode);
-      if (restaurantCode) params.set('restaurantCode', restaurantCode);
-      
-      navigate(`${location.pathname}?${params.toString()}`);
-    }
+    // Remove React Router navigation code
+    console.log(`Tab changed to: ${tabId}`);
   };
   
   const navigationButtons = [
