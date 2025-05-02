@@ -28,7 +28,7 @@ try {
     console.log("Elemento root trovato, rendering app...");
     const root = createRoot(rootElement);
     
-    // Avvolgiamo il rendering in un try-catch aggiuntivo
+    // Avvolgiamo il rendering in un try-catch aggiuntivo e assicuriamo che BrowserRouter avvolga App
     try {
       root.render(
         <BrowserRouter>
