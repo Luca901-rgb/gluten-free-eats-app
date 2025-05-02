@@ -21,36 +21,63 @@ const navigationItems = [
 ];
 
 const Layout: React.FC<LayoutProps> = ({ children, hideNavigation = false }) => {
-  const location = useLocation();
-  const isRestaurantView = location.pathname.includes('/restaurant-dashboard') || location.pathname.includes('/dashboard');
+  // Safely use Router hooks with a try-catch to avoid breaking the app
+  let location = { pathname: '' };
+  let isRouterAvailable = true;
+  
+  try {
+    location = useLocation();
+  } catch (e) {
+    console.error("Router context not available in Layout", e);
+    isRouterAvailable = false;
+  }
+  
+  const isRestaurantView = isRouterAvailable && (
+    location.pathname.includes('/restaurant-dashboard') || 
+    location.pathname.includes('/dashboard')
+  );
   
   // Pagine dove la navigazione NON deve essere mostrata
   const hideNavOn = ['/login', '/register', '/restaurant-login', '/admin-login'];
   
   // Verifica se la navigazione deve essere nascosta nella pagina attuale
-  const shouldHideNav = hideNavigation || hideNavOn.some(path => location.pathname === path);
+  const shouldHideNav = hideNavigation || (isRouterAvailable && hideNavOn.some(path => location.pathname === path));
 
   return (
     <div className="flex flex-col min-h-screen w-full bg-green-white">
       <header className="sticky top-0 z-10 flex items-center justify-between bg-gradient-to-r from-green-dark/90 via-green/80 to-green-light/70 border-b h-16 px-4 backdrop-blur-sm w-full">
-        <Link to="/home" className="flex items-center gap-2">
-          <div className="flex items-center justify-center p-1.5 rounded-full bg-gradient-to-br from-green-dark via-green to-green-light shadow-md">
-            <div className="relative">
-              <Wheat size={16} className="text-white drop-shadow-[0_0_1px_rgba(0,0,0,0.8)]" strokeWidth={2.5} />
-              <Utensils size={12} className="text-white drop-shadow-[0_0_1px_rgba(0,0,0,0.8)] absolute -bottom-1 -right-1" strokeWidth={2.5} />
+        {isRouterAvailable ? (
+          <Link to="/home" className="flex items-center gap-2">
+            <div className="flex items-center justify-center p-1.5 rounded-full bg-gradient-to-br from-green-dark via-green to-green-light shadow-md">
+              <div className="relative">
+                <Wheat size={16} className="text-white drop-shadow-[0_0_1px_rgba(0,0,0,0.8)]" strokeWidth={2.5} />
+                <Utensils size={12} className="text-white drop-shadow-[0_0_1px_rgba(0,0,0,0.8)] absolute -bottom-1 -right-1" strokeWidth={2.5} />
+              </div>
             </div>
+            <span className="font-poppins font-bold text-lg text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
+              {isRestaurantView ? "Dashboard Ristoratore" : "GlutenFree Eats"}
+            </span>
+          </Link>
+        ) : (
+          <div className="flex items-center gap-2">
+            <div className="flex items-center justify-center p-1.5 rounded-full bg-gradient-to-br from-green-dark via-green to-green-light shadow-md">
+              <div className="relative">
+                <Wheat size={16} className="text-white drop-shadow-[0_0_1px_rgba(0,0,0,0.8)]" strokeWidth={2.5} />
+                <Utensils size={12} className="text-white drop-shadow-[0_0_1px_rgba(0,0,0,0.8)] absolute -bottom-1 -right-1" strokeWidth={2.5} />
+              </div>
+            </div>
+            <span className="font-poppins font-bold text-lg text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
+              GlutenFree Eats
+            </span>
           </div>
-          <span className="font-poppins font-bold text-lg text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
-            {isRestaurantView ? "Dashboard Ristoratore" : "GlutenFree Eats"}
-          </span>
-        </Link>
+        )}
       </header>
       
       <div className="flex-1 overflow-y-auto pb-16 w-full">
         {children}
       </div>
       
-      {!shouldHideNav && (
+      {!shouldHideNav && isRouterAvailable && (
         <nav className="fixed bottom-0 w-full bg-gradient-to-r from-green-dark/90 via-green/80 to-green-light/70 border-t h-16 flex justify-around items-center z-10 backdrop-blur-sm">
           {navigationItems.map((item) => (
             <Link
