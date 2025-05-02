@@ -13,7 +13,8 @@ import AuthGuard from "./components/Authentication/AuthGuard";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 import RestaurantLogin from "./pages/RestaurantLogin";
-import RestaurantPage from "./pages/RestaurantPage"; // Import the actual RestaurantPage component
+import RestaurantPage from "./pages/RestaurantPage"; 
+import { BookingProvider } from "./context/BookingContext";
 
 // Import existing pages or create placeholder components for those that don't exist
 const RegisterPage = () => <div className="container mx-auto p-6">Register Page</div>;
@@ -28,61 +29,62 @@ const App: React.FC = () => {
 
   return (
     <Suspense fallback={<LoadingScreen />}>
-      <Routes>
-        {/* Redirect root to login */}
-        <Route path="/" element={<Navigate to="/login" replace />} />
-        
-        {/* Public Routes */}
-        <Route path="/home" element={
-          user ? <Index /> : <Navigate to="/login" replace />
-        } />
-        <Route path="/search" element={
-          user ? <SearchPage /> : <Navigate to="/login" replace />
-        } />
-        <Route path="/restaurant/:id" element={
-          <RestaurantPage /> // Use the actual imported RestaurantPage component
-        } />
-        <Route path="/login" element={
-          !user ? <Login /> : <Navigate to="/home" replace />
-        } />
-        <Route path="/register" element={
-          !user ? <RegisterPage /> : <Navigate to="/home" replace />
-        } />
-        <Route path="/restaurant-login" element={
-          !user ? <RestaurantLogin /> : <Navigate to="/restaurant-dashboard" replace />
-        } />
+      {/* Wrap with BookingProvider to make booking context available to all routes */}
+      <BookingProvider>
+        <Routes>
+          {/* Redirect root to login */}
+          <Route path="/" element={<Navigate to="/login" replace />} />
+          
+          {/* Public Routes */}
+          <Route path="/home" element={
+            user ? <Index /> : <Navigate to="/login" replace />
+          } />
+          <Route path="/search" element={
+            user ? <SearchPage /> : <Navigate to="/login" replace />
+          } />
+          <Route path="/restaurant/:id" element={<RestaurantPage />} />
+          <Route path="/login" element={
+            !user ? <Login /> : <Navigate to="/home" replace />
+          } />
+          <Route path="/register" element={
+            !user ? <RegisterPage /> : <Navigate to="/home" replace />
+          } />
+          <Route path="/restaurant-login" element={
+            !user ? <RestaurantLogin /> : <Navigate to="/restaurant-dashboard" replace />
+          } />
 
-        {/* Protected Customer Routes */}
-        <Route path="/favorites" element={
-          <AuthGuard allowedUserTypes={["customer"]}>
-            <FavoritesPage />
-          </AuthGuard>
-        } />
-        <Route path="/bookings" element={
-          <AuthGuard allowedUserTypes={["customer"]}>
-            <BookingsPage />
-          </AuthGuard>
-        } />
-        <Route path="/profile" element={
-          <AuthGuard allowedUserTypes={["customer", "restaurant"]}>
-            <ProfilePage />
-          </AuthGuard>
-        } />
+          {/* Protected Customer Routes */}
+          <Route path="/favorites" element={
+            <AuthGuard allowedUserTypes={["customer"]}>
+              <FavoritesPage />
+            </AuthGuard>
+          } />
+          <Route path="/bookings" element={
+            <AuthGuard allowedUserTypes={["customer"]}>
+              <BookingsPage />
+            </AuthGuard>
+          } />
+          <Route path="/profile" element={
+            <AuthGuard allowedUserTypes={["customer", "restaurant"]}>
+              <ProfilePage />
+            </AuthGuard>
+          } />
 
-        {/* Protected Restaurant Routes */}
-        <Route path="/restaurant-dashboard/*" element={
-          <AuthGuard allowedUserTypes={["restaurant"]}>
-            <RestaurantDashboardPage />
-          </AuthGuard>
-        } />
-        <Route path="/dashboard/*" element={
-          <AuthGuard allowedUserTypes={["restaurant"]}>
-            <RestaurantDashboardPage />
-          </AuthGuard>
-        } />
+          {/* Protected Restaurant Routes */}
+          <Route path="/restaurant-dashboard/*" element={
+            <AuthGuard allowedUserTypes={["restaurant"]}>
+              <RestaurantDashboardPage />
+            </AuthGuard>
+          } />
+          <Route path="/dashboard/*" element={
+            <AuthGuard allowedUserTypes={["restaurant"]}>
+              <RestaurantDashboardPage />
+            </AuthGuard>
+          } />
 
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BookingProvider>
     </Suspense>
   );
 };
