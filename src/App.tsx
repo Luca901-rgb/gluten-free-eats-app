@@ -29,14 +29,28 @@ const App: React.FC = () => {
   return (
     <Suspense fallback={<LoadingScreen />}>
       <Routes>
+        {/* Redirect root to login */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        
         {/* Public Routes */}
-        <Route path="/" element={<Navigate to="/home" replace />} />
-        <Route path="/home" element={<Index />} />
-        <Route path="/search" element={<SearchPage />} />
-        <Route path="/restaurant/:id" element={<RestaurantPage />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/restaurant-login" element={<RestaurantLogin />} />
+        <Route path="/home" element={
+          user ? <Index /> : <Navigate to="/login" replace />
+        } />
+        <Route path="/search" element={
+          user ? <SearchPage /> : <Navigate to="/login" replace />
+        } />
+        <Route path="/restaurant/:id" element={
+          user ? <RestaurantPage /> : <Navigate to="/login" replace />
+        } />
+        <Route path="/login" element={
+          !user ? <Login /> : <Navigate to="/home" replace />
+        } />
+        <Route path="/register" element={
+          !user ? <RegisterPage /> : <Navigate to="/home" replace />
+        } />
+        <Route path="/restaurant-login" element={
+          !user ? <RestaurantLogin /> : <Navigate to="/restaurant-dashboard" replace />
+        } />
 
         {/* Protected Customer Routes */}
         <Route path="/favorites" element={

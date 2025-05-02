@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -97,7 +96,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ initialUserType = 'customer' }) =
       if (userType === 'restaurant') {
         navigate('/restaurant-dashboard');
       } else {
-        // Usa '/' come fallback se '/home' fallisce
+        // Reindirizzo alla home page
         navigate('/home');
       }
     } catch (error: any) {
