@@ -48,6 +48,10 @@ const Layout: React.FC<LayoutProps> = ({ children, hideNavigation = false }) => 
               key={item.path}
               href={item.path}
               className="flex flex-col items-center justify-center p-1 text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.7)]"
+              onClick={(e) => {
+                // Add console logging to help debug
+                console.log(`Navigation clicked: ${item.path}`);
+              }}
             >
               <div className="drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
                 {item.icon}

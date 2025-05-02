@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Layout from '@/components/Layout';
 import { Search, MapPin, Filter, Wheat, Coffee, SlidersHorizontal } from 'lucide-react';
@@ -10,7 +9,6 @@ import RestaurantCard from '@/components/Restaurant/RestaurantCard';
 import { useRestaurantList } from '@/hooks/useRestaurantList';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useNavigate } from 'react-router-dom';
-import { useLocation } from 'react-router-dom';
 import { Sheet, SheetClose, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 
 const categories = [
@@ -24,13 +22,12 @@ const categories = [
 
 const SearchPage: React.FC = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
   const { restaurants, isLoading } = useRestaurantList();
 
-  const searchParams = new URLSearchParams(location.search);
-  const forceHideBadge = searchParams.get('forceHideBadge') === 'true';
+  // The Layout component shouldn't try to use any React Router hooks
+  const forceHideBadge = false;
 
   const handleFilterToggle = (filter: string) => {
     setSelectedFilters(prev => 
@@ -52,7 +49,7 @@ const SearchPage: React.FC = () => {
     )
     .filter(restaurant => 
       selectedFilters.length === 0 || 
-      // Check if cuisine matches any of the selected filters instead of using categories
+      // Check if cuisine matches any of the selected filters
       restaurant.cuisine?.toLowerCase().includes(selectedFilters.some(filter => 
         filter.toLowerCase()
       ).toString())
