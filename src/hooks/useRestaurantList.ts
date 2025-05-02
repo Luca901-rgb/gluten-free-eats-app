@@ -1,9 +1,8 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { Restaurant } from '@/components/Restaurant/RestaurantCard';
 import { toast } from 'sonner';
 import { checkUserRegion } from '@/utils/geolocation';
-import { collection, getDocs, doc, setDoc, deleteDoc, getDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, setDoc, deleteDoc, getDoc, updateDoc } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
 
 export interface RegionStatus {
@@ -458,6 +457,7 @@ export const useRestaurantList = () => {
         message = "Ristorante aggiunto ai preferiti";
       }
       
+      // Aggiorna immediatamente l'UI per una migliore esperienza utente
       setRestaurants(prevRestaurants => 
         prevRestaurants.map(restaurant => 
           restaurant.id === id 
@@ -466,28 +466,46 @@ export const useRestaurantList = () => {
         )
       );
       
+      // Salva in localStorage per accesso offline
       try {
         localStorage.setItem(`favorites_${currentUser.uid}`, JSON.stringify(updatedFavorites));
+        
+        // Aggiorna anche la cache dei ristoranti con lo stato aggiornato dei preferiti
+        const cachedRestaurants = localStorage.getItem('cachedRestaurants');
+        if (cachedRestaurants) {
+          const parsedCachedRestaurants = JSON.parse(cachedRestaurants);
+          const updatedCache = parsedCachedRestaurants.map((r: Restaurant) => 
+            r.id === id ? { ...r, isFavorite: !isFavorite } : r
+          );
+          localStorage.setItem('cachedRestaurants', JSON.stringify(updatedCache));
+        }
       } catch (error) {
         console.error("Errore nel salvataggio locale dei preferiti:", error);
       }
       
       if (navigator.onLine) {
         try {
+          // Aggiorna lista globale dei preferiti
           await setDoc(userFavoritesRef, { restaurantIds: updatedFavorites }, { merge: true });
           const selectedRestaurant = restaurants.find(r => r.id === id);
           
           if (selectedRestaurant && !isFavorite) {
+            // Aggiungi alla sottocollezione dei preferiti
             const userFavRef = doc(db, `users/${currentUser.uid}/favorites`, id);
             await setDoc(userFavRef, {
               name: selectedRestaurant.name,
               address: selectedRestaurant.address,
               image: selectedRestaurant.image,
               rating: selectedRestaurant.rating,
+              reviews: selectedRestaurant.reviews,
+              cuisine: selectedRestaurant.cuisine,
               description: selectedRestaurant.description,
-              restaurantId: id
+              hasGlutenFreeOptions: selectedRestaurant.hasGlutenFreeOptions || true,
+              restaurantId: id,
+              location: selectedRestaurant.location
             });
           } else if (isFavorite) {
+            // Rimuovi dalla sottocollezione
             try {
               await deleteDoc(doc(db, `users/${currentUser.uid}/favorites`, id));
             } catch (error) {

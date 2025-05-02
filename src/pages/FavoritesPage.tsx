@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { Heart, Search } from 'lucide-react';
@@ -140,6 +139,7 @@ const FavoritesPage: React.FC = () => {
     try {
       // Rimuovi immediatamente dalla UI
       setFavorites(prevFavorites => prevFavorites.filter(item => item.id !== id));
+      toast.success("Ristorante rimosso dai preferiti");
       
       if (navigator.onLine) {
         // Aggiorna Firestore: rimuovi dai preferiti globali
@@ -157,7 +157,6 @@ const FavoritesPage: React.FC = () => {
         
         const updatedFavorites = userFavorites.filter((favId: string) => favId !== id);
         
-        // Fix: Using updateDoc instead of .update()
         await updateDoc(userFavoritesRef, {
           restaurantIds: updatedFavorites
         });
@@ -173,12 +172,20 @@ const FavoritesPage: React.FC = () => {
           const favoriteIds = JSON.parse(localFavorites) as string[];
           const updatedFavorites = favoriteIds.filter(favId => favId !== id);
           localStorage.setItem(`favorites_${currentUser.uid}`, JSON.stringify(updatedFavorites));
+          
+          // Aggiorna anche la cache dei ristoranti
+          const cachedRestaurants = localStorage.getItem('cachedRestaurants');
+          if (cachedRestaurants) {
+            const parsedCachedRestaurants = JSON.parse(cachedRestaurants);
+            const updatedCache = parsedCachedRestaurants.map((r: Restaurant) => 
+              r.id === id ? { ...r, isFavorite: false } : r
+            );
+            localStorage.setItem('cachedRestaurants', JSON.stringify(updatedCache));
+          }
         } catch (e) {
           console.error("Errore nell'aggiornamento dei preferiti locali:", e);
         }
       }
-      
-      toast.success("Ristorante rimosso dai preferiti");
     } catch (error) {
       console.error("Errore nella rimozione dai preferiti:", error);
       toast.error("Errore nella rimozione dai preferiti");

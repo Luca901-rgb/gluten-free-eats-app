@@ -50,6 +50,8 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({
     e.stopPropagation();
     if (onToggleFavorite) {
       onToggleFavorite(id);
+    } else {
+      toast.error("Impossibile aggiornare i preferiti in questo momento");
     }
   };
   
@@ -105,12 +107,18 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({
             <Heart 
               size={20} 
               className={isFavorite ? "fill-red-500 text-red-500" : "text-gray-500"} 
+              fill={isFavorite ? "currentColor" : "none"}
             />
           </button>
         </div>
       </div>
       <CardContent className="p-4">
-        <h3 className="font-poppins font-semibold text-lg mb-1 text-primary">{name}</h3>
+        <div className="flex justify-between items-start">
+          <h3 className="font-poppins font-semibold text-lg mb-1 text-primary">{name}</h3>
+          {isFavorite && (
+            <Heart size={16} className="fill-red-500 text-red-500 mt-1" />
+          )}
+        </div>
         <div className="flex items-center mb-2">
           <StarRating rating={rating} />
           <span className="text-sm text-gray-600 ml-2">{reviews} recensioni</span>
