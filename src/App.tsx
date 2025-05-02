@@ -13,10 +13,10 @@ import AuthGuard from "./components/Authentication/AuthGuard";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 import RestaurantLogin from "./pages/RestaurantLogin";
+import RestaurantPage from "./pages/RestaurantPage"; // Import the actual RestaurantPage component
 
 // Import existing pages or create placeholder components for those that don't exist
 const RegisterPage = () => <div className="container mx-auto p-6">Register Page</div>;
-const RestaurantPage = () => <div className="container mx-auto p-6">Restaurant Page</div>;
 const RestaurantDashboardPage = () => <div className="container mx-auto p-6">Restaurant Dashboard Page</div>;
 
 const App: React.FC = () => {
@@ -40,7 +40,7 @@ const App: React.FC = () => {
           user ? <SearchPage /> : <Navigate to="/login" replace />
         } />
         <Route path="/restaurant/:id" element={
-          user ? <RestaurantPage /> : <Navigate to="/login" replace />
+          <RestaurantPage /> // Use the actual imported RestaurantPage component
         } />
         <Route path="/login" element={
           !user ? <Login /> : <Navigate to="/home" replace />
