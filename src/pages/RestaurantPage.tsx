@@ -7,6 +7,7 @@ import { db } from '@/lib/firebase';
 import { toast } from 'sonner';
 import { useRestaurantData } from '@/hooks/useRestaurantData';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useBookings } from '@/context/BookingContext';
 
 // PRECARICAMENTO DEI DATI DEFAULT
 const DEFAULT_RESTAURANT: RestaurantDetailProps = {
@@ -41,6 +42,9 @@ const RestaurantPage = () => {
   } catch (error) {
     console.log('Falling back to default restaurant ID');
   }
+  
+  // Trigger the BookingContext to ensure it's loaded
+  const bookingContext = useBookings();
   
   const [isLoading, setIsLoading] = useState(false);
   const [restaurant, setRestaurant] = useState<RestaurantDetailProps | null>(null);

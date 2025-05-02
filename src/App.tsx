@@ -15,9 +15,10 @@ import NotFound from "./pages/NotFound";
 import RestaurantLogin from "./pages/RestaurantLogin";
 import RestaurantPage from "./pages/RestaurantPage"; 
 import { BookingProvider } from "./context/BookingContext";
+import Register from "./pages/Register";
+import RestaurantRegister from "./pages/RestaurantRegister";
 
 // Import existing pages or create placeholder components for those that don't exist
-const RegisterPage = () => <div className="container mx-auto p-6">Register Page</div>;
 const RestaurantDashboardPage = () => <div className="container mx-auto p-6">Restaurant Dashboard Page</div>;
 
 const App: React.FC = () => {
@@ -47,7 +48,10 @@ const App: React.FC = () => {
             !user ? <Login /> : <Navigate to="/home" replace />
           } />
           <Route path="/register" element={
-            !user ? <RegisterPage /> : <Navigate to="/home" replace />
+            !user ? <Register /> : <Navigate to="/home" replace />
+          } />
+          <Route path="/restaurant-register" element={
+            !user ? <RestaurantRegister /> : <Navigate to="/restaurant-dashboard" replace />
           } />
           <Route path="/restaurant-login" element={
             !user ? <RestaurantLogin /> : <Navigate to="/restaurant-dashboard" replace />
