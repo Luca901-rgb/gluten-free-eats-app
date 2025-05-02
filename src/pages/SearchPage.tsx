@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
-import { Search, MapPin, Filter, Wheat, Coffee, SlidersHorizontal } from 'lucide-react';
+import { Search, MapPin, Filter, Wheat, SlidersHorizontal } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -10,21 +11,34 @@ import { useRestaurantList } from '@/hooks/useRestaurantList';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useNavigate } from 'react-router-dom';
 import { Sheet, SheetClose, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { toast } from 'sonner';
 
+// Categorie di cucina senza glutine specifiche
 const categories = [
-  { icon: <Wheat size={16} className="mr-2" />, name: "Pizzerie" },
-  { icon: <Coffee size={16} className="mr-2" />, name: "Caffè" },
-  { icon: <Wheat size={16} className="mr-2" />, name: "Pasta" },
-  { icon: <Wheat size={16} className="mr-2" />, name: "Brunch" },
-  { icon: <Coffee size={16} className="mr-2" />, name: "Pasticcerie" },
-  { icon: <Wheat size={16} className="mr-2" />, name: "Bistrot" }
+  { icon: <Wheat size={16} className="mr-2" />, name: "Pizzeria" },
+  { icon: <Wheat size={16} className="mr-2" />, name: "Ristorante" },
+  { icon: <Wheat size={16} className="mr-2" />, name: "Trattoria" },
+  { icon: <Wheat size={16} className="mr-2" />, name: "Pasticceria" },
+  { icon: <Wheat size={16} className="mr-2" />, name: "Panineria" }
 ];
 
 const SearchPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
-  const { restaurants, isLoading } = useRestaurantList();
+  const { 
+    restaurants, 
+    isLoading, 
+    isOffline, 
+    handleToggleFavorite,
+    getUserLocation, 
+    sortRestaurantsByDistance 
+  } = useRestaurantList();
+
+  // Richiedi la posizione dell'utente all'apertura della pagina
+  useEffect(() => {
+    getUserLocation();
+  }, [getUserLocation]);
 
   // The Layout component shouldn't try to use any React Router hooks
   const forceHideBadge = false;
@@ -41,24 +55,34 @@ const SearchPage: React.FC = () => {
     navigate(`/restaurant/${restaurantId}`);
   };
 
-  // Filtra i ristoranti in base alla ricerca e ai filtri selezionati
+  // Filtra i ristoranti in base alla ricerca, ai filtri selezionati e alla proprietà "hasGlutenFreeOptions"
   const filteredRestaurants = restaurants
+    .filter(restaurant => restaurant.hasGlutenFreeOptions === true) // Mostra SOLO ristoranti senza glutine
     .filter(restaurant => 
       restaurant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (restaurant.address && restaurant.address.toLowerCase().includes(searchQuery.toLowerCase()))
     )
     .filter(restaurant => 
       selectedFilters.length === 0 || 
-      // Check if cuisine matches any of the selected filters
-      restaurant.cuisine?.toLowerCase().includes(selectedFilters.some(filter => 
-        filter.toLowerCase()
-      ).toString())
-    );
+      selectedFilters.some(filter => 
+        restaurant.cuisine?.toLowerCase().includes(filter.toLowerCase())
+      )
+    )
+    // Ordina i ristoranti per distanza
+    .sort((a, b) => {
+      // Se un ristorante ha distanceValue e l'altro no, quello con distanceValue viene prima
+      if (a.distanceValue && !b.distanceValue) return -1;
+      if (!a.distanceValue && b.distanceValue) return 1;
+      // Se entrambi hanno distanceValue, ordina per valore
+      if (a.distanceValue && b.distanceValue) return a.distanceValue - b.distanceValue;
+      // Se nessuno ha distanceValue, mantieni l'ordine originale
+      return 0;
+    });
 
   return (
     <Layout hideNavigation={forceHideBadge}>
       <div className="container mx-auto p-4 pb-20">
-        <h1 className="text-2xl font-bold mb-6">Cerca ristoranti gluten-free</h1>
+        <h1 className="text-2xl font-bold mb-6">Cerca ristoranti senza glutine</h1>
         
         <div className="relative mb-6">
           <Input 
@@ -69,6 +93,16 @@ const SearchPage: React.FC = () => {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+          
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="absolute right-2 top-1/2 transform -translate-y-1/2"
+            onClick={() => getUserLocation()}
+            title="Trova ristoranti vicino a me"
+          >
+            <MapPin size={16} className="mr-1" /> Vicino a me
+          </Button>
         </div>
         
         <div className="flex justify-between items-center mb-6">
@@ -163,14 +197,21 @@ const SearchPage: React.FC = () => {
               <RestaurantCard 
                 key={restaurant.id}
                 restaurant={restaurant}
-                onToggleFavorite={() => {}} // Add empty handler for toggle favorite
+                onToggleFavorite={handleToggleFavorite}
+                onClick={() => handleRestaurantClick(restaurant.id)}
               />
             ))
           ) : (
             <div className="text-center py-10 text-gray-500">
               <Search size={48} className="mx-auto opacity-20 mb-4" />
-              <p className="text-lg">Nessun ristorante trovato</p>
+              <p className="text-lg">Nessun ristorante senza glutine trovato</p>
               <p className="mt-2">Prova a cambiare i filtri o la ricerca</p>
+            </div>
+          )}
+          
+          {isOffline && (
+            <div className="p-3 text-center text-sm text-amber-700 bg-amber-50 rounded-lg border border-amber-200 mt-4">
+              Sei offline. I dati mostrati potrebbero non essere aggiornati.
             </div>
           )}
         </div>

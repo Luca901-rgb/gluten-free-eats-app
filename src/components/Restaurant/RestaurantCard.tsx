@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Heart, Navigation } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import StarRating from '@/components/common/StarRating';
@@ -28,17 +27,23 @@ export interface Restaurant {
 interface RestaurantCardProps {
   restaurant: Restaurant;
   onToggleFavorite?: (id: string) => void;
+  onClick?: () => void;
 }
 
 const RestaurantCard: React.FC<RestaurantCardProps> = ({ 
   restaurant, 
-  onToggleFavorite 
+  onToggleFavorite,
+  onClick
 }) => {
-  const navigate = useNavigate();
-  const { id, name, image, rating, reviews, cuisine, distance, isFavorite, location } = restaurant;
+  const { id, name, image, rating, reviews, cuisine, distance, isFavorite, location, hasGlutenFreeOptions } = restaurant;
 
   const handleCardClick = () => {
-    navigate(`/restaurant/${id}`);
+    if (onClick) {
+      onClick();
+    } else {
+      // Fallback alla navigazione tradizionale
+      window.location.href = `/restaurant/${id}`;
+    }
   };
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
@@ -72,6 +77,10 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({
           src={image} 
           alt={name} 
           className="w-full h-full object-cover"
+          onError={(e) => {
+            // Fallback se l'immagine non si carica
+            e.currentTarget.src = '/placeholder.svg';
+          }}
         />
         <div className="absolute top-3 right-3 flex gap-2">
           {location && (
@@ -88,7 +97,7 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({
             </button>
           )}
           <button 
-            className="p-2 rounded-full bg-white/80 hover:bg-white transition-colors"
+            className={`p-2 rounded-full ${isFavorite ? 'bg-rose-50 hover:bg-rose-100' : 'bg-white/80 hover:bg-white'} transition-colors`}
             onClick={handleFavoriteClick}
             title={isFavorite ? "Rimuovi dai preferiti" : "Aggiungi ai preferiti"}
             aria-label={isFavorite ? "Rimuovi dai preferiti" : "Aggiungi ai preferiti"}
@@ -108,9 +117,13 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({
         </div>
         <div className="flex justify-between items-center">
           <span className="text-sm text-gray-700">{cuisine}</span>
-          {distance && <span className="text-sm text-gray-500">{distance}</span>}
+          {distance && (
+            <span className="text-sm text-gray-500 flex items-center">
+              <Navigation size={14} className="mr-1" /> {distance}
+            </span>
+          )}
         </div>
-        {restaurant.hasGlutenFreeOptions && (
+        {hasGlutenFreeOptions && (
           <div className="mt-2">
             <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">
               100% Gluten Free

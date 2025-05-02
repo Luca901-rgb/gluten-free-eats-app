@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { Restaurant } from '@/components/Restaurant/RestaurantCard';
 import { toast } from 'sonner';
@@ -21,7 +22,9 @@ export const useRestaurantList = () => {
     checked: false,
     inRegion: false
   });
+  const [userLocation, setUserLocation] = useState<GeolocationCoordinates | null>(null);
 
+  // Esempio di ristorante per la modalità offline o fallback
   const sampleRestaurant: Restaurant = {
     id: '1',
     name: 'Trattoria Keccabio',
@@ -37,6 +40,101 @@ export const useRestaurantList = () => {
       lat: 40.8388, 
       lng: 14.2488
     }
+  };
+
+  // Funzione per ottenere la posizione dell'utente
+  const getUserLocation = useCallback(() => {
+    if (!navigator.geolocation) {
+      toast.error("Il tuo browser non supporta la geolocalizzazione");
+      return;
+    }
+
+    toast.info("Ricerca posizione in corso...");
+    
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setUserLocation(position.coords);
+        toast.success("Posizione trovata! Ordinamento ristoranti per distanza");
+        
+        // Calcola la distanza per tutti i ristoranti
+        setRestaurants(prevRestaurants => {
+          return prevRestaurants.map(restaurant => {
+            if (restaurant.location && position.coords) {
+              const distance = calculateDistance(
+                position.coords.latitude,
+                position.coords.longitude,
+                restaurant.location.lat,
+                restaurant.location.lng
+              );
+              
+              return {
+                ...restaurant,
+                distance: formatDistance(distance),
+                distanceValue: distance
+              };
+            }
+            return restaurant;
+          });
+        });
+      },
+      (error) => {
+        console.error("Errore nella geolocalizzazione:", error);
+        
+        if (error.code === 1) { // Permission denied
+          toast.error("Accesso alla posizione negato");
+        } else if (error.code === 2) { // Position unavailable
+          toast.error("Impossibile determinare la posizione");
+        } else if (error.code === 3) { // Timeout
+          toast.error("Richiesta posizione scaduta");
+        } else {
+          toast.error("Errore nella geolocalizzazione");
+        }
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    );
+  }, []);
+  
+  // Funzione per calcolare la distanza tra due punti geografici (formula dell'emisenoverso)
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371; // Raggio della Terra in km
+    const dLat = deg2rad(lat2 - lat1);
+    const dLon = deg2rad(lon2 - lon1);
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+    const distance = R * c; // Distanza in km
+    return distance;
+  };
+  
+  const deg2rad = (deg: number): number => {
+    return deg * (Math.PI/180);
+  };
+  
+  const formatDistance = (distance: number): string => {
+    if (distance < 1) {
+      return `${Math.round(distance * 1000)} m`;
+    } else {
+      return `${distance.toFixed(1)} km`;
+    }
+  };
+  
+  // Funzione per ordinare i ristoranti per distanza
+  const sortRestaurantsByDistance = () => {
+    if (!userLocation) {
+      toast.error("Posizione utente non disponibile");
+      return;
+    }
+    
+    setRestaurants(prevRestaurants => 
+      [...prevRestaurants].sort((a, b) => {
+        if (!a.distanceValue && !b.distanceValue) return 0;
+        if (!a.distanceValue) return 1;
+        if (!b.distanceValue) return -1;
+        return a.distanceValue - b.distanceValue;
+      })
+    );
   };
 
   const verifyRegion = useCallback(async () => {
@@ -169,6 +267,35 @@ export const useRestaurantList = () => {
           restaurantsData.unshift(sampleRestaurant);
           console.log("Aggiunto ristorante di esempio ai risultati del DB");
         }
+      }
+      
+      // Se l'utente ha condiviso la posizione, calcola le distanze
+      if (userLocation) {
+        restaurantsData = restaurantsData.map(restaurant => {
+          if (restaurant.location) {
+            const distance = calculateDistance(
+              userLocation.latitude,
+              userLocation.longitude,
+              restaurant.location.lat,
+              restaurant.location.lng
+            );
+            
+            return {
+              ...restaurant,
+              distance: formatDistance(distance),
+              distanceValue: distance
+            };
+          }
+          return restaurant;
+        });
+        
+        // Ordina per distanza
+        restaurantsData.sort((a, b) => {
+          if (!a.distanceValue && !b.distanceValue) return 0;
+          if (!a.distanceValue) return 1;
+          if (!b.distanceValue) return -1;
+          return a.distanceValue - b.distanceValue;
+        });
       }
       
       try {
@@ -389,9 +516,12 @@ export const useRestaurantList = () => {
     isLoading,
     isOffline,
     regionStatus,
+    userLocation,
     handleSearch,
     handleToggleFavorite,
     refreshRestaurants: fetchRestaurants,
-    retryRegionCheck: verifyRegion
+    retryRegionCheck: verifyRegion,
+    getUserLocation,
+    sortRestaurantsByDistance
   };
 };
