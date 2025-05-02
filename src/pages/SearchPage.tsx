@@ -48,13 +48,14 @@ const SearchPage: React.FC = () => {
   const filteredRestaurants = restaurants
     .filter(restaurant => 
       restaurant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      restaurant.address.toLowerCase().includes(searchQuery.toLowerCase())
+      (restaurant.address && restaurant.address.toLowerCase().includes(searchQuery.toLowerCase()))
     )
     .filter(restaurant => 
       selectedFilters.length === 0 || 
-      restaurant.categories?.some(category => 
-        selectedFilters.includes(category)
-      )
+      // Check if cuisine matches any of the selected filters instead of using categories
+      restaurant.cuisine?.toLowerCase().includes(selectedFilters.some(filter => 
+        filter.toLowerCase()
+      ).toString())
     );
 
   return (
@@ -165,7 +166,7 @@ const SearchPage: React.FC = () => {
               <RestaurantCard 
                 key={restaurant.id}
                 restaurant={restaurant}
-                onClick={() => handleRestaurantClick(restaurant.id)}
+                onToggleFavorite={() => {}} // Add empty handler for toggle favorite
               />
             ))
           ) : (

@@ -6,12 +6,12 @@ import safeStorage from '@/lib/safeStorage';
 
 interface AuthGuardProps {
   children: React.ReactNode;
-  requiredUserType?: 'customer' | 'restaurant' | 'admin';
+  allowedUserTypes?: string[];
 }
 
 const AuthGuard: React.FC<AuthGuardProps> = ({ 
   children, 
-  requiredUserType
+  allowedUserTypes = []
 }) => {
   const location = useLocation();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
@@ -76,9 +76,9 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
     }
     
     // Determina la pagina di login in base al tipo di utente richiesto
-    const loginPath = requiredUserType === 'restaurant' 
+    const loginPath = allowedUserTypes?.includes('restaurant') 
       ? '/restaurant-login'
-      : requiredUserType === 'admin'
+      : allowedUserTypes?.includes('admin')
       ? '/admin-login'
       : '/login';
     
@@ -87,10 +87,10 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
   }
 
   // Se è richiesto un tipo specifico di utente, verifica che corrisponda
-  if (requiredUserType && userType !== requiredUserType) {
+  if (allowedUserTypes.length > 0 && userType && !allowedUserTypes.includes(userType)) {
     // Se l'utente è autenticato ma con tipo errato, mostriamo un messaggio
     if (!sessionStorage.getItem('userTypeRedirectNotified')) {
-      toast.error(`Accesso come ${requiredUserType} richiesto`);
+      toast.error(`Accesso come ${allowedUserTypes.join(' o ')} richiesto`);
       sessionStorage.setItem('userTypeRedirectNotified', 'true');
       // Reset dopo 5 secondi
       setTimeout(() => sessionStorage.removeItem('userTypeRedirectNotified'), 5000);
@@ -106,7 +106,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
       redirectPath = '/admin-dashboard';
     }
     
-    console.log(`Reindirizzamento a ${redirectPath} - Tipo utente non corretto (è ${userType}, richiesto ${requiredUserType})`);
+    console.log(`Reindirizzamento a ${redirectPath} - Tipo utente non corretto (è ${userType}, richiesto ${allowedUserTypes.join(', ')})`);
     return <Navigate to={redirectPath} state={{ from: location }} replace />;
   }
 

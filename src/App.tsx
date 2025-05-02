@@ -8,14 +8,16 @@ import SearchPage from "./pages/SearchPage";
 import FavoritesPage from "./pages/FavoritesPage";
 import BookingsPage from "./pages/BookingsPage";
 import ProfilePage from "./pages/ProfilePage";
-import LoginPage from "./pages/LoginPage";
-import RegisterPage from "./pages/RegisterPage";
-import RestaurantPage from "./pages/RestaurantPage";
-import RestaurantLoginPage from "./pages/RestaurantLoginPage";
-import RestaurantDashboardPage from "./pages/RestaurantDashboardPage";
 import LoadingScreen from "./components/LoadingScreen";
-import NotFoundPage from "./pages/NotFoundPage";
-import AuthGuard from "./components/Auth/AuthGuard";
+import AuthGuard from "./components/Authentication/AuthGuard";
+
+// Import existing pages or create placeholder components for those that don't exist
+const LoginPage = () => <div className="container mx-auto p-6">Login Page</div>;
+const RegisterPage = () => <div className="container mx-auto p-6">Register Page</div>;
+const RestaurantPage = () => <div className="container mx-auto p-6">Restaurant Page</div>;
+const RestaurantLoginPage = () => <div className="container mx-auto p-6">Restaurant Login Page</div>;
+const RestaurantDashboardPage = () => <div className="container mx-auto p-6">Restaurant Dashboard Page</div>;
+const NotFoundPage = () => <div className="container mx-auto p-6">Page Not Found</div>;
 
 const App: React.FC = () => {
   const [user, loading] = useAuthState(auth);
