@@ -4,7 +4,7 @@ import Layout from '@/components/Layout';
 import { Heart, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { db, auth } from '@/lib/firebase';
-import { collection, getDocs, doc, deleteDoc, getDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, deleteDoc, getDoc, updateDoc } from 'firebase/firestore';
 import RestaurantCard, { Restaurant } from '@/components/Restaurant/RestaurantCard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -143,15 +143,24 @@ const FavoritesPage: React.FC = () => {
       
       if (navigator.onLine) {
         // Aggiorna Firestore: rimuovi dai preferiti globali
-        const userFavoritesDoc = await getDoc(doc(db, "userFavorites", currentUser.uid));
-        if (userFavoritesDoc.exists()) {
-          const currentFavorites = userFavoritesDoc.data().restaurantIds || [];
-          const updatedFavorites = currentFavorites.filter((favId: string) => favId !== id);
-          
-          await doc(db, "userFavorites", currentUser.uid).update({
-            restaurantIds: updatedFavorites
-          });
+        const userFavoritesRef = doc(db, "userFavorites", currentUser.uid);
+        let userFavorites: string[] = [];
+        
+        try {
+          const userFavoritesDoc = await getDoc(userFavoritesRef);
+          if (userFavoritesDoc.exists()) {
+            userFavorites = userFavoritesDoc.data().restaurantIds || [];
+          }
+        } catch (error) {
+          console.error("Errore nel recupero dei preferiti:", error);
         }
+        
+        const updatedFavorites = userFavorites.filter((favId: string) => favId !== id);
+        
+        // Fix: Using updateDoc instead of .update()
+        await updateDoc(userFavoritesRef, {
+          restaurantIds: updatedFavorites
+        });
         
         // Rimuovi anche dalla sottocollezione
         await deleteDoc(doc(db, `users/${currentUser.uid}/favorites`, id));
