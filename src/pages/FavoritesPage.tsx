@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { toast } from 'sonner';
@@ -52,7 +53,10 @@ const FavoritesPage: React.FC = () => {
   // Controllo immediato dei preferiti locali
   useEffect(() => {
     const checkLocalFavorites = () => {
-      if (checkSampleRestaurantInFavorites()) {
+      const hasSampleInFavorites = checkSampleRestaurantInFavorites();
+      console.log("Controllo immediato preferiti locali, ristorante esempio nei preferiti:", hasSampleInFavorites);
+      
+      if (hasSampleInFavorites) {
         console.log("Ristorante esempio trovato nei preferiti locali, aggiunto subito");
         setFavorites(prevFavorites => {
           // Verifichiamo che non sia già presente
@@ -123,11 +127,13 @@ const FavoritesPage: React.FC = () => {
         if (restaurantsData.length > 0) {
           console.log("Aggiornamento UI con dati locali:", restaurantsData);
           setFavorites(restaurantsData);
-          // Non rimuoviamo lo stato di caricamento per mostrare che stiamo ancora caricando i dati da Firestore
-        } else if (checkSampleRestaurantInFavorites()) {
+        } else {
           // Se non abbiamo trovato nulla nei preferiti locali ma il ristorante di esempio dovrebbe esserci
-          console.log("Nessun dato in cache ma il ristorante esempio è nei preferiti, lo aggiungiamo");
-          setFavorites([{...sampleRestaurant, isFavorite: true}]);
+          const hasSampleRestaurantInFavorites = checkSampleRestaurantInFavorites();
+          if (hasSampleRestaurantInFavorites) {
+            console.log("Nessun dato in cache ma il ristorante esempio è nei preferiti, lo aggiungiamo");
+            setFavorites([{...sampleRestaurant, isFavorite: true}]);
+          }
         }
         
         // Se siamo online, carica i dati più aggiornati da Firestore
@@ -212,7 +218,8 @@ const FavoritesPage: React.FC = () => {
             console.log("Nessun preferito trovato in Firestore");
             
             // Se non ci sono preferiti in Firestore ma abbiamo il ristorante di esempio nei preferiti locali
-            if (checkSampleRestaurantInFavorites() && !restaurantsData.some(r => r.id === '1')) {
+            const hasSampleInFavorites = checkSampleRestaurantInFavorites();
+            if (hasSampleInFavorites && !restaurantsData.some(r => r.id === '1')) {
               restaurantsData.push({...sampleRestaurant, isFavorite: true});
               console.log("Ristorante esempio aggiunto da preferiti locali (fallback)");
             }
@@ -221,7 +228,8 @@ const FavoritesPage: React.FC = () => {
           console.log("Offline - Utilizzo solo dati locali");
           
           // Se non abbiamo ancora aggiunto il ristorante di esempio ma è nei preferiti locali
-          if (checkSampleRestaurantInFavorites() && !restaurantsData.some(r => r.id === '1')) {
+          const hasSampleInFavorites = checkSampleRestaurantInFavorites();
+          if (hasSampleInFavorites && !restaurantsData.some(r => r.id === '1')) {
             restaurantsData.push({...sampleRestaurant, isFavorite: true});
             console.log("Ristorante esempio aggiunto da preferiti locali (offline)");
           }
@@ -234,7 +242,8 @@ const FavoritesPage: React.FC = () => {
         toast.error("Errore nel caricamento dei preferiti");
         
         // Assicuriamoci che almeno il ristorante di esempio sia visibile se nei preferiti
-        if (checkSampleRestaurantInFavorites()) {
+        const hasSampleInFavorites = checkSampleRestaurantInFavorites();
+        if (hasSampleInFavorites) {
           setFavorites([{...sampleRestaurant, isFavorite: true}]);
           console.log("Ristorante esempio aggiunto come fallback dopo errore");
         }
