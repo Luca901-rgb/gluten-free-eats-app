@@ -1,14 +1,14 @@
 
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
-import { Heart, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { db, auth } from '@/lib/firebase';
 import { collection, getDocs, doc, deleteDoc, getDoc, updateDoc } from 'firebase/firestore';
-import RestaurantCard, { Restaurant } from '@/components/Restaurant/RestaurantCard';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Button } from '@/components/ui/button';
+import { Restaurant } from '@/components/Restaurant/RestaurantCard';
 import safeStorage from '@/lib/safeStorage';
+import LoadingSkeleton from '@/components/Favorites/LoadingSkeleton';
+import EmptyState from '@/components/Favorites/EmptyState';
+import FavoritesList from '@/components/Favorites/FavoritesList';
 
 const FavoritesPage: React.FC = () => {
   const [favorites, setFavorites] = useState<Restaurant[]>([]);
@@ -282,43 +282,14 @@ const FavoritesPage: React.FC = () => {
         <h1 className="text-2xl font-bold mb-6">I miei preferiti</h1>
         
         {isLoading ? (
-          // Skeleton loader per i preferiti
-          <div className="space-y-4">
-            {[...Array(2)].map((_, i) => (
-              <div key={i} className="flex p-4 border rounded-lg">
-                <Skeleton className="h-24 w-24 rounded-md" />
-                <div className="ml-4 flex-1">
-                  <Skeleton className="h-4 w-3/4 mb-2" />
-                  <Skeleton className="h-3 w-1/2 mb-4" />
-                  <Skeleton className="h-3 w-1/4" />
-                </div>
-              </div>
-            ))}
-          </div>
+          <LoadingSkeleton />
         ) : favorites.length > 0 ? (
-          <div className="space-y-4">
-            {favorites.map(restaurant => (
-              <RestaurantCard
-                key={restaurant.id}
-                restaurant={restaurant}
-                onToggleFavorite={handleToggleFavorite}
-              />
-            ))}
-          </div>
+          <FavoritesList 
+            favorites={favorites} 
+            onToggleFavorite={handleToggleFavorite} 
+          />
         ) : (
-          <div className="text-center py-10 text-gray-500">
-            <Heart size={48} className="mx-auto opacity-20 mb-4" />
-            <p className="text-lg">Non hai ancora aggiunto ristoranti ai preferiti</p>
-            <p className="text-sm mt-2">Esplora i ristoranti e aggiungi quelli che ti piacciono ai preferiti</p>
-            <Button 
-              className="mt-6" 
-              variant="outline"
-              onClick={() => window.location.href = '/search'}
-            >
-              <Search size={16} className="mr-2" />
-              Cerca ristoranti
-            </Button>
-          </div>
+          <EmptyState />
         )}
       </div>
     </Layout>
