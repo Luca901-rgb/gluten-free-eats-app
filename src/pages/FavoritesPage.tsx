@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { toast } from 'sonner';
@@ -57,6 +56,13 @@ const FavoritesPage: React.FC = () => {
             favoriteIds = JSON.parse(localFavorites) as string[];
             console.log("Preferiti trovati in localStorage:", favoriteIds);
             
+            // Verifica se il ristorante di esempio è nei preferiti locali
+            const hasSampleRestaurantInFavorites = favoriteIds.includes('1');
+            if (hasSampleRestaurantInFavorites) {
+              console.log("Ristorante di esempio trovato nei preferiti locali");
+              restaurantsData.push({...sampleRestaurant, isFavorite: true});
+            }
+            
             // Se abbiamo ristoranti in cache, usa quelli per un caricamento istantaneo
             const cachedRestaurants = safeStorage.getItem('cachedRestaurants');
             if (cachedRestaurants) {
@@ -64,28 +70,16 @@ const FavoritesPage: React.FC = () => {
               console.log("Cache dei ristoranti trovata con", allCachedRestaurants.length, "elementi");
               
               const cachedFavorites = allCachedRestaurants
-                .filter(r => favoriteIds.includes(r.id))
+                .filter(r => favoriteIds.includes(r.id) && r.id !== '1') // Escludiamo il ristorante di esempio già aggiunto
                 .map(r => ({ ...r, isFavorite: true }));
                 
               if (cachedFavorites.length > 0) {
                 console.log("Trovati", cachedFavorites.length, "ristoranti preferiti nella cache");
-                restaurantsData = [...cachedFavorites];
+                restaurantsData = [...restaurantsData, ...cachedFavorites];
               }
             }
           } catch (e) {
             console.error("Errore nel parsing dei preferiti locali:", e);
-          }
-        }
-        
-        // Verifica se il ristorante di esempio è tra i preferiti
-        const hasSampleRestaurantInFavorites = favoriteIds.includes('1');
-        
-        // Se il ristorante di esempio è nei preferiti, aggiungilo
-        if (hasSampleRestaurantInFavorites) {
-          console.log("Ristorante di esempio trovato nei preferiti");
-          // Verifica che non sia già presente nell'array restaurantsData
-          if (!restaurantsData.some(r => r.id === '1')) {
-            restaurantsData.push(sampleRestaurant);
           }
         }
         
@@ -177,21 +171,36 @@ const FavoritesPage: React.FC = () => {
         } else {
           console.log("Offline - Utilizzo solo dati locali");
           
-          // Se siamo offline ma abbiamo il ristorante di esempio nei preferiti locali
-          if (hasSampleRestaurantInFavorites && !restaurantsData.some(r => r.id === '1')) {
-            restaurantsData.push(sampleRestaurant);
+          // Se non abbiamo ancora aggiunto il ristorante di esempio ma è nei preferiti locali
+          const localFavorites = safeStorage.getItem(`favorites_${currentUser.uid}`);
+          if (localFavorites) {
+            const favoriteIds = JSON.parse(localFavorites) as string[];
+            const hasSampleRestaurantInFavorites = favoriteIds.includes('1');
+            
+            if (hasSampleRestaurantInFavorites && !restaurantsData.some(r => r.id === '1')) {
+              restaurantsData.push({...sampleRestaurant, isFavorite: true});
+            }
           }
         }
         
-        // Aggiorna sempre localStorage con i preferiti aggiornati
-        console.log("Salvataggio finale preferiti in localStorage:", favoriteIds);
-        safeStorage.setItem(`favorites_${currentUser.uid}`, JSON.stringify(favoriteIds));
-        
-        console.log("Salvataggio finale array restaurantsData con", restaurantsData.length, "elementi");
+        console.log("Salvataggio finale array restaurantsData con", restaurantsData.length, "elementi:", restaurantsData);
         setFavorites(restaurantsData);
       } catch (error) {
         console.error("Errore nel recupero dei preferiti:", error);
         toast.error("Errore nel caricamento dei preferiti");
+        
+        // Assicuriamoci che almeno il ristorante di esempio sia visibile se nei preferiti
+        const localFavorites = safeStorage.getItem(`favorites_${currentUser.uid}`);
+        if (localFavorites) {
+          try {
+            const favoriteIds = JSON.parse(localFavorites) as string[];
+            if (favoriteIds.includes('1')) {
+              setFavorites([{...sampleRestaurant, isFavorite: true}]);
+            }
+          } catch (e) {
+            console.error("Errore nel parsing dei preferiti locali in caso di errore:", e);
+          }
+        }
       } finally {
         setIsLoading(false);
       }
@@ -274,7 +283,7 @@ const FavoritesPage: React.FC = () => {
     }
   };
 
-  console.log("Rendering FavoritesPage con", favorites.length, "preferiti");
+  console.log("Rendering FavoritesPage con", favorites.length, "preferiti:", favorites);
 
   return (
     <Layout>
