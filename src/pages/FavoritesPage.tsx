@@ -31,25 +31,36 @@ const FavoritesPage: React.FC = () => {
     }
   };
 
+  // Questa funzione controlla se il ristorante di esempio è nei preferiti
+  const checkSampleRestaurantInFavorites = () => {
+    const currentUser = auth.currentUser;
+    if (!currentUser) return false;
+    
+    const localFavorites = safeStorage.getItem(`favorites_${currentUser.uid}`);
+    if (localFavorites) {
+      try {
+        const favoriteIds = JSON.parse(localFavorites) as string[];
+        return favoriteIds.includes('1');
+      } catch (e) {
+        console.error("Errore nel parsing dei preferiti locali:", e);
+        return false;
+      }
+    }
+    return false;
+  };
+
   // Controllo immediato dei preferiti locali
   useEffect(() => {
     const checkLocalFavorites = () => {
-      const currentUser = auth.currentUser;
-      if (!currentUser) return;
-      
-      const localFavorites = safeStorage.getItem(`favorites_${currentUser.uid}`);
-      if (localFavorites) {
-        try {
-          const favoriteIds = JSON.parse(localFavorites) as string[];
-          console.log("Preferiti locali trovati immediatamente:", favoriteIds);
-          
-          if (favoriteIds.includes('1')) {
-            console.log("Ristorante esempio trovato nei preferiti locali, aggiunto subito");
-            setFavorites([{...sampleRestaurant, isFavorite: true}]);
+      if (checkSampleRestaurantInFavorites()) {
+        console.log("Ristorante esempio trovato nei preferiti locali, aggiunto subito");
+        setFavorites(prevFavorites => {
+          // Verifichiamo che non sia già presente
+          if (!prevFavorites.some(r => r.id === '1')) {
+            return [...prevFavorites, {...sampleRestaurant, isFavorite: true}];
           }
-        } catch (e) {
-          console.error("Errore nel parsing dei preferiti locali:", e);
-        }
+          return prevFavorites;
+        });
       }
     };
     
@@ -112,7 +123,11 @@ const FavoritesPage: React.FC = () => {
         if (restaurantsData.length > 0) {
           console.log("Aggiornamento UI con dati locali:", restaurantsData);
           setFavorites(restaurantsData);
-          setIsLoading(false);  // Rimuoviamo lo stato di caricamento per mostrarli subito
+          // Non rimuoviamo lo stato di caricamento per mostrare che stiamo ancora caricando i dati da Firestore
+        } else if (checkSampleRestaurantInFavorites()) {
+          // Se non abbiamo trovato nulla nei preferiti locali ma il ristorante di esempio dovrebbe esserci
+          console.log("Nessun dato in cache ma il ristorante esempio è nei preferiti, lo aggiungiamo");
+          setFavorites([{...sampleRestaurant, isFavorite: true}]);
         }
         
         // Se siamo online, carica i dati più aggiornati da Firestore
@@ -197,20 +212,7 @@ const FavoritesPage: React.FC = () => {
             console.log("Nessun preferito trovato in Firestore");
             
             // Se non ci sono preferiti in Firestore ma abbiamo il ristorante di esempio nei preferiti locali
-            const localFavorites = safeStorage.getItem(`favorites_${currentUser.uid}`);
-            let hasSampleRestaurantInFavorites = false;
-            
-            if (localFavorites) {
-              try {
-                const favoriteIds = JSON.parse(localFavorites) as string[];
-                hasSampleRestaurantInFavorites = favoriteIds.includes('1');
-                console.log("Controllo dei preferiti locali per ristorante esempio:", hasSampleRestaurantInFavorites);
-              } catch (e) {
-                console.error("Errore nel parsing dei preferiti locali:", e);
-              }
-            }
-            
-            if (hasSampleRestaurantInFavorites && !restaurantsData.some(r => r.id === '1')) {
+            if (checkSampleRestaurantInFavorites() && !restaurantsData.some(r => r.id === '1')) {
               restaurantsData.push({...sampleRestaurant, isFavorite: true});
               console.log("Ristorante esempio aggiunto da preferiti locali (fallback)");
             }
@@ -219,15 +221,9 @@ const FavoritesPage: React.FC = () => {
           console.log("Offline - Utilizzo solo dati locali");
           
           // Se non abbiamo ancora aggiunto il ristorante di esempio ma è nei preferiti locali
-          const localFavorites = safeStorage.getItem(`favorites_${currentUser.uid}`);
-          if (localFavorites) {
-            const favoriteIds = JSON.parse(localFavorites) as string[];
-            const hasSampleRestaurantInFavorites = favoriteIds.includes('1');
-            
-            if (hasSampleRestaurantInFavorites && !restaurantsData.some(r => r.id === '1')) {
-              restaurantsData.push({...sampleRestaurant, isFavorite: true});
-              console.log("Ristorante esempio aggiunto da preferiti locali (offline)");
-            }
+          if (checkSampleRestaurantInFavorites() && !restaurantsData.some(r => r.id === '1')) {
+            restaurantsData.push({...sampleRestaurant, isFavorite: true});
+            console.log("Ristorante esempio aggiunto da preferiti locali (offline)");
           }
         }
         
@@ -238,17 +234,9 @@ const FavoritesPage: React.FC = () => {
         toast.error("Errore nel caricamento dei preferiti");
         
         // Assicuriamoci che almeno il ristorante di esempio sia visibile se nei preferiti
-        const localFavorites = safeStorage.getItem(`favorites_${currentUser.uid}`);
-        if (localFavorites) {
-          try {
-            const favoriteIds = JSON.parse(localFavorites) as string[];
-            if (favoriteIds.includes('1')) {
-              setFavorites([{...sampleRestaurant, isFavorite: true}]);
-              console.log("Ristorante esempio aggiunto come fallback dopo errore");
-            }
-          } catch (e) {
-            console.error("Errore nel parsing dei preferiti locali in caso di errore:", e);
-          }
+        if (checkSampleRestaurantInFavorites()) {
+          setFavorites([{...sampleRestaurant, isFavorite: true}]);
+          console.log("Ristorante esempio aggiunto come fallback dopo errore");
         }
       } finally {
         setIsLoading(false);
