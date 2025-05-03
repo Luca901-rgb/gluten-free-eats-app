@@ -23,7 +23,7 @@ export const useRestaurantList = () => {
   });
   const [userLocation, setUserLocation] = useState<GeolocationCoordinates | null>(null);
 
-  // Esempio di ristorante per la modalità offline o fallback
+  // Ristorante di esempio per la modalità offline o fallback
   const sampleRestaurant: Restaurant = {
     id: '1',
     name: 'Trattoria Keccabio',
@@ -433,6 +433,13 @@ export const useRestaurantList = () => {
     }
     
     try {
+      // Trova il ristorante selezionato
+      const selectedRestaurant = restaurants.find(r => r.id === id);
+      if (!selectedRestaurant) {
+        toast.error("Ristorante non trovato");
+        return;
+      }
+      
       const userFavoritesRef = doc(db, "userFavorites", currentUser.uid);
       let userFavorites: string[] = [];
       
@@ -451,10 +458,10 @@ export const useRestaurantList = () => {
       
       if (isFavorite) {
         updatedFavorites = userFavorites.filter(restaurantId => restaurantId !== id);
-        message = "Ristorante rimosso dai preferiti";
+        message = `${selectedRestaurant.name} rimosso dai preferiti`;
       } else {
         updatedFavorites = [...userFavorites, id];
-        message = "Ristorante aggiunto ai preferiti";
+        message = `${selectedRestaurant.name} aggiunto ai preferiti`;
       }
       
       // Aggiorna immediatamente l'UI per una migliore esperienza utente
@@ -483,11 +490,17 @@ export const useRestaurantList = () => {
         console.error("Errore nel salvataggio locale dei preferiti:", error);
       }
       
+      // Gestione speciale per il ristorante di esempio
+      if (id === '1' || id === sampleRestaurant.id) {
+        // Per il ristorante di esempio, non proviamo a salvare in Firebase, solo in localStorage
+        toast.success(message + " (ristorante di esempio)");
+        return;
+      }
+      
       if (navigator.onLine) {
         try {
           // Aggiorna lista globale dei preferiti
           await setDoc(userFavoritesRef, { restaurantIds: updatedFavorites }, { merge: true });
-          const selectedRestaurant = restaurants.find(r => r.id === id);
           
           if (selectedRestaurant && !isFavorite) {
             // Aggiungi alla sottocollezione dei preferiti

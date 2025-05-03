@@ -13,12 +13,12 @@ import { useNavigate } from 'react-router-dom';
 import { Sheet, SheetClose, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { toast } from 'sonner';
 
-// Categorie di cucina senza glutine specifiche
+// Categorie di cucina senza glutine specifiche - MODIFICATE per escludere pasticcerie e bar
 const categories = [
   { icon: <Wheat size={16} className="mr-2" />, name: "Pizzeria" },
   { icon: <Wheat size={16} className="mr-2" />, name: "Ristorante" },
   { icon: <Wheat size={16} className="mr-2" />, name: "Trattoria" },
-  { icon: <Wheat size={16} className="mr-2" />, name: "Pasticceria" },
+  { icon: <Wheat size={16} className="mr-2" />, name: "Pub" },
   { icon: <Wheat size={16} className="mr-2" />, name: "Panineria" }
 ];
 
@@ -55,9 +55,17 @@ const SearchPage: React.FC = () => {
     navigate(`/restaurant/${restaurantId}`);
   };
 
-  // Filtra i ristoranti in base alla ricerca, ai filtri selezionati e alla proprietà "hasGlutenFreeOptions"
+  // Categorie consentite: Pizzeria, Ristorante, Trattoria, Pub, Panineria
+  const allowedCategories = ["pizzeria", "ristorante", "trattoria", "pub", "panineria"];
+
+  // Filtra i ristoranti in base alla ricerca, ai filtri selezionati, alle categorie consentite e alla proprietà "hasGlutenFreeOptions"
   const filteredRestaurants = restaurants
     .filter(restaurant => restaurant.hasGlutenFreeOptions === true) // Mostra SOLO ristoranti senza glutine
+    .filter(restaurant => {
+      // Filtra per tipo di locale - escludi bar, pasticcerie e altre attività non consentite
+      const lowerCuisine = restaurant.cuisine?.toLowerCase() || '';
+      return allowedCategories.some(category => lowerCuisine.includes(category));
+    })
     .filter(restaurant => 
       restaurant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (restaurant.address && restaurant.address.toLowerCase().includes(searchQuery.toLowerCase()))

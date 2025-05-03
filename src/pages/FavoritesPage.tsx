@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { Heart, Search } from 'lucide-react';
@@ -11,6 +12,24 @@ import { Button } from '@/components/ui/button';
 const FavoritesPage: React.FC = () => {
   const [favorites, setFavorites] = useState<Restaurant[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Ristorante d'esempio per gestire il caso in cui viene aggiunto ai preferiti
+  const sampleRestaurant: Restaurant = {
+    id: '1',
+    name: 'Trattoria Keccabio',
+    image: '/placeholder.svg', 
+    rating: 4.7,
+    reviews: 128,
+    cuisine: 'Campana Gluten Free',
+    description: 'Ristorante 100% gluten free specializzato in cucina campana tradizionale.',
+    address: 'Via Toledo 42, Napoli, 80132',
+    hasGlutenFreeOptions: true,
+    isFavorite: true,
+    location: {
+      lat: 40.8388, 
+      lng: 14.2488
+    }
+  };
 
   useEffect(() => {
     const fetchFavorites = async () => {
@@ -26,9 +45,11 @@ const FavoritesPage: React.FC = () => {
       try {
         // Carica prima dall'archivio locale per una risposta veloce
         const localFavorites = localStorage.getItem(`favorites_${currentUser.uid}`);
+        let favoriteIds: string[] = [];
+        
         if (localFavorites) {
           try {
-            const favoriteIds = JSON.parse(localFavorites) as string[];
+            favoriteIds = JSON.parse(localFavorites) as string[];
             
             // Se abbiamo ristoranti in cache, usa quelli per un caricamento istantaneo
             const cachedRestaurants = localStorage.getItem('cachedRestaurants');
@@ -47,14 +68,17 @@ const FavoritesPage: React.FC = () => {
           }
         }
         
+        // Verifica se il ristorante di esempio è tra i preferiti
+        const hasSampleRestaurantInFavorites = favoriteIds.includes('1');
+        
         // Se siamo online, carica i dati più aggiornati da Firestore
         if (navigator.onLine) {
           const userFavoritesDoc = await getDoc(doc(db, "userFavorites", currentUser.uid));
           
           if (userFavoritesDoc.exists() && userFavoritesDoc.data().restaurantIds) {
-            const favoriteIds = userFavoritesDoc.data().restaurantIds || [];
+            favoriteIds = userFavoritesDoc.data().restaurantIds || [];
             
-            if (favoriteIds.length === 0) {
+            if (favoriteIds.length === 0 && !hasSampleRestaurantInFavorites) {
               setFavorites([]);
               setIsLoading(false);
               return;
@@ -64,40 +88,18 @@ const FavoritesPage: React.FC = () => {
             const userFavoritesCollection = collection(db, `users/${currentUser.uid}/favorites`);
             const favoritesSnapshot = await getDocs(userFavoritesCollection);
             
-            if (favoritesSnapshot.empty) {
-              // Se non abbiamo dati nella sottocollezione, carica direttamente dai ristoranti
-              const restaurantsPromises = favoriteIds.map(async (id) => {
-                try {
-                  const restaurantDoc = await getDoc(doc(db, "restaurants", id));
-                  if (restaurantDoc.exists()) {
-                    const data = restaurantDoc.data();
-                    return {
-                      id: restaurantDoc.id,
-                      name: data.name || 'Ristorante senza nome',
-                      image: data.coverImage || '/placeholder.svg',
-                      rating: data.rating || 0,
-                      reviews: data.reviews || 0,
-                      cuisine: data.cuisine || 'Italiana',
-                      description: data.description || 'Nessuna descrizione disponibile',
-                      address: data.address || 'Indirizzo non disponibile',
-                      hasGlutenFreeOptions: data.hasGlutenFreeOptions || false,
-                      isFavorite: true
-                    } as Restaurant;
-                  }
-                  return null;
-                } catch (e) {
-                  console.error(`Errore nel caricamento del ristorante ${id}:`, e);
-                  return null;
-                }
-              });
-              
-              const restaurantsData = (await Promise.all(restaurantsPromises)).filter(Boolean) as Restaurant[];
-              setFavorites(restaurantsData);
-            } else {
+            const restaurantsData: Restaurant[] = [];
+            
+            // Aggiungi il ristorante di esempio se presente nei preferiti
+            if (favoriteIds.includes('1') || hasSampleRestaurantInFavorites) {
+              restaurantsData.push(sampleRestaurant);
+            }
+            
+            if (!favoritesSnapshot.empty) {
               // Usa i dati dalla sottocollezione favorites dell'utente
-              const restaurantsData = favoritesSnapshot.docs.map(doc => {
+              favoritesSnapshot.docs.forEach(doc => {
                 const data = doc.data();
-                return {
+                restaurantsData.push({
                   id: doc.id,
                   name: data.name || 'Ristorante senza nome',
                   image: data.image || '/placeholder.svg',
@@ -108,13 +110,58 @@ const FavoritesPage: React.FC = () => {
                   address: data.address || 'Indirizzo non disponibile',
                   hasGlutenFreeOptions: true,
                   isFavorite: true
-                } as Restaurant;
+                });
               });
+            } else if (favoriteIds.length > 0 && favoriteIds.some(id => id !== '1')) {
+              // Se non abbiamo dati nella sottocollezione, carica direttamente dai ristoranti
+              const restaurantsPromises = favoriteIds
+                .filter(id => id !== '1') // Filtra l'ID del ristorante di esempio che già abbiamo gestito
+                .map(async (id) => {
+                  try {
+                    const restaurantDoc = await getDoc(doc(db, "restaurants", id));
+                    if (restaurantDoc.exists()) {
+                      const data = restaurantDoc.data();
+                      return {
+                        id: restaurantDoc.id,
+                        name: data.name || 'Ristorante senza nome',
+                        image: data.coverImage || '/placeholder.svg',
+                        rating: data.rating || 0,
+                        reviews: data.reviews || 0,
+                        cuisine: data.cuisine || 'Italiana',
+                        description: data.description || 'Nessuna descrizione disponibile',
+                        address: data.address || 'Indirizzo non disponibile',
+                        hasGlutenFreeOptions: data.hasGlutenFreeOptions || false,
+                        isFavorite: true
+                      } as Restaurant;
+                    }
+                    return null;
+                  } catch (e) {
+                    console.error(`Errore nel caricamento del ristorante ${id}:`, e);
+                    return null;
+                  }
+                });
               
-              setFavorites(restaurantsData);
+              const fetchedRestaurants = (await Promise.all(restaurantsPromises)).filter(Boolean) as Restaurant[];
+              restaurantsData.push(...fetchedRestaurants);
             }
+            
+            setFavorites(restaurantsData);
           } else {
-            setFavorites([]);
+            // Non ci sono preferiti in Firestore, ma potremmo avere il ristorante di esempio
+            if (hasSampleRestaurantInFavorites) {
+              setFavorites([sampleRestaurant]);
+            } else {
+              setFavorites([]);
+            }
+          }
+        } else {
+          // In modalità offline, se abbiamo il ristorante di esempio nei preferiti, mostralo
+          if (hasSampleRestaurantInFavorites) {
+            const currentFavorites = [...favorites];
+            if (!currentFavorites.some(r => r.id === '1')) {
+              currentFavorites.push(sampleRestaurant);
+            }
+            setFavorites(currentFavorites);
           }
         }
       } catch (error) {
@@ -139,7 +186,36 @@ const FavoritesPage: React.FC = () => {
     try {
       // Rimuovi immediatamente dalla UI
       setFavorites(prevFavorites => prevFavorites.filter(item => item.id !== id));
-      toast.success("Ristorante rimosso dai preferiti");
+      
+      // Ottieni il nome del ristorante prima di rimuoverlo dall'UI
+      const restaurantName = favorites.find(r => r.id === id)?.name || 'Ristorante';
+      toast.success(`${restaurantName} rimosso dai preferiti`);
+      
+      // Gestione speciale per il ristorante di esempio
+      if (id === '1') {
+        // Per il ristorante di esempio, aggiorniamo solo localStorage
+        const localFavorites = localStorage.getItem(`favorites_${currentUser.uid}`);
+        if (localFavorites) {
+          try {
+            const favoriteIds = JSON.parse(localFavorites) as string[];
+            const updatedFavorites = favoriteIds.filter(favId => favId !== id);
+            localStorage.setItem(`favorites_${currentUser.uid}`, JSON.stringify(updatedFavorites));
+            
+            // Aggiorna anche la cache dei ristoranti
+            const cachedRestaurants = localStorage.getItem('cachedRestaurants');
+            if (cachedRestaurants) {
+              const parsedCachedRestaurants = JSON.parse(cachedRestaurants);
+              const updatedCache = parsedCachedRestaurants.map((r: Restaurant) => 
+                r.id === id ? { ...r, isFavorite: false } : r
+              );
+              localStorage.setItem('cachedRestaurants', JSON.stringify(updatedCache));
+            }
+          } catch (e) {
+            console.error("Errore nell'aggiornamento dei preferiti locali:", e);
+          }
+        }
+        return;
+      }
       
       if (navigator.onLine) {
         // Aggiorna Firestore: rimuovi dai preferiti globali

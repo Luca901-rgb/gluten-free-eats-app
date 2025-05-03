@@ -50,6 +50,10 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({
     e.stopPropagation();
     if (onToggleFavorite) {
       onToggleFavorite(id);
+      // Feedback visivo immediato
+      toast.success(isFavorite 
+        ? `${name} rimosso dai preferiti` 
+        : `${name} aggiunto ai preferiti`);
     } else {
       toast.error("Impossibile aggiornare i preferiti in questo momento");
     }
