@@ -8,6 +8,7 @@ import { collection, getDocs, doc, deleteDoc, getDoc, updateDoc } from 'firebase
 import RestaurantCard, { Restaurant } from '@/components/Restaurant/RestaurantCard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
+import safeStorage from '@/lib/safeStorage';
 
 const FavoritesPage: React.FC = () => {
   const [favorites, setFavorites] = useState<Restaurant[]>([]);
@@ -39,6 +40,7 @@ const FavoritesPage: React.FC = () => {
       
       if (!currentUser) {
         setIsLoading(false);
+        toast.error("Devi effettuare l'accesso per vedere i preferiti");
         return;
       }
       
@@ -46,7 +48,7 @@ const FavoritesPage: React.FC = () => {
         console.log("Tentativo di recupero preferiti per l'utente", currentUser.uid);
         
         // Carica prima dall'archivio locale per una risposta veloce
-        const localFavorites = localStorage.getItem(`favorites_${currentUser.uid}`);
+        const localFavorites = safeStorage.getItem(`favorites_${currentUser.uid}`);
         let favoriteIds: string[] = [];
         let restaurantsData: Restaurant[] = [];
         
@@ -56,7 +58,7 @@ const FavoritesPage: React.FC = () => {
             console.log("Preferiti trovati in localStorage:", favoriteIds);
             
             // Se abbiamo ristoranti in cache, usa quelli per un caricamento istantaneo
-            const cachedRestaurants = localStorage.getItem('cachedRestaurants');
+            const cachedRestaurants = safeStorage.getItem('cachedRestaurants');
             if (cachedRestaurants) {
               const allCachedRestaurants = JSON.parse(cachedRestaurants) as Restaurant[];
               console.log("Cache dei ristoranti trovata con", allCachedRestaurants.length, "elementi");
@@ -166,14 +168,24 @@ const FavoritesPage: React.FC = () => {
             }
           } else {
             console.log("Nessun preferito trovato in Firestore");
+            
+            // Se non ci sono preferiti in Firestore ma abbiamo il ristorante di esempio nei preferiti locali
+            if (hasSampleRestaurantInFavorites && !restaurantsData.some(r => r.id === '1')) {
+              restaurantsData.push(sampleRestaurant);
+            }
           }
         } else {
           console.log("Offline - Utilizzo solo dati locali");
+          
+          // Se siamo offline ma abbiamo il ristorante di esempio nei preferiti locali
+          if (hasSampleRestaurantInFavorites && !restaurantsData.some(r => r.id === '1')) {
+            restaurantsData.push(sampleRestaurant);
+          }
         }
         
         // Aggiorna sempre localStorage con i preferiti aggiornati
         console.log("Salvataggio finale preferiti in localStorage:", favoriteIds);
-        localStorage.setItem(`favorites_${currentUser.uid}`, JSON.stringify(favoriteIds));
+        safeStorage.setItem(`favorites_${currentUser.uid}`, JSON.stringify(favoriteIds));
         
         console.log("Salvataggio finale array restaurantsData con", restaurantsData.length, "elementi");
         setFavorites(restaurantsData);
@@ -205,22 +217,22 @@ const FavoritesPage: React.FC = () => {
       toast.success(`${restaurantName} rimosso dai preferiti`);
       
       // Aggiorna localStorage per la persistenza offline
-      const localFavorites = localStorage.getItem(`favorites_${currentUser.uid}`);
+      const localFavorites = safeStorage.getItem(`favorites_${currentUser.uid}`);
       let favoriteIds: string[] = [];
       if (localFavorites) {
         try {
           favoriteIds = JSON.parse(localFavorites) as string[];
           const updatedFavorites = favoriteIds.filter(favId => favId !== id);
-          localStorage.setItem(`favorites_${currentUser.uid}`, JSON.stringify(updatedFavorites));
+          safeStorage.setItem(`favorites_${currentUser.uid}`, JSON.stringify(updatedFavorites));
           
           // Aggiorna anche la cache dei ristoranti
-          const cachedRestaurants = localStorage.getItem('cachedRestaurants');
+          const cachedRestaurants = safeStorage.getItem('cachedRestaurants');
           if (cachedRestaurants) {
             const parsedCachedRestaurants = JSON.parse(cachedRestaurants);
             const updatedCache = parsedCachedRestaurants.map((r: Restaurant) => 
               r.id === id ? { ...r, isFavorite: false } : r
             );
-            localStorage.setItem('cachedRestaurants', JSON.stringify(updatedCache));
+            safeStorage.setItem('cachedRestaurants', JSON.stringify(updatedCache));
           }
         } catch (e) {
           console.error("Errore nell'aggiornamento dei preferiti locali:", e);
@@ -261,6 +273,8 @@ const FavoritesPage: React.FC = () => {
       toast.error("Errore nella rimozione dai preferiti");
     }
   };
+
+  console.log("Rendering FavoritesPage con", favorites.length, "preferiti");
 
   return (
     <Layout>
