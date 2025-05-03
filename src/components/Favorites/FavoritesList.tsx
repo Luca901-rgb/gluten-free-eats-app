@@ -15,7 +15,7 @@ const FavoritesList: React.FC<FavoritesListProps> = ({ favorites, onToggleFavori
   // Verifica se abbiamo dei preferiti da mostrare
   if (!favorites || favorites.length === 0) {
     console.log("Nessun ristorante preferito trovato");
-    return null;
+    return <div className="text-center text-gray-500">Nessun ristorante nei preferiti</div>;
   }
 
   return (
