@@ -22,6 +22,9 @@ const categories = [
   { icon: <Wheat size={16} className="mr-2" />, name: "Panineria" }
 ];
 
+// Categorie consentite in formato lowercase per il filtraggio
+const allowedCategories = ["pizzeria", "ristorante", "trattoria", "pub", "panineria"];
+
 const SearchPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
@@ -40,9 +43,6 @@ const SearchPage: React.FC = () => {
     getUserLocation();
   }, [getUserLocation]);
 
-  // The Layout component shouldn't try to use any React Router hooks
-  const forceHideBadge = false;
-
   const handleFilterToggle = (filter: string) => {
     setSelectedFilters(prev => 
       prev.includes(filter)
@@ -55,18 +55,22 @@ const SearchPage: React.FC = () => {
     navigate(`/restaurant/${restaurantId}`);
   };
 
-  // Categorie consentite: Pizzeria, Ristorante, Trattoria, Pub, Panineria
-  const allowedCategories = ["pizzeria", "ristorante", "trattoria", "pub", "panineria"];
-
   // Filtra i ristoranti in base alla ricerca, ai filtri selezionati, alle categorie consentite e alla proprietà "hasGlutenFreeOptions"
   const filteredRestaurants = restaurants
-    .filter(restaurant => restaurant.hasGlutenFreeOptions === true) // Mostra SOLO ristoranti senza glutine
     .filter(restaurant => {
+      // Mostra SOLO ristoranti senza glutine
+      if (!restaurant.hasGlutenFreeOptions) {
+        return false;
+      }
+      
       // Filtra per tipo di locale - escludi bar, pasticcerie e altre attività non consentite
       const lowerCuisine = restaurant.cuisine?.toLowerCase() || '';
+      
+      // Un ristorante passa il filtro se contiene almeno una delle categorie consentite
       return allowedCategories.some(category => lowerCuisine.includes(category));
     })
     .filter(restaurant => 
+      !searchQuery || 
       restaurant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (restaurant.address && restaurant.address.toLowerCase().includes(searchQuery.toLowerCase()))
     )
@@ -88,7 +92,7 @@ const SearchPage: React.FC = () => {
     });
 
   return (
-    <Layout hideNavigation={forceHideBadge}>
+    <Layout>
       <div className="container mx-auto p-4 pb-20">
         <h1 className="text-2xl font-bold mb-6">Cerca ristoranti senza glutine</h1>
         

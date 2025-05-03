@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { Restaurant } from '@/components/Restaurant/RestaurantCard';
 import { toast } from 'sonner';
@@ -231,9 +232,30 @@ export const useRestaurantList = () => {
       
       if (currentUser) {
         try {
-          const userFavoritesDoc = await getDoc(doc(db, "userFavorites", currentUser.uid));
-          if (userFavoritesDoc.exists()) {
-            userFavorites = userFavoritesDoc.data().restaurantIds || [];
+          // Verifica locale prima
+          const localFavorites = localStorage.getItem(`favorites_${currentUser.uid}`);
+          if (localFavorites) {
+            try {
+              userFavorites = JSON.parse(localFavorites);
+              console.log("Preferiti trovati in localStorage:", userFavorites);
+            } catch (e) {
+              console.error("Errore nel parsing dei preferiti locali:", e);
+            }
+          }
+          
+          // Poi verifica su Firestore
+          if (navigator.onLine) {
+            const userFavoritesDoc = await getDoc(doc(db, "userFavorites", currentUser.uid));
+            if (userFavoritesDoc.exists()) {
+              const firestoreFavorites = userFavoritesDoc.data().restaurantIds || [];
+              console.log("Preferiti trovati in Firestore:", firestoreFavorites);
+              
+              // Unisci i preferiti da localStorage e Firestore
+              userFavorites = [...new Set([...userFavorites, ...firestoreFavorites])];
+              
+              // Sincronizza con localStorage
+              localStorage.setItem(`favorites_${currentUser.uid}`, JSON.stringify(userFavorites));
+            }
           }
         } catch (error) {
           console.error("Error fetching user favorites:", error);
@@ -257,13 +279,24 @@ export const useRestaurantList = () => {
         } as Restaurant;
       });
       
+      // Verifica se il ristorante di esempio è nei preferiti
+      const isSampleFavorite = userFavorites.includes('1');
+      
       if (restaurantsData.length === 0) {
-        restaurantsData = [sampleRestaurant];
+        const favoriteRestaurant = { 
+          ...sampleRestaurant,
+          isFavorite: isSampleFavorite
+        };
+        restaurantsData = [favoriteRestaurant];
         console.log("DB vuoto, aggiunto ristorante di esempio");
       } else {
         const hasSampleRestaurant = restaurantsData.some(r => r.id === sampleRestaurant.id || r.name === sampleRestaurant.name);
         if (!hasSampleRestaurant) {
-          restaurantsData.unshift(sampleRestaurant);
+          const favoriteRestaurant = { 
+            ...sampleRestaurant,
+            isFavorite: isSampleFavorite
+          };
+          restaurantsData.unshift(favoriteRestaurant);
           console.log("Aggiunto ristorante di esempio ai risultati del DB");
         }
       }
@@ -440,16 +473,31 @@ export const useRestaurantList = () => {
         return;
       }
       
-      const userFavoritesRef = doc(db, "userFavorites", currentUser.uid);
+      // Recupera i preferiti correnti dall'utente
       let userFavorites: string[] = [];
       
-      try {
-        const userFavoritesDoc = await getDoc(userFavoritesRef);
-        if (userFavoritesDoc.exists()) {
-          userFavorites = userFavoritesDoc.data().restaurantIds || [];
+      // Prima verifica localStorage
+      const localFavorites = localStorage.getItem(`favorites_${currentUser.uid}`);
+      if (localFavorites) {
+        try {
+          userFavorites = JSON.parse(localFavorites) as string[];
+        } catch (e) {
+          console.error("Errore nel parsing dei preferiti locali:", e);
         }
-      } catch (error) {
-        console.error("Errore nel recupero dei preferiti:", error);
+      }
+      
+      // Poi verifica Firestore se online
+      if (navigator.onLine) {
+        try {
+          const userFavoritesDoc = await getDoc(doc(db, "userFavorites", currentUser.uid));
+          if (userFavoritesDoc.exists()) {
+            const firestoreFavorites = userFavoritesDoc.data().restaurantIds || [];
+            // Unisci i preferiti da localStorage e Firestore
+            userFavorites = [...new Set([...userFavorites, ...firestoreFavorites])];
+          }
+        } catch (error) {
+          console.error("Errore nel recupero dei preferiti da Firestore:", error);
+        }
       }
       
       const isFavorite = userFavorites.includes(id);
@@ -490,17 +538,49 @@ export const useRestaurantList = () => {
         console.error("Errore nel salvataggio locale dei preferiti:", error);
       }
       
-      // Gestione speciale per il ristorante di esempio
+      // Aggiunta funzionalità per ristorante di esempio
       if (id === '1' || id === sampleRestaurant.id) {
-        // Per il ristorante di esempio, non proviamo a salvare in Firebase, solo in localStorage
-        toast.success(message + " (ristorante di esempio)");
+        // Per il ristorante di esempio, aggiorniamo anche Firestore se online
+        if (navigator.onLine && currentUser) {
+          try {
+            // Aggiorna la lista globale dei preferiti
+            await setDoc(doc(db, "userFavorites", currentUser.uid), {
+              restaurantIds: updatedFavorites
+            }, { merge: true });
+            
+            if (!isFavorite) {
+              // Aggiungi alla sottocollezione dei preferiti
+              await setDoc(doc(db, `users/${currentUser.uid}/favorites`, id), {
+                name: selectedRestaurant.name,
+                address: selectedRestaurant.address,
+                image: selectedRestaurant.image,
+                rating: selectedRestaurant.rating,
+                reviews: selectedRestaurant.reviews,
+                cuisine: selectedRestaurant.cuisine,
+                description: selectedRestaurant.description,
+                hasGlutenFreeOptions: selectedRestaurant.hasGlutenFreeOptions || true,
+                restaurantId: id,
+                location: selectedRestaurant.location
+              });
+            } else {
+              // Rimuovi dalla sottocollezione
+              await deleteDoc(doc(db, `users/${currentUser.uid}/favorites`, id));
+            }
+          } catch (error) {
+            console.error("Errore nell'aggiornamento del ristorante di esempio su Firestore:", error);
+          }
+        }
+        
+        toast.success(message);
         return;
       }
       
       if (navigator.onLine) {
         try {
           // Aggiorna lista globale dei preferiti
-          await setDoc(userFavoritesRef, { restaurantIds: updatedFavorites }, { merge: true });
+          await setDoc(doc(db, "userFavorites", currentUser.uid), {
+            restaurantIds: updatedFavorites
+          }, { merge: true });
           
           if (selectedRestaurant && !isFavorite) {
             // Aggiungi alla sottocollezione dei preferiti
