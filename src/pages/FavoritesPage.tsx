@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { toast } from 'sonner';
@@ -164,6 +165,18 @@ const FavoritesPage: React.FC = () => {
             console.log("Nessun preferito trovato in Firestore");
             
             // Se non ci sono preferiti in Firestore ma abbiamo il ristorante di esempio nei preferiti locali
+            const localFavorites = safeStorage.getItem(`favorites_${currentUser.uid}`);
+            let hasSampleRestaurantInFavorites = false;
+            
+            if (localFavorites) {
+              try {
+                const favoriteIds = JSON.parse(localFavorites) as string[];
+                hasSampleRestaurantInFavorites = favoriteIds.includes('1');
+              } catch (e) {
+                console.error("Errore nel parsing dei preferiti locali:", e);
+              }
+            }
+            
             if (hasSampleRestaurantInFavorites && !restaurantsData.some(r => r.id === '1')) {
               restaurantsData.push(sampleRestaurant);
             }
