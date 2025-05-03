@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { toast } from 'sonner';
@@ -31,6 +30,31 @@ const FavoritesPage: React.FC = () => {
       lng: 14.2488
     }
   };
+
+  // Controllo immediato dei preferiti locali
+  useEffect(() => {
+    const checkLocalFavorites = () => {
+      const currentUser = auth.currentUser;
+      if (!currentUser) return;
+      
+      const localFavorites = safeStorage.getItem(`favorites_${currentUser.uid}`);
+      if (localFavorites) {
+        try {
+          const favoriteIds = JSON.parse(localFavorites) as string[];
+          console.log("Preferiti locali trovati immediatamente:", favoriteIds);
+          
+          if (favoriteIds.includes('1')) {
+            console.log("Ristorante esempio trovato nei preferiti locali, aggiunto subito");
+            setFavorites([{...sampleRestaurant, isFavorite: true}]);
+          }
+        } catch (e) {
+          console.error("Errore nel parsing dei preferiti locali:", e);
+        }
+      }
+    };
+    
+    checkLocalFavorites();
+  }, []);
 
   useEffect(() => {
     const fetchFavorites = async () => {
@@ -84,6 +108,13 @@ const FavoritesPage: React.FC = () => {
           }
         }
         
+        // Aggiorna l'UI con i dati locali prima di proseguire con Firestore
+        if (restaurantsData.length > 0) {
+          console.log("Aggiornamento UI con dati locali:", restaurantsData);
+          setFavorites(restaurantsData);
+          setIsLoading(false);  // Rimuoviamo lo stato di caricamento per mostrarli subito
+        }
+        
         // Se siamo online, carica i dati più aggiornati da Firestore
         if (navigator.onLine) {
           console.log("Online - Tentativo di caricare preferiti da Firestore");
@@ -95,7 +126,8 @@ const FavoritesPage: React.FC = () => {
             
             // Se il ristorante di esempio è nei preferiti di Firestore ma non è ancora nell'array
             if (favoriteIds.includes('1') && !restaurantsData.some(r => r.id === '1')) {
-              restaurantsData.push(sampleRestaurant);
+              restaurantsData.push({...sampleRestaurant, isFavorite: true});
+              console.log("Ristorante di esempio aggiunto dai dati Firestore");
             }
             
             // Carica i dettagli completi di ogni ristorante preferito
@@ -172,13 +204,15 @@ const FavoritesPage: React.FC = () => {
               try {
                 const favoriteIds = JSON.parse(localFavorites) as string[];
                 hasSampleRestaurantInFavorites = favoriteIds.includes('1');
+                console.log("Controllo dei preferiti locali per ristorante esempio:", hasSampleRestaurantInFavorites);
               } catch (e) {
                 console.error("Errore nel parsing dei preferiti locali:", e);
               }
             }
             
             if (hasSampleRestaurantInFavorites && !restaurantsData.some(r => r.id === '1')) {
-              restaurantsData.push(sampleRestaurant);
+              restaurantsData.push({...sampleRestaurant, isFavorite: true});
+              console.log("Ristorante esempio aggiunto da preferiti locali (fallback)");
             }
           }
         } else {
@@ -192,6 +226,7 @@ const FavoritesPage: React.FC = () => {
             
             if (hasSampleRestaurantInFavorites && !restaurantsData.some(r => r.id === '1')) {
               restaurantsData.push({...sampleRestaurant, isFavorite: true});
+              console.log("Ristorante esempio aggiunto da preferiti locali (offline)");
             }
           }
         }
@@ -209,6 +244,7 @@ const FavoritesPage: React.FC = () => {
             const favoriteIds = JSON.parse(localFavorites) as string[];
             if (favoriteIds.includes('1')) {
               setFavorites([{...sampleRestaurant, isFavorite: true}]);
+              console.log("Ristorante esempio aggiunto come fallback dopo errore");
             }
           } catch (e) {
             console.error("Errore nel parsing dei preferiti locali in caso di errore:", e);
@@ -221,7 +257,7 @@ const FavoritesPage: React.FC = () => {
     
     fetchFavorites();
   }, []);
-
+  
   const handleToggleFavorite = async (id: string) => {
     const currentUser = auth.currentUser;
     
