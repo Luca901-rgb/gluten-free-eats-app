@@ -1,8 +1,6 @@
-
 import React, { useEffect } from 'react';
 import { Restaurant } from '@/components/Restaurant/RestaurantCard';
 import RestaurantCard from '@/components/Restaurant/RestaurantCard';
-import { toast } from 'sonner';
 
 interface FavoritesListProps {
   favorites: Restaurant[];
