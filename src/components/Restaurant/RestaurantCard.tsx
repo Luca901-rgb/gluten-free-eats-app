@@ -15,13 +15,13 @@ export interface Restaurant {
   description?: string;
   address?: string;
   distance?: string;
+  isFavorite?: boolean;
+  hasGlutenFreeOptions?: boolean;
+  distanceValue?: number;
   location?: {
     lat: number;
     lng: number;
   };
-  isFavorite?: boolean;
-  hasGlutenFreeOptions?: boolean;
-  distanceValue?: number;
 }
 
 interface RestaurantCardProps {

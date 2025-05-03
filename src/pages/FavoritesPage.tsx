@@ -78,12 +78,6 @@ const FavoritesPage: React.FC = () => {
           if (userFavoritesDoc.exists() && userFavoritesDoc.data().restaurantIds) {
             favoriteIds = userFavoritesDoc.data().restaurantIds || [];
             
-            if (favoriteIds.length === 0 && !hasSampleRestaurantInFavorites) {
-              setFavorites([]);
-              setIsLoading(false);
-              return;
-            }
-            
             // Carica i dettagli completi di ogni ristorante preferito
             const userFavoritesCollection = collection(db, `users/${currentUser.uid}/favorites`);
             const favoritesSnapshot = await getDocs(userFavoritesCollection);
@@ -98,6 +92,8 @@ const FavoritesPage: React.FC = () => {
             if (!favoritesSnapshot.empty) {
               // Usa i dati dalla sottocollezione favorites dell'utente
               favoritesSnapshot.docs.forEach(doc => {
+                if (doc.id === '1') return; // Salta il ristorante di esempio che abbiamo già aggiunto
+                
                 const data = doc.data();
                 restaurantsData.push({
                   id: doc.id,
@@ -109,7 +105,8 @@ const FavoritesPage: React.FC = () => {
                   description: data.description || 'Nessuna descrizione disponibile',
                   address: data.address || 'Indirizzo non disponibile',
                   hasGlutenFreeOptions: true,
-                  isFavorite: true
+                  isFavorite: true,
+                  location: data.location || null
                 });
               });
             } else if (favoriteIds.length > 0 && favoriteIds.some(id => id !== '1')) {
@@ -131,7 +128,8 @@ const FavoritesPage: React.FC = () => {
                         description: data.description || 'Nessuna descrizione disponibile',
                         address: data.address || 'Indirizzo non disponibile',
                         hasGlutenFreeOptions: data.hasGlutenFreeOptions || false,
-                        isFavorite: true
+                        isFavorite: true,
+                        location: data.location || null
                       } as Restaurant;
                     }
                     return null;
@@ -157,11 +155,12 @@ const FavoritesPage: React.FC = () => {
         } else {
           // In modalità offline, se abbiamo il ristorante di esempio nei preferiti, mostralo
           if (hasSampleRestaurantInFavorites) {
-            const currentFavorites = [...favorites];
-            if (!currentFavorites.some(r => r.id === '1')) {
-              currentFavorites.push(sampleRestaurant);
-            }
-            setFavorites(currentFavorites);
+            setFavorites(prev => {
+              if (prev.some(r => r.id === '1')) {
+                return prev;
+              }
+              return [sampleRestaurant, ...prev];
+            });
           }
         }
       } catch (error) {

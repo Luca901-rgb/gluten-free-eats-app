@@ -8,11 +8,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, ArrowLeft, Save, User, Phone, MapPin, Calendar, Mail, Info, Wheat } from 'lucide-react';
+import { Loader2, ArrowLeft, Save, User, Phone, MapPin, Calendar, Mail, Info, Wheat, Briefcase, FileText, Shield, Star, Image } from 'lucide-react';
 import Layout from '@/components/Layout';
 import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 
 interface UserData {
   displayName: string;
@@ -33,6 +34,35 @@ interface UserData {
   gender?: string;
   newsletter?: boolean;
   notificationsEnabled?: boolean;
+  // Campi aggiuntivi dalla registrazione
+  profession?: string;
+  bio?: string;
+  socialMediaLinks?: {
+    facebook?: string;
+    instagram?: string;
+    twitter?: string;
+    tiktok?: string;
+    website?: string;
+  };
+  preferredCuisine?: string[];
+  allergyDocuments?: string[];
+  avatarUrl?: string;
+  certificationType?: string;
+  certificationNumber?: string;
+  memberSince?: string;
+  notificationPreferences?: {
+    email?: boolean;
+    push?: boolean;
+    sms?: boolean;
+  };
+  privacySettings?: {
+    showProfile?: boolean;
+    showReviews?: boolean;
+    showBookings?: boolean;
+  };
+  reviews?: number;
+  rating?: number;
+  badgeLevel?: string;
 }
 
 const UserSettingsPage: React.FC = () => {
@@ -58,7 +88,37 @@ const UserSettingsPage: React.FC = () => {
       other: localStorage.getItem('userDietaryOther') || '',
     },
     newsletter: localStorage.getItem('userNewsletter') === 'true' || false,
-    notificationsEnabled: localStorage.getItem('userNotifications') === 'true' || true
+    notificationsEnabled: localStorage.getItem('userNotifications') === 'true' || true,
+    // Campi aggiuntivi dalla registrazione
+    profession: localStorage.getItem('userProfession') || '',
+    bio: localStorage.getItem('userBio') || '',
+    socialMediaLinks: {
+      facebook: localStorage.getItem('userSocialFacebook') || '',
+      instagram: localStorage.getItem('userSocialInstagram') || '',
+      twitter: localStorage.getItem('userSocialTwitter') || '',
+      tiktok: localStorage.getItem('userSocialTiktok') || '',
+      website: localStorage.getItem('userSocialWebsite') || '',
+    },
+    preferredCuisine: localStorage.getItem('userPreferredCuisine') ? 
+      JSON.parse(localStorage.getItem('userPreferredCuisine') || '[]') : 
+      ['Italiana', 'Pizzeria'],
+    certificationType: localStorage.getItem('userCertificationType') || 'AIC',
+    certificationNumber: localStorage.getItem('userCertificationNumber') || '',
+    avatarUrl: localStorage.getItem('userAvatarUrl') || '',
+    memberSince: localStorage.getItem('userMemberSince') || new Date().toISOString().split('T')[0],
+    notificationPreferences: {
+      email: localStorage.getItem('userNotifEmail') === 'true' || true,
+      push: localStorage.getItem('userNotifPush') === 'true' || true,
+      sms: localStorage.getItem('userNotifSms') === 'true' || false,
+    },
+    privacySettings: {
+      showProfile: localStorage.getItem('userPrivacyProfile') === 'true' || true,
+      showReviews: localStorage.getItem('userPrivacyReviews') === 'true' || true,
+      showBookings: localStorage.getItem('userPrivacyBookings') === 'true' || false,
+    },
+    reviews: parseInt(localStorage.getItem('userReviews') || '0'),
+    rating: parseFloat(localStorage.getItem('userRating') || '0'),
+    badgeLevel: localStorage.getItem('userBadgeLevel') || 'Principiante',
   });
 
   useEffect(() => {
@@ -89,6 +149,20 @@ const UserSettingsPage: React.FC = () => {
             dietaryRestrictions: firestoreData.dietaryRestrictions || current.dietaryRestrictions,
             newsletter: firestoreData.newsletter !== undefined ? firestoreData.newsletter : current.newsletter,
             notificationsEnabled: firestoreData.notificationsEnabled !== undefined ? firestoreData.notificationsEnabled : current.notificationsEnabled,
+            // Campi aggiuntivi dalla registrazione
+            profession: firestoreData.profession || current.profession,
+            bio: firestoreData.bio || current.bio,
+            socialMediaLinks: firestoreData.socialMediaLinks || current.socialMediaLinks,
+            preferredCuisine: firestoreData.preferredCuisine || current.preferredCuisine,
+            certificationType: firestoreData.certificationType || current.certificationType,
+            certificationNumber: firestoreData.certificationNumber || current.certificationNumber,
+            avatarUrl: firestoreData.avatarUrl || current.avatarUrl,
+            memberSince: firestoreData.memberSince || current.memberSince,
+            notificationPreferences: firestoreData.notificationPreferences || current.notificationPreferences,
+            privacySettings: firestoreData.privacySettings || current.privacySettings,
+            reviews: firestoreData.reviews || current.reviews,
+            rating: firestoreData.rating || current.rating,
+            badgeLevel: firestoreData.badgeLevel || current.badgeLevel,
           }));
         }
       } catch (err) {
@@ -100,7 +174,7 @@ const UserSettingsPage: React.FC = () => {
     loadUserData();
   }, [navigate, userData.displayName, userData.email]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setUserData(prev => ({ ...prev, [name]: value }));
   };
@@ -113,6 +187,53 @@ const UserSettingsPage: React.FC = () => {
         [key]: value
       }
     }));
+  };
+
+  const handleSocialChange = (key: string, value: string) => {
+    setUserData(prev => ({
+      ...prev,
+      socialMediaLinks: {
+        ...prev.socialMediaLinks,
+        [key]: value
+      }
+    }));
+  };
+
+  const handleNotificationPrefChange = (key: string, value: boolean) => {
+    setUserData(prev => ({
+      ...prev,
+      notificationPreferences: {
+        ...prev.notificationPreferences,
+        [key]: value
+      }
+    }));
+  };
+
+  const handlePrivacySettingChange = (key: string, value: boolean) => {
+    setUserData(prev => ({
+      ...prev,
+      privacySettings: {
+        ...prev.privacySettings,
+        [key]: value
+      }
+    }));
+  };
+
+  const handlePreferredCuisineChange = (cuisine: string) => {
+    setUserData(prev => {
+      const current = prev.preferredCuisine || [];
+      if (current.includes(cuisine)) {
+        return {
+          ...prev,
+          preferredCuisine: current.filter(c => c !== cuisine)
+        };
+      } else {
+        return {
+          ...prev,
+          preferredCuisine: [...current, cuisine]
+        };
+      }
+    });
   };
 
   const handleSave = async () => {
@@ -138,6 +259,29 @@ const UserSettingsPage: React.FC = () => {
       localStorage.setItem('userNewsletter', String(userData.newsletter || false));
       localStorage.setItem('userNotifications', String(userData.notificationsEnabled || true));
       
+      // Campi aggiuntivi dalla registrazione
+      localStorage.setItem('userProfession', userData.profession || '');
+      localStorage.setItem('userBio', userData.bio || '');
+      localStorage.setItem('userSocialFacebook', userData.socialMediaLinks?.facebook || '');
+      localStorage.setItem('userSocialInstagram', userData.socialMediaLinks?.instagram || '');
+      localStorage.setItem('userSocialTwitter', userData.socialMediaLinks?.twitter || '');
+      localStorage.setItem('userSocialTiktok', userData.socialMediaLinks?.tiktok || '');
+      localStorage.setItem('userSocialWebsite', userData.socialMediaLinks?.website || '');
+      localStorage.setItem('userPreferredCuisine', JSON.stringify(userData.preferredCuisine || []));
+      localStorage.setItem('userCertificationType', userData.certificationType || '');
+      localStorage.setItem('userCertificationNumber', userData.certificationNumber || '');
+      localStorage.setItem('userAvatarUrl', userData.avatarUrl || '');
+      localStorage.setItem('userMemberSince', userData.memberSince || '');
+      localStorage.setItem('userNotifEmail', String(userData.notificationPreferences?.email || true));
+      localStorage.setItem('userNotifPush', String(userData.notificationPreferences?.push || true));
+      localStorage.setItem('userNotifSms', String(userData.notificationPreferences?.sms || false));
+      localStorage.setItem('userPrivacyProfile', String(userData.privacySettings?.showProfile || true));
+      localStorage.setItem('userPrivacyReviews', String(userData.privacySettings?.showReviews || true));
+      localStorage.setItem('userPrivacyBookings', String(userData.privacySettings?.showBookings || false));
+      localStorage.setItem('userReviews', String(userData.reviews || 0));
+      localStorage.setItem('userRating', String(userData.rating || 0));
+      localStorage.setItem('userBadgeLevel', userData.badgeLevel || 'Principiante');
+      
       // Se l'utente è autenticato, aggiorna anche Firestore
       if (currentUser) {
         await updateDoc(doc(db, "users", currentUser.uid), {
@@ -152,6 +296,20 @@ const UserSettingsPage: React.FC = () => {
           dietaryRestrictions: userData.dietaryRestrictions || { glutenFree: true },
           newsletter: userData.newsletter || false,
           notificationsEnabled: userData.notificationsEnabled || true,
+          // Campi aggiuntivi dalla registrazione
+          profession: userData.profession || '',
+          bio: userData.bio || '',
+          socialMediaLinks: userData.socialMediaLinks || {},
+          preferredCuisine: userData.preferredCuisine || [],
+          certificationType: userData.certificationType || '',
+          certificationNumber: userData.certificationNumber || '',
+          avatarUrl: userData.avatarUrl || '',
+          memberSince: userData.memberSince || new Date().toISOString().split('T')[0],
+          notificationPreferences: userData.notificationPreferences || {},
+          privacySettings: userData.privacySettings || {},
+          reviews: userData.reviews || 0,
+          rating: userData.rating || 0,
+          badgeLevel: userData.badgeLevel || 'Principiante',
         });
       }
       
@@ -163,6 +321,11 @@ const UserSettingsPage: React.FC = () => {
       setSaving(false);
     }
   };
+
+  const cuisineOptions = [
+    "Italiana", "Pizzeria", "Trattoria", "Pub", "Panineria", 
+    "Campana", "Romana", "Toscana", "Siciliana", "Pugliese"
+  ];
 
   return (
     <Layout>
@@ -180,11 +343,24 @@ const UserSettingsPage: React.FC = () => {
         </div>
         
         <Card className="mb-6">
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <User className="h-5 w-5" />
               Dati Personali
             </CardTitle>
+
+            {userData.avatarUrl && (
+              <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-primary">
+                <img 
+                  src={userData.avatarUrl} 
+                  alt="Profile" 
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.src = '/placeholder.svg';
+                  }}
+                />
+              </div>
+            )}
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -250,19 +426,63 @@ const UserSettingsPage: React.FC = () => {
               </div>
             </div>
             
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="gender">Genere</Label>
+                <Select value={userData.gender} onValueChange={(value) => setUserData(prev => ({ ...prev, gender: value }))}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Seleziona" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="male">Uomo</SelectItem>
+                    <SelectItem value="female">Donna</SelectItem>
+                    <SelectItem value="other">Altro</SelectItem>
+                    <SelectItem value="prefer-not-to-say">Preferisco non specificare</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="profession">Professione</Label>
+                <div className="relative">
+                  <Input 
+                    id="profession" 
+                    name="profession" 
+                    value={userData.profession || ''} 
+                    onChange={handleInputChange} 
+                    placeholder="La tua professione"
+                    className="pl-9"
+                  />
+                  <Briefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={16} />
+                </div>
+              </div>
+            </div>
+
             <div className="space-y-2">
-              <Label htmlFor="gender">Genere</Label>
-              <Select value={userData.gender} onValueChange={(value) => setUserData(prev => ({ ...prev, gender: value }))}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Seleziona" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="male">Uomo</SelectItem>
-                  <SelectItem value="female">Donna</SelectItem>
-                  <SelectItem value="other">Altro</SelectItem>
-                  <SelectItem value="prefer-not-to-say">Preferisco non specificare</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label htmlFor="bio">Biografia</Label>
+              <Textarea
+                id="bio"
+                name="bio"
+                value={userData.bio || ''}
+                onChange={handleInputChange}
+                placeholder="Raccontaci qualcosa di te..."
+                rows={3}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="avatarUrl">URL Immagine Profilo</Label>
+              <div className="relative">
+                <Input 
+                  id="avatarUrl" 
+                  name="avatarUrl" 
+                  value={userData.avatarUrl || ''} 
+                  onChange={handleInputChange} 
+                  placeholder="URL della tua immagine profilo"
+                  className="pl-9"
+                />
+                <Image className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={16} />
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -383,6 +603,176 @@ const UserSettingsPage: React.FC = () => {
                 placeholder="Es: allergia alla frutta secca, ecc."
               />
             </div>
+
+            <div className="space-y-2">
+              <Label>Cucine preferite</Label>
+              <div className="flex flex-wrap gap-2">
+                {cuisineOptions.map(cuisine => (
+                  <Badge 
+                    key={cuisine}
+                    variant={userData.preferredCuisine?.includes(cuisine) ? "default" : "outline"}
+                    className="cursor-pointer"
+                    onClick={() => handlePreferredCuisineChange(cuisine)}
+                  >
+                    {cuisine}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5" />
+              Certificazioni e Documenti
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="certificationType">Tipo certificazione</Label>
+                <Select 
+                  value={userData.certificationType || ''} 
+                  onValueChange={(value) => setUserData(prev => ({ ...prev, certificationType: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleziona tipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="AIC">AIC</SelectItem>
+                    <SelectItem value="AFC">AFC</SelectItem>
+                    <SelectItem value="Medical">Certificato Medico</SelectItem>
+                    <SelectItem value="Self">Autocertificazione</SelectItem>
+                    <SelectItem value="None">Nessuna</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="certificationNumber">Numero certificazione</Label>
+                <div className="relative">
+                  <Input 
+                    id="certificationNumber" 
+                    name="certificationNumber" 
+                    value={userData.certificationNumber || ''} 
+                    onChange={handleInputChange} 
+                    placeholder="Numero certificazione"
+                    className="pl-9"
+                  />
+                  <FileText className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={16} />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Documenti caricati</Label>
+              <p className="text-sm text-muted-foreground">
+                Non sono presenti documenti caricati. Puoi caricare la tua certificazione medica o altri documenti relativi alla tua condizione.
+              </p>
+              <Button variant="outline" size="sm" className="mt-2">
+                Carica documento
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Star className="h-5 w-5" />
+              Attività e Badge
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="p-4 border rounded-lg text-center">
+                <h4 className="font-semibold text-lg">{userData.reviews || 0}</h4>
+                <p className="text-sm text-gray-500">Recensioni</p>
+              </div>
+              <div className="p-4 border rounded-lg text-center">
+                <h4 className="font-semibold text-lg">{userData.rating || 0}</h4>
+                <p className="text-sm text-gray-500">Valutazione</p>
+              </div>
+              <div className="p-4 border rounded-lg text-center">
+                <h4 className="font-semibold text-lg">{userData.badgeLevel || 'Principiante'}</h4>
+                <p className="text-sm text-gray-500">Livello</p>
+              </div>
+              <div className="p-4 border rounded-lg text-center">
+                <h4 className="font-semibold text-lg">
+                  {userData.memberSince ? 
+                    new Date(userData.memberSince).toLocaleDateString('it-IT', {
+                      year: 'numeric',
+                      month: 'short'
+                    }) :
+                    'N/D'}
+                </h4>
+                <p className="text-sm text-gray-500">Membro dal</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Info className="h-5 w-5" />
+              Social Media
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="facebook">Facebook</Label>
+                <Input 
+                  id="facebook" 
+                  value={userData.socialMediaLinks?.facebook || ''} 
+                  onChange={(e) => handleSocialChange('facebook', e.target.value)} 
+                  placeholder="URL profilo Facebook"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="instagram">Instagram</Label>
+                <Input 
+                  id="instagram" 
+                  value={userData.socialMediaLinks?.instagram || ''} 
+                  onChange={(e) => handleSocialChange('instagram', e.target.value)} 
+                  placeholder="URL profilo Instagram"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="twitter">Twitter</Label>
+                <Input 
+                  id="twitter" 
+                  value={userData.socialMediaLinks?.twitter || ''} 
+                  onChange={(e) => handleSocialChange('twitter', e.target.value)} 
+                  placeholder="URL profilo Twitter"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="tiktok">TikTok</Label>
+                <Input 
+                  id="tiktok" 
+                  value={userData.socialMediaLinks?.tiktok || ''} 
+                  onChange={(e) => handleSocialChange('tiktok', e.target.value)} 
+                  placeholder="URL profilo TikTok"
+                />
+              </div>
+              
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="website">Sito Web</Label>
+                <Input 
+                  id="website" 
+                  value={userData.socialMediaLinks?.website || ''} 
+                  onChange={(e) => handleSocialChange('website', e.target.value)} 
+                  placeholder="URL del tuo sito web"
+                />
+              </div>
+            </div>
           </CardContent>
         </Card>
         
@@ -394,6 +784,70 @@ const UserSettingsPage: React.FC = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="space-y-3">
+              <h3 className="text-sm font-medium">Canali di notifica</h3>
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="notifEmail" 
+                  checked={userData.notificationPreferences?.email || false} 
+                  onCheckedChange={(checked) => handleNotificationPrefChange('email', !!checked)}
+                />
+                <Label htmlFor="notifEmail" className="cursor-pointer">Email</Label>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="notifPush" 
+                  checked={userData.notificationPreferences?.push || false} 
+                  onCheckedChange={(checked) => handleNotificationPrefChange('push', !!checked)}
+                />
+                <Label htmlFor="notifPush" className="cursor-pointer">Notifiche push</Label>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="notifSms" 
+                  checked={userData.notificationPreferences?.sms || false} 
+                  onCheckedChange={(checked) => handleNotificationPrefChange('sms', !!checked)}
+                />
+                <Label htmlFor="notifSms" className="cursor-pointer">SMS</Label>
+              </div>
+            </div>
+
+            <Separator />
+
+            <div className="space-y-3">
+              <h3 className="text-sm font-medium">Privacy del profilo</h3>
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="privacyProfile" 
+                  checked={userData.privacySettings?.showProfile || false} 
+                  onCheckedChange={(checked) => handlePrivacySettingChange('showProfile', !!checked)}
+                />
+                <Label htmlFor="privacyProfile" className="cursor-pointer">Mostra il mio profilo pubblicamente</Label>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="privacyReviews" 
+                  checked={userData.privacySettings?.showReviews || false} 
+                  onCheckedChange={(checked) => handlePrivacySettingChange('showReviews', !!checked)}
+                />
+                <Label htmlFor="privacyReviews" className="cursor-pointer">Mostra le mie recensioni pubblicamente</Label>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="privacyBookings" 
+                  checked={userData.privacySettings?.showBookings || false} 
+                  onCheckedChange={(checked) => handlePrivacySettingChange('showBookings', !!checked)}
+                />
+                <Label htmlFor="privacyBookings" className="cursor-pointer">Mostra le mie prenotazioni agli amici</Label>
+              </div>
+            </div>
+
+            <Separator />
+
             <div className="flex items-center space-x-2">
               <Checkbox 
                 id="notificationsEnabled" 
