@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, ReactNode } from 'react';
 
 // Define the booking type
@@ -89,7 +90,7 @@ const initialBookings: Booking[] = [
   // ... altri booking di esempio
 ];
 
-export function BookingProvider({ children }: { children: ReactNode }) {
+export const BookingProvider: React.FC<{children: ReactNode}> = ({ children }) => {
   const [bookings, setBookings] = useState<Booking[]>(initialBookings);
 
   const addBooking = (booking: Booking) => {
