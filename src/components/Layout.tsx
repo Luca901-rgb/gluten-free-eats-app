@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Home, Search, Heart, Calendar, UserRound, Wheat, Utensils } from 'lucide-react';
+import { Home, Search, Calendar, UserRound, Wheat, Utensils } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { buttonVariants } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -14,7 +14,6 @@ interface LayoutProps {
 const navigationItems = [
   { path: '/home', icon: <Home size={24} strokeWidth={2.5} />, label: 'Home' },
   { path: '/search', icon: <Search size={24} strokeWidth={2.5} />, label: 'Ricerca' },
-  { path: '/favorites', icon: <Heart size={24} strokeWidth={2.5} />, label: 'Preferiti' },
   { path: '/bookings', icon: <Calendar size={24} strokeWidth={2.5} />, label: 'Prenotazioni' },
   { path: '/profile', icon: <UserRound size={24} strokeWidth={2.5} />, label: 'Profilo' },
 ];
@@ -70,3 +69,4 @@ const Layout: React.FC<LayoutProps> = ({ children, hideNavigation = false }) => 
 };
 
 export default Layout;
+
