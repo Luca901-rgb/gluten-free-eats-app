@@ -33,7 +33,6 @@ const SearchPage: React.FC = () => {
     restaurants, 
     isLoading, 
     isOffline, 
-    handleToggleFavorite,
     getUserLocation, 
     sortRestaurantsByDistance 
   } = useRestaurantList();
@@ -209,7 +208,6 @@ const SearchPage: React.FC = () => {
               <RestaurantCard 
                 key={restaurant.id}
                 restaurant={restaurant}
-                onToggleFavorite={handleToggleFavorite}
                 onClick={() => handleRestaurantClick(restaurant.id)}
               />
             ))
