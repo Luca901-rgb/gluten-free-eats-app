@@ -47,7 +47,8 @@ export const useRestaurantList = () => {
       if (navigator.onLine) {
         await fetchRestaurants();
       } else {
-        setRestaurants(getOfflineRestaurants());
+        const offlineData = getOfflineRestaurants();
+        setRestaurants(offlineData);
         setIsLoading(false);
       }
     };
@@ -99,16 +100,10 @@ export const useRestaurantList = () => {
         } as Restaurant;
       });
       
-      if (restaurantsData.length === 0) {
-        restaurantsData = [sampleRestaurant];
-        console.log("DB vuoto, aggiunto ristorante di esempio");
-      } else {
-        const hasSampleRestaurant = restaurantsData.some(r => r.id === sampleRestaurant.id || r.name === sampleRestaurant.name);
-        if (!hasSampleRestaurant) {
-          restaurantsData.unshift(sampleRestaurant);
-          console.log("Aggiunto ristorante di esempio ai risultati del DB");
-        }
-      }
+      // Aggiungi sempre il ristorante di esempio all'inizio dell'array,
+      // indipendentemente dai risultati del database
+      restaurantsData = [sampleRestaurant, ...restaurantsData];
+      console.log("Ristorante di esempio (Trattoria Keccabio) aggiunto in testa ai risultati");
       
       // Se l'utente ha condiviso la posizione, calcola le distanze
       if (userLocation) {
@@ -123,8 +118,15 @@ export const useRestaurantList = () => {
     } catch (error) {
       console.error("Errore durante il recupero dei ristoranti:", error);
       
+      // In caso di errore, assicuriamoci di includere il ristorante di esempio
       const offlineRestaurants = getOfflineRestaurants();
+      // Verifica che Trattoria Keccabio sia presente
+      const keccabioExists = offlineRestaurants.some(r => r.id === sampleRestaurant.id);
+      if (!keccabioExists) {
+        offlineRestaurants.unshift(sampleRestaurant);
+      }
       setRestaurants(offlineRestaurants);
+      
       if (navigator.onLine) {
         toast.error("Si è verificato un errore nel caricamento dei ristoranti");
       } else {

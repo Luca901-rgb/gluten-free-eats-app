@@ -32,20 +32,11 @@ const Index = () => {
 
   // Carica automaticamente i ristoranti all'apertura dell'app
   useEffect(() => {
-    console.log("Caricamento ristoranti all'avvio");
+    console.log("Forzando ricarica ristoranti dalla pagina Index");
     
     // Carica immediatamente senza attendere l'interazione utente
     refreshRestaurants();
     
-    // Imposta un refresh periodico dei dati ogni 3 minuti se l'utente rimane sulla pagina
-    const refreshInterval = setInterval(() => {
-      if (navigator.onLine) {
-        console.log("Aggiornamento periodico dei dati");
-        refreshRestaurants();
-      }
-    }, 3 * 60 * 1000);
-    
-    return () => clearInterval(refreshInterval);
   }, [refreshRestaurants]);
 
   return (

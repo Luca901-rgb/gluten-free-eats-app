@@ -27,8 +27,14 @@ export const useOfflineRestaurants = () => {
       try {
         let parsedRestaurants = JSON.parse(cachedRestaurants);
         
+        // Verifichiamo sempre che Trattoria Keccabio sia presente
         const hasSampleRestaurant = parsedRestaurants.some((r: Restaurant) => r.id === sampleRestaurant.id);
         if (!hasSampleRestaurant) {
+          // Se non è presente, lo aggiungiamo all'inizio dell'array
+          parsedRestaurants = [sampleRestaurant, ...parsedRestaurants];
+        } else {
+          // Se è presente ma non è in prima posizione, lo rimuoviamo e lo riaggiungiamo all'inizio
+          parsedRestaurants = parsedRestaurants.filter((r: Restaurant) => r.id !== sampleRestaurant.id);
           parsedRestaurants = [sampleRestaurant, ...parsedRestaurants];
         }
         
