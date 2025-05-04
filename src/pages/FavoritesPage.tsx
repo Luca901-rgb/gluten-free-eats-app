@@ -4,7 +4,7 @@ import Layout from '@/components/Layout';
 import { toast } from 'sonner';
 import { db, auth } from '@/lib/firebase';
 import { collection, getDocs, doc, deleteDoc, getDoc, updateDoc } from 'firebase/firestore';
-import { Restaurant } from '@/components/Restaurant/RestaurantCard';
+import { Restaurant } from '@/types/restaurant';
 import safeStorage from '@/lib/safeStorage';
 import LoadingSkeleton from '@/components/Favorites/LoadingSkeleton';
 import EmptyState from '@/components/Favorites/EmptyState';
