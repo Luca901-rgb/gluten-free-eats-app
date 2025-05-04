@@ -30,13 +30,16 @@ const Index = () => {
     console.log("Restaurants changed:", restaurants);
   }, [restaurants]);
 
-  // Carica automaticamente i ristoranti all'apertura dell'app
+  // Carica automaticamente i ristoranti all'apertura della pagina
   useEffect(() => {
     console.log("Forzando ricarica ristoranti dalla pagina Index");
     
-    // Carica immediatamente senza attendere l'interazione utente
-    refreshRestaurants();
+    // Forza un refresh immediato all'apertura della pagina
+    const timer = setTimeout(() => {
+      refreshRestaurants();
+    }, 300);
     
+    return () => clearTimeout(timer);
   }, [refreshRestaurants]);
 
   return (

@@ -6,6 +6,7 @@ import { Restaurant } from '@/types/restaurant';
 import RestaurantCard from '@/components/Restaurant/RestaurantCard';
 import { RegionStatus } from '@/hooks/useRestaurantList';
 import { Skeleton } from '@/components/ui/skeleton';
+import { sampleRestaurant } from '@/data/sampleRestaurant';
 
 interface RestaurantListProps {
   restaurants: Restaurant[];
@@ -37,20 +38,19 @@ const RestaurantList: React.FC<RestaurantListProps> = ({
     );
   }
 
-  if (restaurants.length === 0) {
-    return (
-      <div className="text-center p-8 border border-gray-200 rounded-lg">
-        <X className="mx-auto h-12 w-12 text-gray-400 mb-3" />
-        <h3 className="text-lg font-semibold text-gray-900 mb-1">Nessun ristorante trovato</h3>
-        <p className="text-gray-500 mb-4">Non ci sono ristoranti disponibili al momento.</p>
-        <Button onClick={onRetry}>Riprova</Button>
-      </div>
-    );
+  // Se l'array è vuoto o undefined, mostra almeno il ristorante d'esempio
+  const displayRestaurants = (restaurants?.length > 0) 
+    ? restaurants 
+    : [sampleRestaurant];
+
+  // Verifica se il ristorante d'esempio è presente, se no aggiungilo
+  if (!displayRestaurants.some(r => r.id === sampleRestaurant.id)) {
+    displayRestaurants.unshift(sampleRestaurant);
   }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in">
-      {restaurants.map(restaurant => (
+      {displayRestaurants.map(restaurant => (
         <RestaurantCard
           key={restaurant.id}
           restaurant={restaurant}

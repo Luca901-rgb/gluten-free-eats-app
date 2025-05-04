@@ -22,6 +22,35 @@ export const useRestaurantList = () => {
   const { regionStatus, verifyRegion } = useRegionVerification();
   const { userLocation, getUserLocation, addDistanceToRestaurants } = useGeolocationRestaurants();
 
+  // Funzione per assicurarsi che il ristorante di esempio sia sempre presente
+  const ensureSampleRestaurantPresent = useCallback((restaurantsList: Restaurant[]): Restaurant[] => {
+    // Verifica se il ristorante esempio è presente
+    const hasSampleRestaurant = restaurantsList.some(r => r.id === sampleRestaurant.id);
+    
+    if (!hasSampleRestaurant) {
+      // Se non è presente, lo aggiungiamo all'inizio
+      console.log("Aggiungo il ristorante esempio che mancava");
+      return [sampleRestaurant, ...restaurantsList];
+    }
+    
+    // Se è presente ma non è in prima posizione, lo spostiamo all'inizio
+    const keccabioIndex = restaurantsList.findIndex(r => r.id === sampleRestaurant.id);
+    if (keccabioIndex > 0) {
+      console.log("Sposto il ristorante esempio in prima posizione");
+      const keccabio = restaurantsList.splice(keccabioIndex, 1)[0];
+      return [keccabio, ...restaurantsList];
+    }
+    
+    // Già in prima posizione, nessuna modifica necessaria
+    return restaurantsList;
+  }, []);
+
+  // Funzione immediata per forzare l'aggiornamento del ristorante di esempio
+  useEffect(() => {
+    console.log("Controllo presenza del ristorante esempio");
+    setRestaurants(prev => ensureSampleRestaurantPresent(prev));
+  }, [ensureSampleRestaurantPresent]);
+
   // Carica automaticamente i ristoranti all'apertura dell'app
   useEffect(() => {
     console.log("Caricamento ristoranti all'avvio");
@@ -48,59 +77,35 @@ export const useRestaurantList = () => {
         await fetchRestaurants();
       } else {
         const offlineData = getOfflineRestaurants();
-        setRestaurants(offlineData.length > 0 ? offlineData : [sampleRestaurant]); // Fallback to sampleRestaurant
+        setRestaurants(offlineData.length > 0 ? ensureSampleRestaurantPresent(offlineData) : [sampleRestaurant]);
         setIsLoading(false);
       }
     };
 
     initApp();
-  }, [verifyRegion]);
+  }, [verifyRegion, ensureSampleRestaurantPresent]);
 
   // Effetto per aggiornare le distanze quando cambia la posizione dell'utente
   useEffect(() => {
     if (userLocation && restaurants.length > 0) {
-      // Assicuriamoci che il ristorante di esempio sia presente
-      let restaurantsToUpdate = [...restaurants];
-      if (!restaurantsToUpdate.some(r => r.id === sampleRestaurant.id)) {
-        restaurantsToUpdate = [sampleRestaurant, ...restaurantsToUpdate];
-      }
-      
+      const restaurantsToUpdate = ensureSampleRestaurantPresent([...restaurants]);
       const restaurantsWithDistance = addDistanceToRestaurants(restaurantsToUpdate);
       const sortedRestaurants = sortRestaurantsByDistance(restaurantsWithDistance, userLocation);
       
       // Assicuriamoci che il sample restaurant sia sempre in prima posizione
-      const keccabioIndex = sortedRestaurants.findIndex(r => r.id === sampleRestaurant.id);
-      if (keccabioIndex > 0) {
-        const keccabio = sortedRestaurants.splice(keccabioIndex, 1)[0];
-        sortedRestaurants.unshift(keccabio);
-      } else if (keccabioIndex === -1) {
-        // Se non c'è, lo aggiungiamo
-        sortedRestaurants.unshift(sampleRestaurant);
-      }
-      
-      setRestaurants(sortedRestaurants);
+      setRestaurants(ensureSampleRestaurantPresent(sortedRestaurants));
     }
-  }, [userLocation, addDistanceToRestaurants]);
+  }, [userLocation, addDistanceToRestaurants, ensureSampleRestaurantPresent]);
 
   const fetchRestaurants = async () => {
     console.log("Caricamento ristoranti iniziato");
     
     // Assicuriamoci che il ristorante di esempio sia sempre visibile anche durante il caricamento
-    setRestaurants(prev => {
-      if (prev.length === 0 || !prev.some(r => r.id === sampleRestaurant.id)) {
-        return [sampleRestaurant];
-      }
-      return prev;
-    });
+    setRestaurants(prev => ensureSampleRestaurantPresent(prev));
     
     if (isOffline) {
       const offlineRestaurants = getOfflineRestaurants();
-      // Assicuriamoci che Trattoria Keccabio sia presente nei risultati offline
-      if (offlineRestaurants.length === 0 || !offlineRestaurants.some(r => r.id === sampleRestaurant.id)) {
-        setRestaurants([sampleRestaurant]);
-      } else {
-        setRestaurants(offlineRestaurants);
-      }
+      setRestaurants(ensureSampleRestaurantPresent(offlineRestaurants));
       setIsLoading(false);
       return;
     }
@@ -130,22 +135,16 @@ export const useRestaurantList = () => {
         } as Restaurant;
       });
       
-      // Aggiungi sempre il ristorante di esempio all'inizio dell'array,
-      // indipendentemente dai risultati del database
-      restaurantsData = [sampleRestaurant, ...restaurantsData];
+      // Aggiungi sempre il ristorante di esempio e assicurati che sia all'inizio
+      restaurantsData = ensureSampleRestaurantPresent(restaurantsData);
       console.log("Ristorante di esempio (Trattoria Keccabio) aggiunto in testa ai risultati");
       
       // Se l'utente ha condiviso la posizione, calcola le distanze
       if (userLocation) {
         restaurantsData = addDistanceToRestaurants(restaurantsData);
         restaurantsData = sortRestaurantsByDistance(restaurantsData, userLocation);
-        
-        // Assicuriamoci che il sample restaurant sia sempre in prima posizione
-        const keccabioIndex = restaurantsData.findIndex(r => r.id === sampleRestaurant.id);
-        if (keccabioIndex > 0) {
-          const keccabio = restaurantsData.splice(keccabioIndex, 1)[0];
-          restaurantsData.unshift(keccabio);
-        }
+        // Assicuriamoci ancora che il sample restaurant sia in prima posizione dopo l'ordinamento
+        restaurantsData = ensureSampleRestaurantPresent(restaurantsData);
       }
       
       saveRestaurantsToCache(restaurantsData);
@@ -177,15 +176,27 @@ export const useRestaurantList = () => {
       const normalizedSearchTerm = searchTerm.toLowerCase().trim();
       
       if (!normalizedSearchTerm) {
-        setRestaurants(cachedRestaurants);
+        setRestaurants(ensureSampleRestaurantPresent(cachedRestaurants));
         return;
       }
       
-      const filtered = cachedRestaurants.filter((restaurant: Restaurant) => 
+      let filtered = cachedRestaurants.filter((restaurant: Restaurant) => 
         restaurant.name.toLowerCase().includes(normalizedSearchTerm) || 
         restaurant.description?.toLowerCase().includes(normalizedSearchTerm) ||
         restaurant.address?.toLowerCase().includes(normalizedSearchTerm)
       );
+      
+      // Se non ci sono risultati, aggiungi comunque il ristorante di esempio
+      if (filtered.length === 0 || !filtered.some(r => r.id === sampleRestaurant.id)) {
+        if (sampleRestaurant.name.toLowerCase().includes(normalizedSearchTerm) ||
+            sampleRestaurant.description?.toLowerCase().includes(normalizedSearchTerm) ||
+            sampleRestaurant.address?.toLowerCase().includes(normalizedSearchTerm)) {
+          filtered = [sampleRestaurant, ...filtered];
+        }
+      } else {
+        // Assicurati che il ristorante esempio sia in prima posizione
+        filtered = ensureSampleRestaurantPresent(filtered);
+      }
       
       setRestaurants(filtered);
       return;
@@ -203,7 +214,7 @@ export const useRestaurantList = () => {
       const restaurantsCollection = collection(db, "restaurants");
       const restaurantsSnapshot = await getDocs(restaurantsCollection);
       
-      const filteredRestaurants = restaurantsSnapshot.docs
+      let filteredRestaurants = restaurantsSnapshot.docs
         .map(doc => {
           const data = doc.data();
           return {
@@ -224,10 +235,19 @@ export const useRestaurantList = () => {
           restaurant.address?.toLowerCase().includes(normalizedSearchTerm)
         );
       
+      // Aggiungi il ristorante esempio se corrisponde alla ricerca
+      if (sampleRestaurant.name.toLowerCase().includes(normalizedSearchTerm) ||
+          sampleRestaurant.description?.toLowerCase().includes(normalizedSearchTerm) ||
+          sampleRestaurant.address?.toLowerCase().includes(normalizedSearchTerm)) {
+        filteredRestaurants = ensureSampleRestaurantPresent(filteredRestaurants);
+      }
+      
       setRestaurants(filteredRestaurants);
     } catch (error) {
       console.error("Error searching restaurants:", error);
       toast.error("Si è verificato un errore durante la ricerca");
+      // In caso di errore, mostra almeno il ristorante esempio
+      setRestaurants([sampleRestaurant]);
     } finally {
       setIsLoading(false);
     }
@@ -238,7 +258,8 @@ export const useRestaurantList = () => {
     userLocation, 
     getOfflineRestaurants, 
     addDistanceToRestaurants, 
-    saveRestaurantsToCache
+    saveRestaurantsToCache,
+    ensureSampleRestaurantPresent
   ]);
 
   return {
@@ -261,18 +282,8 @@ export const useRestaurantList = () => {
       
       setRestaurants(prevRestaurants => {
         const sorted = sortRestaurantsByDistance(prevRestaurants, userLocation);
-        
-        // Assicuriamoci che il sample restaurant sia sempre in prima posizione
-        const keccabioIndex = sorted.findIndex(r => r.id === sampleRestaurant.id);
-        if (keccabioIndex > 0) {
-          const keccabio = sorted.splice(keccabioIndex, 1)[0];
-          sorted.unshift(keccabio);
-        } else if (keccabioIndex === -1) {
-          // Se non c'è, lo aggiungiamo
-          sorted.unshift(sampleRestaurant);
-        }
-        
-        return sorted;
+        // Assicuriamoci che il ristorante esempio sia sempre in prima posizione
+        return ensureSampleRestaurantPresent(sorted);
       });
     }
   };
