@@ -1,10 +1,11 @@
 
 import React from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Home, Search, Calendar, UserRound, Wheat, Utensils } from 'lucide-react';
+import { Home, Search, Calendar, UserRound, Wheat, Utensils, Heart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { buttonVariants } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { Link } from 'react-router-dom';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -15,6 +16,7 @@ const navigationItems = [
   { path: '/home', icon: <Home size={24} strokeWidth={2.5} />, label: 'Home' },
   { path: '/search', icon: <Search size={24} strokeWidth={2.5} />, label: 'Ricerca' },
   { path: '/bookings', icon: <Calendar size={24} strokeWidth={2.5} />, label: 'Prenotazioni' },
+  { path: '/favorites', icon: <Heart size={24} strokeWidth={2.5} />, label: 'Preferiti' },
   { path: '/profile', icon: <UserRound size={24} strokeWidth={2.5} />, label: 'Profilo' },
 ];
 
@@ -42,9 +44,9 @@ const Layout: React.FC<LayoutProps> = ({ children, hideNavigation = false }) => 
       {!hideNavigation && (
         <nav className="fixed bottom-0 w-full bg-gradient-to-r from-green-dark/90 via-green/80 to-green-light/70 border-t h-16 flex justify-around items-center z-10 backdrop-blur-sm">
           {navigationItems.map((item) => (
-            <a
+            <Link
               key={item.path}
-              href={item.path}
+              to={item.path}
               className="flex flex-col items-center justify-center p-1 text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.7)]"
               onClick={(e) => {
                 console.log(`Navigation clicked: ${item.path}`);
@@ -59,7 +61,7 @@ const Layout: React.FC<LayoutProps> = ({ children, hideNavigation = false }) => 
               }}>
                 {item.label}
               </span>
-            </a>
+            </Link>
           ))}
         </nav>
       )}

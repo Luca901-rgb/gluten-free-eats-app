@@ -16,6 +16,7 @@ import RestaurantPage from "./pages/RestaurantPage";
 import { BookingProvider } from "./context/BookingContext";
 import Register from "./pages/Register";
 import RestaurantRegister from "./pages/RestaurantRegister";
+import FavoritesPage from "./pages/FavoritesPage";
 
 // Import existing pages or create placeholder components for those that don't exist
 const RestaurantDashboardPage = () => <div className="container mx-auto p-6">Restaurant Dashboard Page</div>;
@@ -51,6 +52,9 @@ const App: React.FC = () => {
           <Route path="/restaurant-login" element={
             !user ? <RestaurantLogin /> : <Navigate to="/restaurant-dashboard" replace />
           } />
+          
+          {/* Favorites page */}
+          <Route path="/favorites" element={<FavoritesPage />} />
 
           {/* Protected Customer Routes */}
           <Route path="/bookings" element={

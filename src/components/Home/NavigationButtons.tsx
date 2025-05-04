@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Search, Calendar, MapPin, UserCircle } from 'lucide-react';
+import { Search, Calendar, MapPin, UserCircle, Heart } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface NavigationButtonsProps {
@@ -32,6 +32,13 @@ const NavigationButtons = ({ isRegionAvailable }: NavigationButtonsProps) => {
           </button>
         </Link>
       )}
+      
+      <Link to="/favorites">
+        <button className="w-full py-4 px-3 bg-white shadow-md rounded-lg flex flex-col items-center justify-center hover:bg-gray-50 transition-colors">
+          <Heart className="h-6 w-6 text-primary mb-2" />
+          <span className="text-sm font-medium text-gray-700">Preferiti</span>
+        </button>
+      </Link>
       
       <Link to="/profile">
         <button className="w-full py-4 px-3 bg-white shadow-md rounded-lg flex flex-col items-center justify-center hover:bg-gray-50 transition-colors">
