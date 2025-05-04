@@ -5,7 +5,6 @@ import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "./lib/firebase";
 import Index from "./pages/Index";
 import SearchPage from "./pages/SearchPage";
-import FavoritesPage from "./pages/FavoritesPage";
 import BookingsPage from "./pages/BookingsPage";
 import ProfilePage from "./pages/ProfilePage";
 import LoadingScreen from "./components/LoadingScreen";
@@ -58,11 +57,6 @@ const App: React.FC = () => {
           } />
 
           {/* Protected Customer Routes */}
-          <Route path="/favorites" element={
-            <AuthGuard allowedUserTypes={["customer"]}>
-              <FavoritesPage />
-            </AuthGuard>
-          } />
           <Route path="/bookings" element={
             <AuthGuard allowedUserTypes={["customer"]}>
               <BookingsPage />

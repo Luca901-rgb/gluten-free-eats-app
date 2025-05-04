@@ -16,7 +16,6 @@ const Index = () => {
     isLoading,
     regionStatus,
     handleSearch,
-    handleToggleFavorite,
     refreshRestaurants
   } = useRestaurantList();
 
@@ -85,7 +84,6 @@ const Index = () => {
             restaurants={restaurants}
             isLoading={isLoading}
             regionStatus={regionStatus}
-            onToggleFavorite={handleToggleFavorite}
             onRetry={refreshRestaurants}
           />
         </div>

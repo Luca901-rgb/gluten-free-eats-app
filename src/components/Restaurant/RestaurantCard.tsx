@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Heart, Navigation } from 'lucide-react';
+import { Navigation } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import StarRating from '@/components/common/StarRating';
 import { toast } from 'sonner';
@@ -32,10 +32,9 @@ interface RestaurantCardProps {
 
 const RestaurantCard: React.FC<RestaurantCardProps> = ({ 
   restaurant, 
-  onToggleFavorite,
   onClick
 }) => {
-  const { id, name, image, rating, reviews, cuisine, distance, isFavorite, location, hasGlutenFreeOptions } = restaurant;
+  const { id, name, image, rating, reviews, cuisine, distance, location, hasGlutenFreeOptions } = restaurant;
 
   const handleCardClick = () => {
     if (onClick) {
@@ -43,19 +42,6 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({
     } else {
       // Fallback alla navigazione tradizionale
       window.location.href = `/restaurant/${id}`;
-    }
-  };
-
-  const handleFavoriteClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (onToggleFavorite) {
-      onToggleFavorite(id);
-      // Feedback visivo immediato
-      toast.success(isFavorite 
-        ? `${name} rimosso dai preferiti` 
-        : `${name} aggiunto ai preferiti`);
-    } else {
-      toast.error("Impossibile aggiornare i preferiti in questo momento");
     }
   };
   
@@ -102,26 +88,11 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({
               />
             </button>
           )}
-          <button 
-            className={`p-2 rounded-full ${isFavorite ? 'bg-rose-50 hover:bg-rose-100' : 'bg-white/80 hover:bg-white'} transition-colors`}
-            onClick={handleFavoriteClick}
-            title={isFavorite ? "Rimuovi dai preferiti" : "Aggiungi ai preferiti"}
-            aria-label={isFavorite ? "Rimuovi dai preferiti" : "Aggiungi ai preferiti"}
-          >
-            <Heart 
-              size={20} 
-              className={isFavorite ? "fill-red-500 text-red-500" : "text-gray-500"} 
-              fill={isFavorite ? "currentColor" : "none"}
-            />
-          </button>
         </div>
       </div>
       <CardContent className="p-4">
         <div className="flex justify-between items-start">
           <h3 className="font-poppins font-semibold text-lg mb-1 text-primary">{name}</h3>
-          {isFavorite && (
-            <Heart size={16} className="fill-red-500 text-red-500 mt-1" />
-          )}
         </div>
         <div className="flex items-center mb-2">
           <StarRating rating={rating} />
