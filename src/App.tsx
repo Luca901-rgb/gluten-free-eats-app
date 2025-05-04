@@ -32,16 +32,12 @@ const App: React.FC = () => {
       {/* Wrap with BookingProvider to make booking context available to all routes */}
       <BookingProvider>
         <Routes>
-          {/* Redirect root to login */}
-          <Route path="/" element={<Navigate to="/login" replace />} />
+          {/* Redirect root to home for direct access to the featured restaurant */}
+          <Route path="/" element={<Navigate to="/home" replace />} />
           
           {/* Public Routes */}
-          <Route path="/home" element={
-            user ? <Index /> : <Navigate to="/login" replace />
-          } />
-          <Route path="/search" element={
-            user ? <SearchPage /> : <Navigate to="/login" replace />
-          } />
+          <Route path="/home" element={<Index />} />
+          <Route path="/search" element={<SearchPage />} />
           <Route path="/restaurant/:id" element={<RestaurantPage />} />
           <Route path="/login" element={
             !user ? <Login /> : <Navigate to="/home" replace />
