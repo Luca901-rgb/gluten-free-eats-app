@@ -109,6 +109,7 @@ export const useRestaurantData = (restaurantId?: string) => {
             description: data.description,
             address: data.address,
             hasGlutenFreeOptions: true,
+            isFavorite: r.isFavorite || false,
             location: data.location,
             cachedAt: Date.now()
           } : r

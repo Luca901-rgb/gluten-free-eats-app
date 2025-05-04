@@ -30,7 +30,7 @@ const FavoritesList: React.FC<FavoritesListProps> = ({ favorites, onToggleFavori
         <RestaurantCard
           key={restaurant.id}
           restaurant={restaurant}
-          onToggleFavorite={onToggleFavorite}
+          onToggleFavorite={() => onToggleFavorite(restaurant.id)}
         />
       ))}
     </div>

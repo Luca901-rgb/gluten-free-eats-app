@@ -17,6 +17,7 @@ export interface Restaurant {
   distance?: string;
   hasGlutenFreeOptions?: boolean;
   distanceValue?: number;
+  isFavorite?: boolean;
   location?: {
     lat: number;
     lng: number;
@@ -26,11 +27,13 @@ export interface Restaurant {
 interface RestaurantCardProps {
   restaurant: Restaurant;
   onClick?: () => void;
+  onToggleFavorite?: (id: string) => void;
 }
 
 const RestaurantCard: React.FC<RestaurantCardProps> = ({ 
   restaurant, 
-  onClick
+  onClick,
+  onToggleFavorite
 }) => {
   const { id, name, image, rating, reviews, cuisine, distance, location, hasGlutenFreeOptions } = restaurant;
 

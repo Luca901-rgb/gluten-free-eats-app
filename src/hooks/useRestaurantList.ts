@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { Restaurant } from '@/components/Restaurant/RestaurantCard';
 import { toast } from 'sonner';
@@ -34,6 +35,7 @@ export const useRestaurantList = () => {
     description: 'Ristorante 100% gluten free specializzato in cucina campana tradizionale.',
     address: 'Via Toledo 42, Napoli, 80132',
     hasGlutenFreeOptions: true,
+    isFavorite: false,
     location: {
       lat: 40.8388, 
       lng: 14.2488
