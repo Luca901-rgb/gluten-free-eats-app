@@ -11,7 +11,8 @@ export const useRestaurantSearch = (
   getOfflineRestaurants: () => Restaurant[],
   setRestaurants: (restaurants: Restaurant[]) => void,
   isOffline: boolean,
-  setIsLoading: (isLoading: boolean) => void
+  setIsLoading: (isLoading: boolean) => void,
+  fetchRestaurants: () => Promise<void> // Add fetchRestaurants parameter
 ) => {
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -53,7 +54,7 @@ export const useRestaurantSearch = (
     
     try {
       if (!searchTerm.trim()) {
-        // This is assuming fetchRestaurants exists in the parent component and can be called here
+        // Use the fetchRestaurants function that's now passed as a parameter
         await fetchRestaurants();
         return;
       }

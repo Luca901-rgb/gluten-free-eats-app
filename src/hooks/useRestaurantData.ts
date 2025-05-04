@@ -109,6 +109,7 @@ export const useRestaurantData = () => {
     restaurants,
     setRestaurants,
     isLoading,
+    setIsLoading, // Explicitly return setIsLoading
     isOffline,
     fetchRestaurants,
     ensureSampleRestaurantPresent,

@@ -17,7 +17,7 @@ export const useRestaurantList = () => {
     restaurants, 
     setRestaurants, 
     isLoading, 
-    setIsLoading = useState(true)[1], 
+    setIsLoading, // Fix: Make sure setIsLoading is properly exported from useRestaurantData
     isOffline, 
     fetchRestaurants, 
     ensureSampleRestaurantPresent,
@@ -37,7 +37,8 @@ export const useRestaurantList = () => {
     getOfflineRestaurants,
     setRestaurants,
     isOffline,
-    setIsLoading
+    setIsLoading,
+    fetchRestaurants // Pass fetchRestaurants to useRestaurantSearch
   );
 
   // Load restaurants on app launch

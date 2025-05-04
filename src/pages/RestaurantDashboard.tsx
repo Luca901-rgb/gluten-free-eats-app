@@ -1,18 +1,27 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
 import DashboardHeader from '@/components/Restaurant/DashboardHeader';
 import DashboardNavigation from '@/components/Restaurant/DashboardNavigation';
 import DashboardContent from '@/components/Restaurant/DashboardContent';
 import { TabProvider } from '@/context/TabContext';
-import { useRestaurantData } from '@/hooks/useRestaurantData';
 import { Button } from '@/components/ui/button';
 import { LogOut } from 'lucide-react';
 import { toast } from 'sonner';
+import { sampleRestaurant } from '@/data/sampleRestaurant';
 
 const RestaurantDashboard = () => {
-  const { restaurantData } = useRestaurantData();
+  // Create a local restaurant data object instead of using the hook
+  const restaurantData = {
+    id: '1',
+    name: 'Trattoria Keccabio',
+    address: 'Via Toledo 42, Napoli, 80132',
+    rating: 4.7,
+    totalReviews: 128,
+    coverImage: '/placeholder.svg'
+  };
+  
   const isRestaurantOwner = true;
   const navigate = useNavigate();
 

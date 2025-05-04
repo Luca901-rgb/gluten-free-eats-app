@@ -5,9 +5,9 @@ import RestaurantDetails, { RestaurantDetailProps } from '@/components/Restauran
 import { doc, getDoc, DocumentSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { toast } from 'sonner';
-import { useRestaurantData } from '@/hooks/useRestaurantData';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useBookings } from '@/context/BookingContext';
+import { sampleRestaurant } from '@/data/sampleRestaurant';
 
 // PRECARICAMENTO DEI DATI DEFAULT
 const DEFAULT_RESTAURANT: RestaurantDetailProps = {
@@ -48,7 +48,8 @@ const RestaurantPage = () => {
   
   const [isLoading, setIsLoading] = useState(false);
   const [restaurant, setRestaurant] = useState<RestaurantDetailProps | null>(null);
-  const { restaurantData: cachedRestaurant } = useRestaurantData(id);
+  // Create a local object for cached restaurant data instead of using the hook
+  const cachedRestaurant = sampleRestaurant;
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
   
   // Check if we have a booking code in the URL
@@ -78,15 +79,15 @@ const RestaurantPage = () => {
       setRestaurant({
         id: cachedRestaurant.id || id || '1',
         name: cachedRestaurant.name,
-        description: cachedRestaurant.description,
-        coverImage: cachedRestaurant.coverImage,
-        images: [cachedRestaurant.coverImage || '/placeholder.svg', '/placeholder.svg', '/placeholder.svg'],
-        address: cachedRestaurant.address,
-        phone: cachedRestaurant.phone || '+39 081 1234567',
-        openingHours: cachedRestaurant.openingHours || DEFAULT_RESTAURANT.openingHours,
-        rating: cachedRestaurant.rating,
-        reviews: cachedRestaurant.totalReviews,
-        hasGlutenFreeOptions: cachedRestaurant.hasGlutenFreeOptions || true
+        description: cachedRestaurant.description || DEFAULT_RESTAURANT.description,
+        coverImage: cachedRestaurant.image || DEFAULT_RESTAURANT.coverImage,
+        images: [cachedRestaurant.image || '/placeholder.svg', '/placeholder.svg', '/placeholder.svg'],
+        address: cachedRestaurant.address || DEFAULT_RESTAURANT.address,
+        phone: DEFAULT_RESTAURANT.phone,
+        openingHours: DEFAULT_RESTAURANT.openingHours,
+        rating: cachedRestaurant.rating || DEFAULT_RESTAURANT.rating,
+        reviews: cachedRestaurant.reviews || DEFAULT_RESTAURANT.reviews,
+        hasGlutenFreeOptions: cachedRestaurant.hasGlutenFreeOptions || DEFAULT_RESTAURANT.hasGlutenFreeOptions
       });
     } else {
       // Se non c'è cache, usa il default restaurant preimpostato
@@ -159,7 +160,7 @@ const RestaurantPage = () => {
           // Nessun toast, stiamo già mostrando i dati
         });
     }
-  }, [id, cachedRestaurant]);
+  }, [id]);
   
   return (
     <Layout>
