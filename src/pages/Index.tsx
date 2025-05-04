@@ -7,6 +7,7 @@ import SearchBar from '@/components/Home/SearchBar';
 import RestaurantList from '@/components/Home/RestaurantList';
 import NavigationButtons from '@/components/Home/NavigationButtons';
 import { useRestaurantList } from '@/hooks/useRestaurantList';
+import { sampleRestaurant } from '@/data/sampleRestaurant';
 
 const Index = () => {
   const {
@@ -61,7 +62,8 @@ const Index = () => {
         <div className="space-y-2">
           <h2 className="text-xl font-poppins font-semibold">Ristoranti in evidenza</h2>
           <RestaurantList 
-            restaurants={restaurants}
+            // Assicuriamoci che ci sia almeno il ristorante di esempio
+            restaurants={restaurants.length > 0 ? restaurants : [sampleRestaurant]}
             isLoading={isLoading}
             regionStatus={regionStatus}
             onRetry={refreshRestaurants}

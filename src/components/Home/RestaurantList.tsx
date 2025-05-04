@@ -1,7 +1,5 @@
 
 import React from 'react';
-import { X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Restaurant } from '@/types/restaurant';
 import RestaurantCard from '@/components/Restaurant/RestaurantCard';
 import { RegionStatus } from '@/hooks/useRestaurantList';
@@ -38,15 +36,19 @@ const RestaurantList: React.FC<RestaurantListProps> = ({
     );
   }
 
-  // Se l'array è vuoto o undefined, mostra almeno il ristorante d'esempio
-  const displayRestaurants = (restaurants?.length > 0) 
-    ? restaurants 
-    : [sampleRestaurant];
+  // Inizializziamo displayRestaurants con il ristorante di esempio
+  let displayRestaurants = [sampleRestaurant];
 
-  // Verifica se il ristorante d'esempio è presente, se no aggiungilo
-  if (!displayRestaurants.some(r => r.id === sampleRestaurant.id)) {
-    displayRestaurants.unshift(sampleRestaurant);
+  // Aggiungiamo gli altri ristoranti se ce ne sono
+  if (restaurants && restaurants.length > 0) {
+    // Filtriamo per rimuovere duplicati del ristorante di esempio
+    const otherRestaurants = restaurants.filter(r => r.id !== sampleRestaurant.id);
+    displayRestaurants = [...displayRestaurants, ...otherRestaurants];
   }
+
+  // Se non ci sono ristoranti, abbiamo comunque il ristorante di esempio
+
+  console.log("Display restaurants:", displayRestaurants);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in">
