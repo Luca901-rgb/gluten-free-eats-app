@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Navigation } from 'lucide-react';
+import { Navigation, Heart } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import StarRating from '@/components/common/StarRating';
 import { toast } from 'sonner';
@@ -35,7 +35,7 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({
   onClick,
   onToggleFavorite
 }) => {
-  const { id, name, image, rating, reviews, cuisine, distance, location, hasGlutenFreeOptions } = restaurant;
+  const { id, name, image, rating, reviews, cuisine, distance, location, hasGlutenFreeOptions, isFavorite } = restaurant;
 
   const handleCardClick = () => {
     if (onClick) {
@@ -60,6 +60,20 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({
     }
   };
 
+  const handleFavoriteClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Previene l'attivazione dell'onClick del Card
+    
+    if (onToggleFavorite) {
+      onToggleFavorite(id);
+      
+      if (isFavorite) {
+        toast.success('Rimosso dai preferiti');
+      } else {
+        toast.success('Aggiunto ai preferiti');
+      }
+    }
+  };
+
   return (
     <Card 
       className="overflow-hidden transition-all duration-300 hover:shadow-md cursor-pointer animate-fade-in"
@@ -76,17 +90,35 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({
           }}
         />
         <div className="absolute top-3 right-3 flex gap-2">
-          {location && (
+          <button 
+            className="p-2 rounded-full bg-white/80 hover:bg-white transition-colors"
+            onClick={handleNavigateClick}
+            title="Apri in Google Maps"
+            aria-label="Apri in Google Maps"
+          >
+            <Navigation 
+              size={20} 
+              className="text-primary" 
+            />
+          </button>
+          {onToggleFavorite && (
             <button 
               className="p-2 rounded-full bg-white/80 hover:bg-white transition-colors"
-              onClick={handleNavigateClick}
-              title="Apri in Google Maps"
-              aria-label="Apri in Google Maps"
+              onClick={handleFavoriteClick}
+              title={isFavorite ? "Rimuovi dai preferiti" : "Aggiungi ai preferiti"}
+              aria-label={isFavorite ? "Rimuovi dai preferiti" : "Aggiungi ai preferiti"}
             >
-              <Navigation 
-                size={20} 
-                className="text-primary" 
-              />
+              {isFavorite ? (
+                <Heart 
+                  size={20} 
+                  className="text-red-500 fill-red-500" 
+                />
+              ) : (
+                <Heart 
+                  size={20} 
+                  className="text-gray-500" 
+                />
+              )}
             </button>
           )}
         </div>
