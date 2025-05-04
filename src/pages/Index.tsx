@@ -74,8 +74,10 @@ const Index = () => {
           />
         </div>
 
-        {/* Navigation buttons */}
-        <NavigationButtons isRegionAvailable={regionStatus.inRegion} />
+        {/* Only show the "Near you" button now */}
+        {regionStatus.inRegion && (
+          <NavigationButtons isRegionAvailable={regionStatus.inRegion} />
+        )}
       </div>
     </Layout>
   );
