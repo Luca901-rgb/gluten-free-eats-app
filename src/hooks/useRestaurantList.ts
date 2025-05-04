@@ -14,7 +14,7 @@ import { sortRestaurantsByDistance } from '@/utils/distanceCalculator';
 export type { RegionStatus };
 
 export const useRestaurantList = () => {
-  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([sampleRestaurant]); // Initialize with sampleRestaurant
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
@@ -48,7 +48,7 @@ export const useRestaurantList = () => {
         await fetchRestaurants();
       } else {
         const offlineData = getOfflineRestaurants();
-        setRestaurants(offlineData);
+        setRestaurants(offlineData.length > 0 ? offlineData : [sampleRestaurant]); // Fallback to sampleRestaurant
         setIsLoading(false);
       }
     };
@@ -59,8 +59,25 @@ export const useRestaurantList = () => {
   // Effetto per aggiornare le distanze quando cambia la posizione dell'utente
   useEffect(() => {
     if (userLocation && restaurants.length > 0) {
-      const restaurantsWithDistance = addDistanceToRestaurants(restaurants);
+      // Assicuriamoci che il ristorante di esempio sia presente
+      let restaurantsToUpdate = [...restaurants];
+      if (!restaurantsToUpdate.some(r => r.id === sampleRestaurant.id)) {
+        restaurantsToUpdate = [sampleRestaurant, ...restaurantsToUpdate];
+      }
+      
+      const restaurantsWithDistance = addDistanceToRestaurants(restaurantsToUpdate);
       const sortedRestaurants = sortRestaurantsByDistance(restaurantsWithDistance, userLocation);
+      
+      // Assicuriamoci che il sample restaurant sia sempre in prima posizione
+      const keccabioIndex = sortedRestaurants.findIndex(r => r.id === sampleRestaurant.id);
+      if (keccabioIndex > 0) {
+        const keccabio = sortedRestaurants.splice(keccabioIndex, 1)[0];
+        sortedRestaurants.unshift(keccabio);
+      } else if (keccabioIndex === -1) {
+        // Se non c'è, lo aggiungiamo
+        sortedRestaurants.unshift(sampleRestaurant);
+      }
+      
       setRestaurants(sortedRestaurants);
     }
   }, [userLocation, addDistanceToRestaurants]);
@@ -68,9 +85,22 @@ export const useRestaurantList = () => {
   const fetchRestaurants = async () => {
     console.log("Caricamento ristoranti iniziato");
     
+    // Assicuriamoci che il ristorante di esempio sia sempre visibile anche durante il caricamento
+    setRestaurants(prev => {
+      if (prev.length === 0 || !prev.some(r => r.id === sampleRestaurant.id)) {
+        return [sampleRestaurant];
+      }
+      return prev;
+    });
+    
     if (isOffline) {
       const offlineRestaurants = getOfflineRestaurants();
-      setRestaurants(offlineRestaurants);
+      // Assicuriamoci che Trattoria Keccabio sia presente nei risultati offline
+      if (offlineRestaurants.length === 0 || !offlineRestaurants.some(r => r.id === sampleRestaurant.id)) {
+        setRestaurants([sampleRestaurant]);
+      } else {
+        setRestaurants(offlineRestaurants);
+      }
       setIsLoading(false);
       return;
     }
@@ -109,6 +139,13 @@ export const useRestaurantList = () => {
       if (userLocation) {
         restaurantsData = addDistanceToRestaurants(restaurantsData);
         restaurantsData = sortRestaurantsByDistance(restaurantsData, userLocation);
+        
+        // Assicuriamoci che il sample restaurant sia sempre in prima posizione
+        const keccabioIndex = restaurantsData.findIndex(r => r.id === sampleRestaurant.id);
+        if (keccabioIndex > 0) {
+          const keccabio = restaurantsData.splice(keccabioIndex, 1)[0];
+          restaurantsData.unshift(keccabio);
+        }
       }
       
       saveRestaurantsToCache(restaurantsData);
@@ -119,13 +156,8 @@ export const useRestaurantList = () => {
       console.error("Errore durante il recupero dei ristoranti:", error);
       
       // In caso di errore, assicuriamoci di includere il ristorante di esempio
-      const offlineRestaurants = getOfflineRestaurants();
-      // Verifica che Trattoria Keccabio sia presente
-      const keccabioExists = offlineRestaurants.some(r => r.id === sampleRestaurant.id);
-      if (!keccabioExists) {
-        offlineRestaurants.unshift(sampleRestaurant);
-      }
-      setRestaurants(offlineRestaurants);
+      setRestaurants([sampleRestaurant]);
+      toast.info("Utilizzando solo il ristorante di esempio");
       
       if (navigator.onLine) {
         toast.error("Si è verificato un errore nel caricamento dei ristoranti");
@@ -227,9 +259,21 @@ export const useRestaurantList = () => {
         return;
       }
       
-      setRestaurants(prevRestaurants => 
-        sortRestaurantsByDistance(prevRestaurants, userLocation)
-      );
+      setRestaurants(prevRestaurants => {
+        const sorted = sortRestaurantsByDistance(prevRestaurants, userLocation);
+        
+        // Assicuriamoci che il sample restaurant sia sempre in prima posizione
+        const keccabioIndex = sorted.findIndex(r => r.id === sampleRestaurant.id);
+        if (keccabioIndex > 0) {
+          const keccabio = sorted.splice(keccabioIndex, 1)[0];
+          sorted.unshift(keccabio);
+        } else if (keccabioIndex === -1) {
+          // Se non c'è, lo aggiungiamo
+          sorted.unshift(sampleRestaurant);
+        }
+        
+        return sorted;
+      });
     }
   };
 };
