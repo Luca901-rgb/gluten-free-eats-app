@@ -1,8 +1,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { Restaurant } from '@/types/restaurant';
+import { Restaurant, RegionStatus } from '@/types/restaurant';
 import { toast } from 'sonner';
-import { collection, getDocs, getDoc, doc } from 'firebase/firestore';
+import { collection, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { sampleRestaurant } from '@/data/sampleRestaurant';
 import { useGeolocationRestaurants } from './useGeolocationRestaurants';
@@ -10,7 +10,8 @@ import { useRegionVerification } from './useRegionVerification';
 import { useOfflineRestaurants } from './useOfflineRestaurants';
 import { sortRestaurantsByDistance } from '@/utils/distanceCalculator';
 
-export { RegionStatus } from '@/types/restaurant';
+// Export the RegionStatus type properly with 'export type'
+export type { RegionStatus };
 
 export const useRestaurantList = () => {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);

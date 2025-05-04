@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Navigation } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -5,25 +6,7 @@ import StarRating from '@/components/common/StarRating';
 import { toast } from 'sonner';
 import { Restaurant } from '@/types/restaurant';
 
-export interface Restaurant {
-  id: string;
-  name: string;
-  image: string;
-  rating: number;
-  reviews: number;
-  cuisine: string;
-  description?: string;
-  address?: string;
-  distance?: string;
-  hasGlutenFreeOptions?: boolean;
-  distanceValue?: number;
-  isFavorite?: boolean;
-  location?: {
-    lat: number;
-    lng: number;
-  };
-}
-
+// Define card props interface that uses the imported Restaurant type
 interface RestaurantCardProps {
   restaurant: Restaurant;
   onClick?: () => void;
