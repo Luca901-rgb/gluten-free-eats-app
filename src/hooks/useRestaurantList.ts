@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { Restaurant } from '@/components/Restaurant/RestaurantCard';
 import { toast } from 'sonner';
@@ -239,7 +238,8 @@ export const useRestaurantList = () => {
           description: data.description || 'Nessuna descrizione disponibile',
           address: data.address || 'Indirizzo non disponibile',
           hasGlutenFreeOptions: data.hasGlutenFreeOptions || false,
-          location: data.location || { lat: 40.8518, lng: 14.2681 }
+          location: data.location || { lat: 40.8518, lng: 14.2681 },
+          isFavorite: false
         } as Restaurant;
       });
       

@@ -65,12 +65,6 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({
     
     if (onToggleFavorite) {
       onToggleFavorite(id);
-      
-      if (isFavorite) {
-        toast.success('Rimosso dai preferiti');
-      } else {
-        toast.success('Aggiunto ai preferiti');
-      }
     }
   };
 

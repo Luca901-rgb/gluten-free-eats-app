@@ -18,7 +18,6 @@ const navigationItems = [
   { path: '/profile', icon: <UserRound size={24} strokeWidth={2.5} />, label: 'Profilo' },
 ];
 
-// Create a RouterSafeLayout component that doesn't require router context
 const Layout: React.FC<LayoutProps> = ({ children, hideNavigation = false }) => {  
   return (
     <div className="flex flex-col min-h-screen w-full bg-green-white">
@@ -69,4 +68,3 @@ const Layout: React.FC<LayoutProps> = ({ children, hideNavigation = false }) => 
 };
 
 export default Layout;
-
