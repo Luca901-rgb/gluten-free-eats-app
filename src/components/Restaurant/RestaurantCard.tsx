@@ -1,9 +1,9 @@
-
 import React from 'react';
 import { Navigation } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import StarRating from '@/components/common/StarRating';
 import { toast } from 'sonner';
+import { Restaurant } from '@/types/restaurant';
 
 export interface Restaurant {
   id: string;

@@ -2,7 +2,7 @@
 import React from 'react';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Restaurant } from '@/components/Restaurant/RestaurantCard';
+import { Restaurant } from '@/types/restaurant';
 import RestaurantCard from '@/components/Restaurant/RestaurantCard';
 import { RegionStatus } from '@/hooks/useRestaurantList';
 import { Skeleton } from '@/components/ui/skeleton';
