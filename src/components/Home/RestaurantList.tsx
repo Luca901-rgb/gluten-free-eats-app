@@ -12,15 +12,13 @@ interface RestaurantListProps {
   isLoading: boolean;
   regionStatus: RegionStatus;
   onRetry: () => void;
-  onToggleFavorite?: (id: string) => void;
 }
 
 const RestaurantList: React.FC<RestaurantListProps> = ({
   restaurants,
   isLoading,
   regionStatus,
-  onRetry,
-  onToggleFavorite
+  onRetry
 }) => {
   if (isLoading) {
     return (
@@ -57,7 +55,6 @@ const RestaurantList: React.FC<RestaurantListProps> = ({
           key={restaurant.id}
           restaurant={restaurant}
           onClick={() => window.location.href = `/restaurant/${restaurant.id}`}
-          onToggleFavorite={onToggleFavorite}
         />
       ))}
     </div>

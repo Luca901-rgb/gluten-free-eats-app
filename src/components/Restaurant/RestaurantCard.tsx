@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Navigation, Heart } from 'lucide-react';
+import { Navigation } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import StarRating from '@/components/common/StarRating';
 import { toast } from 'sonner';
@@ -27,15 +27,13 @@ export interface Restaurant {
 interface RestaurantCardProps {
   restaurant: Restaurant;
   onClick?: () => void;
-  onToggleFavorite?: (id: string) => void;
 }
 
 const RestaurantCard: React.FC<RestaurantCardProps> = ({ 
   restaurant, 
-  onClick,
-  onToggleFavorite
+  onClick
 }) => {
-  const { id, name, image, rating, reviews, cuisine, distance, location, hasGlutenFreeOptions, isFavorite } = restaurant;
+  const { id, name, image, rating, reviews, cuisine, distance, location, hasGlutenFreeOptions } = restaurant;
 
   const handleCardClick = () => {
     if (onClick) {
@@ -57,20 +55,6 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({
       toast.success('Apertura mappa del ristorante');
     } else {
       toast.error('Coordinate del ristorante non disponibili');
-    }
-  };
-
-  const handleFavoriteClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Previene l'attivazione dell'onClick del Card
-    
-    if (onToggleFavorite) {
-      onToggleFavorite(id);
-      
-      if (isFavorite) {
-        toast.success('Rimosso dai preferiti');
-      } else {
-        toast.success('Aggiunto ai preferiti');
-      }
     }
   };
 
@@ -101,26 +85,6 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({
               className="text-primary" 
             />
           </button>
-          {onToggleFavorite && (
-            <button 
-              className="p-2 rounded-full bg-white/80 hover:bg-white transition-colors"
-              onClick={handleFavoriteClick}
-              title={isFavorite ? "Rimuovi dai preferiti" : "Aggiungi ai preferiti"}
-              aria-label={isFavorite ? "Rimuovi dai preferiti" : "Aggiungi ai preferiti"}
-            >
-              {isFavorite ? (
-                <Heart 
-                  size={20} 
-                  className="text-red-500 fill-red-500" 
-                />
-              ) : (
-                <Heart 
-                  size={20} 
-                  className="text-gray-500" 
-                />
-              )}
-            </button>
-          )}
         </div>
       </div>
       <CardContent className="p-4">
