@@ -36,18 +36,15 @@ const RestaurantList: React.FC<RestaurantListProps> = ({
     );
   }
 
-  // Inizializziamo displayRestaurants con il ristorante di esempio
+  // Always ensure we have the sample restaurant
   let displayRestaurants = [sampleRestaurant];
-
-  // Aggiungiamo gli altri ristoranti se ce ne sono
+  
+  // Add other restaurants if they exist, excluding any duplicates of the sample restaurant
   if (restaurants && restaurants.length > 0) {
-    // Filtriamo per rimuovere duplicati del ristorante di esempio
     const otherRestaurants = restaurants.filter(r => r.id !== sampleRestaurant.id);
-    displayRestaurants = [...displayRestaurants, ...otherRestaurants];
+    displayRestaurants = [sampleRestaurant, ...otherRestaurants];
   }
-
-  // Se non ci sono ristoranti, abbiamo comunque il ristorante di esempio
-
+  
   console.log("Display restaurants:", displayRestaurants);
 
   return (

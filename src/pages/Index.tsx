@@ -36,11 +36,7 @@ const Index = () => {
     console.log("Forzando ricarica ristoranti dalla pagina Index");
     
     // Forza un refresh immediato all'apertura della pagina
-    const timer = setTimeout(() => {
-      refreshRestaurants();
-    }, 300);
-    
-    return () => clearTimeout(timer);
+    refreshRestaurants();
   }, [refreshRestaurants]);
 
   return (
@@ -62,8 +58,7 @@ const Index = () => {
         <div className="space-y-2">
           <h2 className="text-xl font-poppins font-semibold">Ristoranti in evidenza</h2>
           <RestaurantList 
-            // Assicuriamoci che ci sia almeno il ristorante di esempio
-            restaurants={restaurants.length > 0 ? restaurants : [sampleRestaurant]}
+            restaurants={restaurants} 
             isLoading={isLoading}
             regionStatus={regionStatus}
             onRetry={refreshRestaurants}
