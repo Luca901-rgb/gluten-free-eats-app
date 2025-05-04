@@ -20,23 +20,30 @@ const Index = () => {
     refreshRestaurants
   } = useRestaurantList();
   
-  // Log per debug
+  // Debug logs
   useEffect(() => {
     console.log("Index page - Mounting");
     console.log("Initial restaurants:", restaurants);
   }, []);
 
-  // Log quando cambiano i ristoranti
   useEffect(() => {
     console.log("Restaurants changed:", restaurants);
   }, [restaurants]);
 
-  // Carica automaticamente i ristoranti all'apertura della pagina
+  // Forza il caricamento dei ristoranti all'apertura della pagina
   useEffect(() => {
     console.log("Forzando ricarica ristoranti dalla pagina Index");
     
-    // Forza un refresh immediato all'apertura della pagina
+    // Forza un refresh immediato
     refreshRestaurants();
+    
+    // Imposta anche un controllo dopo 500ms nel caso il primo caricamento fallisse
+    const timer = setTimeout(() => {
+      console.log("Controllo di sicurezza per i ristoranti");
+      refreshRestaurants();
+    }, 500);
+    
+    return () => clearTimeout(timer);
   }, [refreshRestaurants]);
 
   return (

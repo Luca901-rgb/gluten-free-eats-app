@@ -36,16 +36,17 @@ const RestaurantList: React.FC<RestaurantListProps> = ({
     );
   }
 
-  // Always ensure we have the sample restaurant
+  // Garantisci sempre la presenza del ristorante di esempio, prima di tutto
   let displayRestaurants = [sampleRestaurant];
   
-  // Add other restaurants if they exist, excluding any duplicates of the sample restaurant
+  // Aggiungi altri ristoranti se esistono, escludendo duplicati del ristorante esempio
   if (restaurants && restaurants.length > 0) {
     const otherRestaurants = restaurants.filter(r => r.id !== sampleRestaurant.id);
     displayRestaurants = [sampleRestaurant, ...otherRestaurants];
   }
   
   console.log("Display restaurants:", displayRestaurants);
+  console.log("Restaurants length:", displayRestaurants.length);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in">
