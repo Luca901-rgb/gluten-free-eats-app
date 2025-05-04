@@ -23,15 +23,6 @@ const Index = () => {
   useEffect(() => {
     console.log("Index page - Mounting");
     console.log("Initial restaurants:", restaurants);
-    
-    // Pulizia forzata della cache all'apertura della pagina
-    try {
-      localStorage.removeItem('cachedRestaurants');
-      localStorage.removeItem('lastCacheTime');
-      console.log("Cache forzatamente ripulita all'avvio della pagina");
-    } catch (e) {
-      console.error("Errore nella pulizia della cache:", e);
-    }
   }, []);
 
   // Log quando cambiano i ristoranti
@@ -42,11 +33,6 @@ const Index = () => {
   // Carica automaticamente i ristoranti all'apertura dell'app
   useEffect(() => {
     console.log("Caricamento ristoranti all'avvio");
-    
-    // Forza ricaricamento dati freschi all'avvio
-    console.log("Forzo ricaricamento dati freschi");
-    localStorage.removeItem('cachedRestaurants');
-    localStorage.setItem('lastCacheTime', Date.now().toString());
     
     // Carica immediatamente senza attendere l'interazione utente
     refreshRestaurants();

@@ -34,7 +34,6 @@ export const useRestaurantList = () => {
     description: 'Ristorante 100% gluten free specializzato in cucina campana tradizionale.',
     address: 'Via Toledo 42, Napoli, 80132',
     hasGlutenFreeOptions: true,
-    isFavorite: false,
     location: {
       lat: 40.8388, 
       lng: 14.2488
@@ -203,12 +202,6 @@ export const useRestaurantList = () => {
             parsedRestaurants = [sampleRestaurant, ...parsedRestaurants];
           }
           
-          // Rimuovi la proprietà isFavorite da tutti i ristoranti
-          parsedRestaurants = parsedRestaurants.map((r: Restaurant) => {
-            const { isFavorite, ...rest } = r;
-            return rest;
-          });
-          
           setRestaurants(parsedRestaurants);
           console.log("Caricati", parsedRestaurants.length, "ristoranti dalla cache (incluso esempio)");
         } catch (e) {
@@ -289,19 +282,15 @@ export const useRestaurantList = () => {
       }
       
       try {
-        // Rimuovi la proprietà isFavorite da tutti i ristoranti prima di salvarli in cache
-        const restaurantsForCache = restaurantsData.map(r => {
-          const { isFavorite, ...rest } = r;
-          return rest;
-        });
-        localStorage.setItem('cachedRestaurants', JSON.stringify(restaurantsForCache));
-        console.log("Salvati", restaurantsForCache.length, "ristoranti in cache");
+        localStorage.setItem('cachedRestaurants', JSON.stringify(restaurantsData));
+        console.log("Salvati", restaurantsData.length, "ristoranti in cache");
       } catch (e) {
         console.error("Errore nel salvataggio dei ristoranti in cache:", e);
       }
       
       setRestaurants(restaurantsData);
       console.log("Lista ristoranti aggiornata con", restaurantsData.length, "elementi");
+      console.log("RestaurantList - Valore restaurant:", restaurantsData);
     } catch (error) {
       console.error("Errore durante il recupero dei ristoranti:", error);
       
@@ -315,14 +304,9 @@ export const useRestaurantList = () => {
             parsedRestaurants = [sampleRestaurant, ...parsedRestaurants];
           }
           
-          // Rimuovi la proprietà isFavorite da tutti i ristoranti
-          parsedRestaurants = parsedRestaurants.map((r: Restaurant) => {
-            const { isFavorite, ...rest } = r;
-            return rest;
-          });
-          
           setRestaurants(parsedRestaurants);
           toast.info("Utilizzando dati ristoranti dalla cache");
+          console.log("Aggiornamento lista con", parsedRestaurants.length, "ristoranti dal backend");
         } catch (e) {
           console.error("Errore nel parsing dei ristoranti dalla cache:", e);
           setRestaurants([sampleRestaurant]);
