@@ -1,4 +1,3 @@
-
 import React, { Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuthState } from "react-firebase-hooks/auth";
@@ -29,12 +28,11 @@ const App: React.FC = () => {
 
   return (
     <Suspense fallback={<LoadingScreen />}>
-      {/* Wrap with BookingProvider to make booking context available to all routes */}
       <BookingProvider>
         <TableProvider>
           <Routes>
-            {/* Redirect root to search page instead of home */}
-            <Route path="/" element={<Navigate to="/search" replace />} />
+            {/* Redirect root to restaurant-login instead of search */}
+            <Route path="/" element={<Navigate to="/restaurant-login" replace />} />
             
             {/* Public Routes */}
             <Route path="/home" element={<Index />} />
