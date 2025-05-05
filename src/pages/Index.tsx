@@ -1,6 +1,5 @@
 
 import React, { useEffect } from 'react';
-import Layout from '@/components/Layout';
 import { useNavigate } from 'react-router-dom';
 import { Search, Heart, MapPin, Calendar, Home } from 'lucide-react';
 import { useRestaurantList } from '@/hooks/useRestaurantList';
@@ -101,26 +100,6 @@ const Index = () => {
             </Card>
           </div>
         )}
-      </div>
-      
-      {/* Bottom Navigation - fixed position */}
-      <div className="fixed bottom-0 left-0 right-0 bg-green-500 flex justify-around items-center py-3 text-white">
-        <div className="flex flex-col items-center">
-          <Home size={20} />
-          <span className="text-xs mt-1">Home</span>
-        </div>
-        <div className="flex flex-col items-center">
-          <Search size={20} />
-          <span className="text-xs mt-1">Ricerca</span>
-        </div>
-        <div className="flex flex-col items-center">
-          <Heart size={20} />
-          <span className="text-xs mt-1">Preferiti</span>
-        </div>
-        <div className="flex flex-col items-center">
-          <Calendar size={20} />
-          <span className="text-xs mt-1">Prenotazioni</span>
-        </div>
       </div>
     </div>
   );
