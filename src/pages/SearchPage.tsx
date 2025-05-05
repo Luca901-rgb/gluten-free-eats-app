@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { Link } from 'react-router-dom';
@@ -11,6 +12,7 @@ import { Slider } from '@/components/ui/slider';
 import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useRestaurantData } from '@/hooks/useRestaurantData';
+import { sampleRestaurant } from '@/data/sampleRestaurant';
 
 // Tipo di dato per i ristoranti
 interface Restaurant {
@@ -38,8 +40,8 @@ const SearchPage = () => {
   const [maxDistance, setMaxDistance] = useState<number>(100); // Impostazione del filtro distanza a 100km
   const [isLoading, setIsLoading] = useState(false);
   
-  // Import the sample restaurant data to use as fallback
-  const { restaurantData: sampleRestaurant } = useRestaurantData();
+  // Import the restaurant data hook to get access to sampleRestaurant
+  const { restaurants: hookRestaurants } = useRestaurantData();
   
   // Controlla lo stato dei permessi di geolocalizzazione
   const checkPermissionStatus = async () => {
@@ -101,9 +103,9 @@ const SearchPage = () => {
           address: sampleRestaurant.address,
           distance: position ? `${distanceValue.toFixed(1)} km` : 'Distanza non disponibile',
           distanceValue: distanceValue,
-          image: sampleRestaurant.coverImage,
-          rating: Number(sampleRestaurant.rating || 0),
-          reviews: Number(sampleRestaurant.totalReviews || 0),
+          image: sampleRestaurant.image,
+          rating: Number(sampleRestaurant.rating) || 0,
+          reviews: Number(sampleRestaurant.reviews) || 0,
           cuisine: 'Italiana', // Default
           isFavorite: false
         }];
@@ -137,8 +139,8 @@ const SearchPage = () => {
             distance: position ? `${distanceValue.toFixed(1)} km` : 'Distanza non disponibile',
             distanceValue: distanceValue,
             image: data.coverImage || '/placeholder.svg',
-            rating: Number(data.rating || 0),
-            reviews: Number(data.reviews || 0),
+            rating: Number(data.rating) || 0,
+            reviews: Number(data.reviews) || 0,
             cuisine: data.cuisine || 'Italiana',
             isFavorite: false
           } as Restaurant;
@@ -187,9 +189,9 @@ const SearchPage = () => {
           address: sampleRestaurant.address,
           distance: `${distanceValue.toFixed(1)} km`,
           distanceValue: distanceValue,
-          image: sampleRestaurant.coverImage,
-          rating: Number(sampleRestaurant.rating || 0),
-          reviews: Number(sampleRestaurant.totalReviews || 0),
+          image: sampleRestaurant.image,
+          rating: Number(sampleRestaurant.rating) || 0,
+          reviews: Number(sampleRestaurant.reviews) || 0,
           cuisine: 'Italiana',
           isFavorite: false
         }]);
