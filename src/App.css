@@ -4,7 +4,7 @@
   margin: 0;
   padding: 0;
   text-align: center;
-  background-color: #def2de;
+  background-color: #e4f8e4;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -61,7 +61,7 @@
 }
 
 .header-bg {
-  background-color: #4CAF50;
+  background-color: #22c55e;
   color: white;
 }
 
@@ -101,7 +101,7 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background-color: #4CAF50;
+  background-color: #22c55e;
   display: flex;
   justify-content: space-around;
   padding: 0.5rem 0;
@@ -127,7 +127,7 @@
 }
 
 .restaurant-tab.active {
-  background-color: #4CAF50;
+  background-color: #22c55e;
   color: white;
-  border-color: #4CAF50;
+  border-color: #22c55e;
 }
