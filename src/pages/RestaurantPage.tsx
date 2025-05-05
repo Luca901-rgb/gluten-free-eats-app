@@ -38,8 +38,8 @@ const RestaurantPage = () => {
             hasGlutenFreeOptions: data.hasGlutenFreeOptions || sampleRestaurant.hasGlutenFreeOptions,
             image: data.coverImage || sampleRestaurant.image,
             location: data.location || sampleRestaurant.location,
-            rating: data.rating || sampleRestaurant.rating,
-            reviews: data.reviewCount || sampleRestaurant.reviews
+            rating: typeof data.rating === 'number' ? data.rating : sampleRestaurant.rating,
+            reviews: typeof data.reviewCount === 'number' ? data.reviewCount : sampleRestaurant.reviews
           });
         }
       } catch (error) {
