@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 import { Button } from '../ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '../ui/form';
 import { Input } from '../ui/input';
-import { Eye, EyeOff, Loader } from 'lucide-react';
+import { Eye, EyeOff, Loader, LogIn } from 'lucide-react';
 
 // Schema di validazione
 const formSchema = z.object({
@@ -73,15 +73,24 @@ const LoginForm: React.FC<LoginFormProps> = ({ userType = 'customer' }) => {
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel className="text-slate-700">Email</FormLabel>
               <FormControl>
-                <Input 
-                  placeholder="nome@esempio.com" 
-                  type="email" 
-                  autoComplete="email" 
-                  disabled={isLoading} 
-                  {...field} 
-                />
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                    <svg className="w-5 h-5 text-gray-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path>
+                      <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path>
+                    </svg>
+                  </div>
+                  <Input 
+                    placeholder="nome@esempio.com" 
+                    type="email" 
+                    autoComplete="email" 
+                    disabled={isLoading}
+                    className="bg-white pl-10"
+                    {...field} 
+                  />
+                </div>
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -94,18 +103,24 @@ const LoginForm: React.FC<LoginFormProps> = ({ userType = 'customer' }) => {
           render={({ field }) => (
             <FormItem>
               <div className="flex justify-between items-center">
-                <FormLabel>Password</FormLabel>
-                <a href="/forgot-password" className="text-sm text-primary hover:underline">
+                <FormLabel className="text-slate-700">Password</FormLabel>
+                <a href="/forgot-password" className="text-sm text-orange-400 hover:underline">
                   Password dimenticata?
                 </a>
               </div>
               <div className="relative">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                  <svg className="w-5 h-5 text-gray-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd"></path>
+                  </svg>
+                </div>
                 <FormControl>
                   <Input 
                     placeholder="••••••" 
                     type={showPassword ? 'text' : 'password'} 
                     autoComplete="current-password" 
-                    disabled={isLoading} 
+                    disabled={isLoading}
+                    className="bg-white pl-10" 
                     {...field} 
                   />
                 </FormControl>
@@ -122,14 +137,17 @@ const LoginForm: React.FC<LoginFormProps> = ({ userType = 'customer' }) => {
           )}
         />
         
-        <Button type="submit" className="w-full" disabled={isLoading}>
+        <Button type="submit" className="w-full text-white" disabled={isLoading}>
           {isLoading ? (
             <>
               <Loader className="mr-2 h-4 w-4 animate-spin" />
               Accesso in corso...
             </>
           ) : (
-            <>Accedi</>
+            <>
+              <LogIn className="h-4 w-4 mr-2" />
+              Accedi
+            </>
           )}
         </Button>
       </form>

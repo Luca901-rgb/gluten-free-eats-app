@@ -32,8 +32,8 @@ const App: React.FC = () => {
       <BookingProvider>
         <TableProvider>
           <Routes>
-            {/* Redirect root to search page instead of restaurant-login */}
-            <Route path="/" element={<Navigate to="/home" replace />} />
+            {/* Redirect root to login page */}
+            <Route path="/" element={<Navigate to="/login" replace />} />
             
             {/* Public Routes */}
             <Route path="/home" element={<Index />} />
