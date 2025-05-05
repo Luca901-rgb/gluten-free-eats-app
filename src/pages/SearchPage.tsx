@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { CheckCircle, AlertTriangle, MapPin, Navigation } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useUserLocation } from '@/hooks/useUserLocation';
-import RestaurantMap from '@/components/Map/RestaurantMap';
+import { RestaurantMap } from '@/components/Map/RestaurantMap';
 
 const SearchPage = () => {
   const [searchParams] = useSearchParams();
