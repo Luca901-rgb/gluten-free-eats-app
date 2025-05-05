@@ -1,3 +1,4 @@
+
 import React, { Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuthState } from "react-firebase-hooks/auth";
@@ -31,8 +32,8 @@ const App: React.FC = () => {
       <BookingProvider>
         <TableProvider>
           <Routes>
-            {/* Redirect root to restaurant-login instead of search */}
-            <Route path="/" element={<Navigate to="/restaurant-login" replace />} />
+            {/* Redirect root to search page instead of restaurant-login */}
+            <Route path="/" element={<Navigate to="/home" replace />} />
             
             {/* Public Routes */}
             <Route path="/home" element={<Index />} />
