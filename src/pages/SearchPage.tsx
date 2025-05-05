@@ -118,7 +118,7 @@ const SearchPage: React.FC = () => {
                     <h3 className="font-bold">{restaurant.name}</h3>
                     <div className="flex items-center my-1">
                       <StarRating rating={restaurant.rating} size="sm" />
-                      <span className="text-xs text-gray-600 ml-1">{restaurant.reviews.toString()}</span>
+                      <span className="text-xs text-gray-600 ml-1">{restaurant.reviews}</span>
                     </div>
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-gray-600">{restaurant.cuisine}</span>
