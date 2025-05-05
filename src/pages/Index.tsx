@@ -78,7 +78,7 @@ const Index = () => {
                     <h3 className="text-lg font-bold">{restaurant.name}</h3>
                     <div className="flex items-center my-1">
                       <StarRating rating={restaurant.rating} />
-                      <span className="text-sm text-gray-600 ml-2">{restaurant.reviews} recensioni</span>
+                      <span className="text-sm text-gray-600 ml-2">{restaurant.reviews || 0} recensioni</span>
                     </div>
                     <p className="text-sm text-gray-600">{restaurant.cuisine}</p>
                     <div className="mt-2">
