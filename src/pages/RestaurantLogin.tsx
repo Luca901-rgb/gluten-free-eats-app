@@ -13,7 +13,7 @@ const RestaurantLogin = () => {
             Accedi alla tua dashboard per gestire il tuo ristorante, prenotazioni, menu e recensioni.
           </p>
         </div>
-        <LoginForm initialUserType="restaurant" />
+        <LoginForm userType="restaurant" />
       </div>
     </Layout>
   );
