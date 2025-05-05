@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import Layout from '@/components/Layout';
 import { useSearchParams } from 'react-router-dom';
@@ -209,7 +210,7 @@ const SearchPage = () => {
             <div className="h-[50vh] rounded-lg border overflow-hidden">
               <RestaurantMap 
                 userLocation={userPosition}
-                restaurants={restaurants}
+                restaurants={restaurants as any[]}
               />
             </div>
             
