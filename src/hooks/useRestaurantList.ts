@@ -17,7 +17,7 @@ export const useRestaurantList = () => {
     restaurants, 
     setRestaurants, 
     isLoading, 
-    setIsLoading, // Fix: Make sure setIsLoading is properly exported from useRestaurantData
+    setIsLoading,
     isOffline, 
     fetchRestaurants, 
     ensureSampleRestaurantPresent,
@@ -38,7 +38,7 @@ export const useRestaurantList = () => {
     setRestaurants,
     isOffline,
     setIsLoading,
-    fetchRestaurants // Pass fetchRestaurants to useRestaurantSearch
+    fetchRestaurants
   );
 
   // Load restaurants on app launch
@@ -84,16 +84,50 @@ export const useRestaurantList = () => {
       
       // Ensure sample restaurant is always in first position
       setRestaurants(ensureSampleRestaurantPresent(sortedRestaurants));
+      
+      // Salvare i ristoranti in cache con le distanze aggiornate
+      if (navigator.onLine) {
+        saveRestaurantsToCache(sortedRestaurants);
+      }
     }
   }, [userLocation, addDistanceToRestaurants, ensureSampleRestaurantPresent]);
 
-  const refreshRestaurants = useCallback(fetchRestaurants, [
+  const refreshRestaurants = useCallback(async () => {
+    if (isOffline) {
+      const offlineData = getOfflineRestaurants();
+      setRestaurants(ensureSampleRestaurantPresent(offlineData));
+      return;
+    }
+    
+    try {
+      setIsLoading(true);
+      await fetchRestaurants();
+      
+      // Se abbiamo la posizione dell'utente, aggiorniamo le distanze
+      if (userLocation) {
+        const updatedWithLocation = addDistanceToRestaurants(restaurants);
+        const sorted = sortRestaurantsByDistance(updatedWithLocation, userLocation);
+        setRestaurants(ensureSampleRestaurantPresent(sorted));
+      }
+      
+      // Save to cache after fetching
+      saveRestaurantsToCache(restaurants);
+    } catch (error) {
+      console.error("Error refreshing restaurants:", error);
+      toast.error("Errore nell'aggiornamento dei ristoranti");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [
     isOffline, 
     userLocation, 
+    restaurants,
     getOfflineRestaurants, 
     addDistanceToRestaurants, 
     saveRestaurantsToCache,
-    ensureSampleRestaurantPresent
+    ensureSampleRestaurantPresent,
+    fetchRestaurants,
+    setIsLoading
   ]);
 
   return {
@@ -110,7 +144,8 @@ export const useRestaurantList = () => {
     getUserLocation,
     sortRestaurantsByDistance: () => {
       if (!userLocation) {
-        toast.error("User location not available");
+        toast.error("Posizione utente non disponibile");
+        getUserLocation(); // Tenta di ottenere la posizione se non disponibile
         return;
       }
       
