@@ -6,6 +6,8 @@ import { Search, Heart, MapPin } from 'lucide-react';
 import { useRestaurantList } from '@/hooks/useRestaurantList';
 import { Card } from '@/components/ui/card';
 import StarRating from '@/components/common/StarRating';
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -15,7 +17,7 @@ const Index = () => {
     refreshRestaurants
   } = useRestaurantList();
   
-  // Forza il caricamento dei ristoranti all'apertura della pagina
+  // Force loading restaurants when the page opens
   useEffect(() => {
     refreshRestaurants();
   }, [refreshRestaurants]);
@@ -31,7 +33,7 @@ const Index = () => {
   return (
     <Layout>
       <div className="w-full px-4 py-6 pb-20 space-y-6 bg-green-light">
-        {/* Barra di ricerca semplificata */}
+        {/* Simplified search bar */}
         <div 
           className="flex items-center bg-white rounded-full p-4 shadow-sm" 
           onClick={handleSearchClick}
@@ -40,7 +42,17 @@ const Index = () => {
           <span className="text-gray-500">Cerca ristoranti o cucina...</span>
         </div>
         
-        {/* Ristoranti in evidenza */}
+        {/* Login/Register options */}
+        <div className="flex flex-col gap-2 mb-4">
+          <Link to="/login">
+            <Button variant="default" className="w-full">Accedi</Button>
+          </Link>
+          <Link to="/register">
+            <Button variant="outline" className="w-full">Registrati</Button>
+          </Link>
+        </div>
+        
+        {/* Featured restaurants */}
         <div className="space-y-4">
           <h2 className="text-xl font-bold text-left">Ristoranti in evidenza</h2>
           
@@ -50,7 +62,7 @@ const Index = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              {restaurants.slice(0, 1).map(restaurant => (
+              {restaurants.slice(0, 3).map(restaurant => (
                 <Card 
                   key={restaurant.id} 
                   className="rounded-xl overflow-hidden shadow-sm bg-white"
@@ -58,11 +70,11 @@ const Index = () => {
                 >
                   <div className="relative">
                     <img
-                      src={restaurant.image || "/lovable-uploads/72ce3268-fe10-45d6-9c12-aecfe184f7ed.png"}
+                      src={restaurant.image || "/placeholder.svg"}
                       alt={restaurant.name}
                       className="w-full h-48 object-cover"
                       onError={(e) => {
-                        e.currentTarget.src = "/lovable-uploads/72ce3268-fe10-45d6-9c12-aecfe184f7ed.png";
+                        e.currentTarget.src = "/placeholder.svg";
                       }}
                     />
                     <div className="absolute top-2 right-2 flex space-x-2">
@@ -77,13 +89,15 @@ const Index = () => {
                   <div className="p-4 text-left">
                     <h3 className="text-lg font-bold">{restaurant.name}</h3>
                     <div className="flex items-center my-1">
-                      <StarRating rating={restaurant.rating} />
+                      <StarRating rating={restaurant.rating || 0} />
                       <span className="text-sm text-gray-600 ml-2">{restaurant.reviews || 0} recensioni</span>
                     </div>
                     <p className="text-sm text-gray-600">{restaurant.cuisine}</p>
-                    <div className="mt-2">
-                      <span className="green-tag">100% Gluten Free</span>
-                    </div>
+                    {restaurant.hasGlutenFreeOptions && (
+                      <div className="mt-2">
+                        <span className="green-tag">100% Gluten Free</span>
+                      </div>
+                    )}
                   </div>
                 </Card>
               ))}
