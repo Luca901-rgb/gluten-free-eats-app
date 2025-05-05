@@ -2,11 +2,10 @@
 import React, { useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { useNavigate } from 'react-router-dom';
-import { Search, Heart, MapPin } from 'lucide-react';
+import { Search, Heart, MapPin, Send, Calendar } from 'lucide-react';
 import { useRestaurantList } from '@/hooks/useRestaurantList';
 import { Card } from '@/components/ui/card';
 import StarRating from '@/components/common/StarRating';
-import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 
 const Index = () => {
@@ -32,40 +31,50 @@ const Index = () => {
 
   return (
     <Layout>
-      <div className="w-full px-4 py-6 pb-20 space-y-6 bg-green-light">
-        {/* Simplified search bar */}
-        <div 
-          className="flex items-center bg-white rounded-full p-4 shadow-sm" 
-          onClick={handleSearchClick}
-        >
-          <Search className="text-gray-400 mr-2" size={20} />
-          <span className="text-gray-500">Cerca ristoranti o cucina...</span>
+      <div className="w-full space-y-6 bg-green-100/60 min-h-screen pb-24">
+        {/* Header with title */}
+        <div className="bg-green-500 text-white p-4 flex items-center justify-center">
+          <h1 className="text-xl font-bold flex items-center">
+            <img src="/placeholder.svg" alt="Logo" className="w-8 h-8 mr-2" />
+            GlutenFree Eats
+          </h1>
         </div>
         
-        {/* Login/Register options */}
-        <div className="flex flex-col gap-2 mb-4">
-          <Link to="/login">
-            <Button variant="default" className="w-full">Accedi</Button>
-          </Link>
-          <Link to="/register">
-            <Button variant="outline" className="w-full">Registrati</Button>
-          </Link>
+        {/* Search bar */}
+        <div className="px-4">
+          <div className="flex items-center gap-2">
+            <div className="flex-1 relative bg-white rounded-lg shadow-sm overflow-hidden">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <input 
+                type="text" 
+                placeholder="Cerca ristoranti o cucina..." 
+                className="w-full pl-10 pr-4 py-3 outline-none"
+                onClick={handleSearchClick}
+              />
+            </div>
+            <Button 
+              onClick={handleSearchClick}
+              className="bg-slate-700 hover:bg-slate-800 px-5 py-3 h-auto"
+            >
+              Cerca
+            </Button>
+          </div>
         </div>
         
         {/* Featured restaurants */}
-        <div className="space-y-4">
-          <h2 className="text-xl font-bold text-left">Ristoranti in evidenza</h2>
+        <div className="px-4 space-y-4">
+          <h2 className="text-xl font-semibold text-center">Ristoranti in evidenza</h2>
           
           {isLoading ? (
-            <div className="flex justify-center py-20">
-              <p>Caricamento ristoranti...</p>
+            <div className="flex justify-center py-10">
+              <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
             </div>
           ) : (
             <div className="space-y-4">
-              {restaurants.slice(0, 3).map(restaurant => (
+              {restaurants.slice(0, 1).map(restaurant => (
                 <Card 
                   key={restaurant.id} 
-                  className="rounded-xl overflow-hidden shadow-sm bg-white"
+                  className="overflow-hidden bg-white rounded-lg shadow"
                   onClick={() => handleRestaurantClick(restaurant.id)}
                 >
                   <div className="relative">
@@ -73,29 +82,28 @@ const Index = () => {
                       src={restaurant.image || "/placeholder.svg"}
                       alt={restaurant.name}
                       className="w-full h-48 object-cover"
-                      onError={(e) => {
-                        e.currentTarget.src = "/placeholder.svg";
-                      }}
                     />
                     <div className="absolute top-2 right-2 flex space-x-2">
                       <button className="p-2 bg-white rounded-full shadow">
-                        <MapPin size={18} className="text-gray-600" />
+                        <Send size={18} className="text-gray-600" />
                       </button>
                       <button className="p-2 bg-white rounded-full shadow">
                         <Heart size={18} className="text-gray-600" />
                       </button>
                     </div>
                   </div>
-                  <div className="p-4 text-left">
-                    <h3 className="text-lg font-bold">{restaurant.name}</h3>
-                    <div className="flex items-center my-1">
+                  <div className="p-4">
+                    <h3 className="text-xl font-bold text-center">{restaurant.name}</h3>
+                    <div className="flex items-center justify-center my-2">
                       <StarRating rating={restaurant.rating || 0} />
                       <span className="text-sm text-gray-600 ml-2">{restaurant.reviews || 0} recensioni</span>
                     </div>
-                    <p className="text-sm text-gray-600">{restaurant.cuisine}</p>
+                    <p className="text-center">Campana Gluten Free</p>
                     {restaurant.hasGlutenFreeOptions && (
-                      <div className="mt-2">
-                        <span className="green-tag">100% Gluten Free</span>
+                      <div className="flex justify-center mt-2">
+                        <span className="px-3 py-1 text-sm bg-green-100 text-green-800 rounded-full">
+                          100% Gluten Free
+                        </span>
                       </div>
                     )}
                   </div>
@@ -104,6 +112,28 @@ const Index = () => {
             </div>
           )}
         </div>
+      </div>
+      
+      {/* Bottom Navigation */}
+      <div className="fixed bottom-0 left-0 right-0 bg-green-500 flex justify-around items-center py-2 text-white">
+        <button className="flex flex-col items-center px-4">
+          <div className="p-1 rounded-full bg-green-600">
+            <MapPin size={20} />
+          </div>
+          <span className="text-xs mt-1">Home</span>
+        </button>
+        <button className="flex flex-col items-center px-4">
+          <Search size={20} />
+          <span className="text-xs mt-1">Ricerca</span>
+        </button>
+        <button className="flex flex-col items-center px-4">
+          <Heart size={20} />
+          <span className="text-xs mt-1">Preferiti</span>
+        </button>
+        <button className="flex flex-col items-center px-4">
+          <Calendar size={20} />
+          <span className="text-xs mt-1">Prenotazioni</span>
+        </button>
       </div>
     </Layout>
   );
