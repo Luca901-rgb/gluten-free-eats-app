@@ -30,7 +30,7 @@ export default {
 				background: 'hsl(var(--background))',
 				foreground: 'hsl(var(--foreground))',
 				primary: {
-					DEFAULT: '#3D405B',
+					DEFAULT: '#4CAF50',
 					foreground: 'hsl(var(--primary-foreground))'
 				},
 				secondary: {
@@ -42,9 +42,9 @@ export default {
 					foreground: 'hsl(var(--accent-foreground))'
 				},
 				green: {
-					light: '#F2FCE2', // Soft light green
-					DEFAULT: '#81C784', // Medium green
-					dark: '#4CAF50', // Darker green
+					light: '#def2de', // Soft light green
+					DEFAULT: '#4CAF50', // Medium green
+					dark: '#388E3C', // Darker green
 				},
 				destructive: {
 					DEFAULT: 'hsl(var(--destructive))',
@@ -79,9 +79,9 @@ export default {
 				sm: 'calc(var(--radius) - 4px)'
 			},
 			backgroundImage: {
-				'green-gradient': 'linear-gradient(184.1deg, rgba(249,255,182,1) 44.7%, rgba(226,255,172,1) 67.2%, #ffffff 100%)',
-				'green-white': 'linear-gradient(to bottom, #81C784 0%, #F2FCE2 50%, #ffffff 100%)',
-				'logo-gradient': 'linear-gradient(to right, #4CAF50, #81C784, #F2FCE2)',
+				'green-gradient': 'linear-gradient(to bottom, #4CAF50, #def2de)',
+				'green-white': 'linear-gradient(to bottom, #4CAF50, #def2de)',
+				'logo-gradient': 'linear-gradient(to right, #4CAF50, #8BC34A)',
 			},
 			keyframes: {
 				'accordion-down': {

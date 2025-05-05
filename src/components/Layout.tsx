@@ -1,37 +1,22 @@
 
 import React from 'react';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Home, Search, Calendar, UserRound, Wheat, Utensils, Heart } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { buttonVariants } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { Link } from 'react-router-dom';
+import { Home, Search, Calendar, Heart, User } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
 
 interface LayoutProps {
   children: React.ReactNode;
   hideNavigation?: boolean;
 }
 
-const navigationItems = [
-  { path: '/home', icon: <Home size={24} strokeWidth={2.5} />, label: 'Home' },
-  { path: '/search', icon: <Search size={24} strokeWidth={2.5} />, label: 'Ricerca' },
-  { path: '/bookings', icon: <Calendar size={24} strokeWidth={2.5} />, label: 'Prenotazioni' },
-  { path: '/favorites', icon: <Heart size={24} strokeWidth={2.5} />, label: 'Preferiti' },
-  { path: '/profile', icon: <UserRound size={24} strokeWidth={2.5} />, label: 'Profilo' },
-];
-
-const Layout: React.FC<LayoutProps> = ({ children, hideNavigation = false }) => {  
+const Layout: React.FC<LayoutProps> = ({ children, hideNavigation = false }) => {
+  const location = useLocation();
+  
   return (
-    <div className="flex flex-col min-h-screen w-full bg-green-white">
-      <header className="sticky top-0 z-10 flex items-center justify-between bg-gradient-to-r from-green-dark/90 via-green/80 to-green-light/70 border-b h-16 px-4 backdrop-blur-sm w-full">
+    <div className="flex flex-col min-h-screen w-full bg-green-light overflow-hidden">
+      <header className="sticky top-0 z-10 flex items-center bg-green-default header-bg h-14 px-4">
         <div className="flex items-center gap-2">
-          <div className="flex items-center justify-center p-1.5 rounded-full bg-gradient-to-br from-green-dark via-green to-green-light shadow-md">
-            <div className="relative">
-              <Wheat size={16} className="text-white drop-shadow-[0_0_1px_rgba(0,0,0,0.8)]" strokeWidth={2.5} />
-              <Utensils size={12} className="text-white drop-shadow-[0_0_1px_rgba(0,0,0,0.8)] absolute -bottom-1 -right-1" strokeWidth={2.5} />
-            </div>
-          </div>
-          <span className="font-poppins font-bold text-lg text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
+          <img src="/lovable-uploads/cb016c24-7700-4927-b5e2-40af08e4b219.png" alt="Logo" className="h-8 w-8" />
+          <span className="font-poppins font-bold text-lg text-white">
             GlutenFree Eats
           </span>
         </div>
@@ -42,27 +27,42 @@ const Layout: React.FC<LayoutProps> = ({ children, hideNavigation = false }) => 
       </div>
       
       {!hideNavigation && (
-        <nav className="fixed bottom-0 w-full bg-gradient-to-r from-green-dark/90 via-green/80 to-green-light/70 border-t h-16 flex justify-around items-center z-10 backdrop-blur-sm">
-          {navigationItems.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className="flex flex-col items-center justify-center p-1 text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.7)]"
-              onClick={(e) => {
-                console.log(`Navigation clicked: ${item.path}`);
-              }}
-            >
-              <div className="drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
-                {item.icon}
-              </div>
-              <span className="text-xs mt-1 font-bold text-white" style={{ 
-                textShadow: '0px 1px 3px rgba(0,0,0,0.9), 0px 1px 2px rgba(0,0,0,0.8)',
-                WebkitTextStroke: '0.5px rgba(0,0,0,0.8)'
-              }}>
-                {item.label}
-              </span>
-            </Link>
-          ))}
+        <nav className="fixed bottom-0 w-full bg-green-default border-t h-16 flex justify-around items-center z-10 bottom-nav">
+          <Link
+            to="/home"
+            className={`nav-button ${location.pathname === '/home' ? 'font-bold' : ''}`}
+          >
+            <Home size={24} />
+            <span>Home</span>
+          </Link>
+          <Link
+            to="/search"
+            className={`nav-button ${location.pathname === '/search' ? 'font-bold' : ''}`}
+          >
+            <Search size={24} />
+            <span>Ricerca</span>
+          </Link>
+          <Link
+            to="/favorites"
+            className={`nav-button ${location.pathname === '/favorites' ? 'font-bold' : ''}`}
+          >
+            <Heart size={24} />
+            <span>Preferiti</span>
+          </Link>
+          <Link
+            to="/bookings"
+            className={`nav-button ${location.pathname === '/bookings' ? 'font-bold' : ''}`}
+          >
+            <Calendar size={24} />
+            <span>Prenotazioni</span>
+          </Link>
+          <Link
+            to="/profile"
+            className={`nav-button ${location.pathname === '/profile' ? 'font-bold' : ''}`}
+          >
+            <User size={24} />
+            <span>Profilo</span>
+          </Link>
         </nav>
       )}
     </div>

@@ -1,227 +1,145 @@
 
 import React, { useState, useEffect } from 'react';
-import Layout from '@/components/Layout';
-import { Search, MapPin, Filter, Wheat, SlidersHorizontal } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
-import RestaurantCard from '@/components/Restaurant/RestaurantCard';
-import { useRestaurantList } from '@/hooks/useRestaurantList';
-import { Skeleton } from '@/components/ui/skeleton';
 import { useNavigate } from 'react-router-dom';
-import { Sheet, SheetClose, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { toast } from 'sonner';
-
-// Categorie di cucina senza glutine specifiche - MODIFICATE per escludere pasticcerie e bar
-const categories = [
-  { icon: <Wheat size={16} className="mr-2" />, name: "Pizzeria" },
-  { icon: <Wheat size={16} className="mr-2" />, name: "Ristorante" },
-  { icon: <Wheat size={16} className="mr-2" />, name: "Trattoria" },
-  { icon: <Wheat size={16} className="mr-2" />, name: "Pub" },
-  { icon: <Wheat size={16} className="mr-2" />, name: "Panineria" }
-];
-
-// Categorie consentite in formato lowercase per il filtraggio
-const allowedCategories = ["pizzeria", "ristorante", "trattoria", "pub", "panineria"];
+import Layout from '@/components/Layout';
+import { Search, MapPin, Filter, Sliders } from 'lucide-react';
+import { useRestaurantList } from '@/hooks/useRestaurantList';
+import { Card } from '@/components/ui/card';
+import StarRating from '@/components/common/StarRating';
 
 const SearchPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const { 
     restaurants, 
     isLoading, 
-    isOffline, 
-    getUserLocation, 
-    sortRestaurantsByDistance 
+    getUserLocation,
+    refreshRestaurants
   } = useRestaurantList();
 
-  // Richiedi la posizione dell'utente all'apertura della pagina
   useEffect(() => {
+    refreshRestaurants();
     getUserLocation();
-  }, [getUserLocation]);
+  }, [refreshRestaurants, getUserLocation]);
 
-  const handleFilterToggle = (filter: string) => {
-    setSelectedFilters(prev => 
-      prev.includes(filter)
-        ? prev.filter(f => f !== filter)
-        : [...prev, filter]
-    );
-  };
-
-  const handleRestaurantClick = (restaurantId: string) => {
-    navigate(`/restaurant/${restaurantId}`);
-  };
-
-  // Filtra i ristoranti in base alla ricerca, ai filtri selezionati, alle categorie consentite e alla proprietà "hasGlutenFreeOptions"
   const filteredRestaurants = restaurants
-    .filter(restaurant => {
-      // Mostra SOLO ristoranti senza glutine
-      if (!restaurant.hasGlutenFreeOptions) {
-        return false;
-      }
-      
-      // Filtra per tipo di locale - escludi bar, pasticcerie e altre attività non consentite
-      const lowerCuisine = restaurant.cuisine?.toLowerCase() || '';
-      
-      // Un ristorante passa il filtro se contiene almeno una delle categorie consentite
-      return allowedCategories.some(category => lowerCuisine.includes(category));
-    })
     .filter(restaurant => 
-      !searchQuery || 
-      restaurant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (restaurant.address && restaurant.address.toLowerCase().includes(searchQuery.toLowerCase()))
-    )
-    .filter(restaurant => 
-      selectedFilters.length === 0 || 
-      selectedFilters.some(filter => 
-        restaurant.cuisine?.toLowerCase().includes(filter.toLowerCase())
+      restaurant.hasGlutenFreeOptions && 
+      (!searchQuery || 
+        restaurant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (restaurant.address && restaurant.address.toLowerCase().includes(searchQuery.toLowerCase()))
+      ) &&
+      (!selectedCategory || 
+        restaurant.cuisine?.toLowerCase().includes(selectedCategory.toLowerCase())
       )
-    )
-    // Ordina i ristoranti per distanza
-    .sort((a, b) => {
-      // Se un ristorante ha distanceValue e l'altro no, quello con distanceValue viene prima
-      if (a.distanceValue && !b.distanceValue) return -1;
-      if (!a.distanceValue && b.distanceValue) return 1;
-      // Se entrambi hanno distanceValue, ordina per valore
-      if (a.distanceValue && b.distanceValue) return a.distanceValue - b.distanceValue;
-      // Se nessuno ha distanceValue, mantieni l'ordine originale
-      return 0;
-    });
+    );
+
+  const categories = [
+    "Ristorante", 
+    "Pizzeria", 
+    "Trattoria", 
+    "Pub", 
+    "Panineria"
+  ];
+
+  const handleRestaurantClick = (id: string) => {
+    navigate(`/restaurant/${id}`);
+  };
 
   return (
     <Layout>
-      <div className="container mx-auto p-4 pb-20">
-        <h1 className="text-2xl font-bold mb-6">Cerca ristoranti senza glutine</h1>
+      <div className="p-4 pb-20">
+        <h1 className="text-2xl font-bold mb-4 text-left">Cerca Ristoranti</h1>
         
-        <div className="relative mb-6">
-          <Input 
-            type="text" 
-            placeholder="Inserisci nome o indirizzo del ristorante..." 
-            className="pl-10 pr-4 py-2"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-          
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="absolute right-2 top-1/2 transform -translate-y-1/2"
-            onClick={() => getUserLocation()}
-            title="Trova ristoranti vicino a me"
-          >
-            <MapPin size={16} className="mr-1" /> Vicino a me
-          </Button>
+        <div className="relative mb-4">
+          <div className="flex items-center bg-white border rounded-full p-2 pl-4">
+            <Search className="text-gray-400 mr-2" size={20} />
+            <input
+              type="text"
+              placeholder="Ricerca per nome o indirizzo..."
+              className="flex-1 outline-none text-sm"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            <button 
+              className="ml-2 bg-green-default text-white rounded-full p-2"
+              onClick={getUserLocation}
+            >
+              <MapPin size={18} />
+            </button>
+          </div>
         </div>
         
-        <div className="flex justify-between items-center mb-6">
-          <ScrollArea className="w-full whitespace-nowrap pb-2">
-            <div className="flex space-x-2">
-              {categories.map((category) => (
-                <Badge
-                  key={category.name}
-                  variant={selectedFilters.includes(category.name) ? "default" : "outline"}
-                  className="cursor-pointer flex items-center"
-                  onClick={() => handleFilterToggle(category.name)}
-                >
-                  {category.icon} {category.name}
-                </Badge>
-              ))}
-            </div>
-          </ScrollArea>
+        <div className="flex items-center mb-4 overflow-x-auto py-1">
+          {categories.map(category => (
+            <button
+              key={category}
+              className={`mr-2 px-3 py-1 text-sm rounded-full whitespace-nowrap ${
+                selectedCategory === category 
+                  ? 'bg-green-default text-white' 
+                  : 'bg-white border text-gray-700'
+              }`}
+              onClick={() => setSelectedCategory(selectedCategory === category ? null : category)}
+            >
+              {category}
+            </button>
+          ))}
           
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="outline" size="icon" className="ml-2 flex-shrink-0">
-                <SlidersHorizontal size={18} />
-              </Button>
-            </SheetTrigger>
-            <SheetContent>
-              <SheetHeader>
-                <SheetTitle>Filtri avanzati</SheetTitle>
-                <SheetDescription>
-                  Personalizza la tua ricerca in base alle tue esigenze
-                </SheetDescription>
-              </SheetHeader>
-              
-              <div className="py-4 space-y-4">
-                <div className="space-y-2">
-                  <h3 className="text-sm font-medium">Certificazione</h3>
-                  <div className="grid grid-cols-2 gap-2">
-                    <Badge variant="outline" className="cursor-pointer justify-center">AIC</Badge>
-                    <Badge variant="outline" className="cursor-pointer justify-center">AFC</Badge>
-                    <Badge variant="outline" className="cursor-pointer justify-center">Self-certified</Badge>
-                    <Badge variant="outline" className="cursor-pointer justify-center">Tutti</Badge>
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <h3 className="text-sm font-medium">Distanza</h3>
-                  <div className="grid grid-cols-3 gap-2">
-                    <Badge variant="outline" className="cursor-pointer justify-center">1 km</Badge>
-                    <Badge variant="outline" className="cursor-pointer justify-center">5 km</Badge>
-                    <Badge variant="outline" className="cursor-pointer justify-center">10 km</Badge>
-                    <Badge variant="outline" className="cursor-pointer justify-center">15 km</Badge>
-                    <Badge variant="outline" className="cursor-pointer justify-center">30 km</Badge>
-                    <Badge variant="outline" className="cursor-pointer justify-center">50+ km</Badge>
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <h3 className="text-sm font-medium">Valutazione minima</h3>
-                  <div className="grid grid-cols-5 gap-2">
-                    <Badge variant="outline" className="cursor-pointer justify-center">1+</Badge>
-                    <Badge variant="outline" className="cursor-pointer justify-center">2+</Badge>
-                    <Badge variant="outline" className="cursor-pointer justify-center">3+</Badge>
-                    <Badge variant="outline" className="cursor-pointer justify-center">4+</Badge>
-                    <Badge variant="outline" className="cursor-pointer justify-center">4.5+</Badge>
-                  </div>
-                </div>
-              </div>
-              
-              <SheetFooter>
-                <SheetClose asChild>
-                  <Button type="submit">Applica filtri</Button>
-                </SheetClose>
-              </SheetFooter>
-            </SheetContent>
-          </Sheet>
+          <button className="ml-auto p-2 bg-white border rounded-lg">
+            <Sliders size={18} className="text-gray-700" />
+          </button>
         </div>
         
         <div className="space-y-4">
           {isLoading ? (
-            // Skeleton loader
-            [...Array(3)].map((_, i) => (
-              <div key={i} className="flex p-4 border rounded-lg mb-4">
-                <Skeleton className="h-24 w-24 rounded-md" />
-                <div className="ml-4 flex-1">
-                  <Skeleton className="h-4 w-3/4 mb-2" />
-                  <Skeleton className="h-3 w-1/2 mb-4" />
-                  <Skeleton className="h-3 w-1/4" />
-                </div>
-              </div>
-            ))
+            <div className="flex justify-center p-8">
+              <p>Caricamento ristoranti...</p>
+            </div>
           ) : filteredRestaurants.length > 0 ? (
             filteredRestaurants.map(restaurant => (
-              <RestaurantCard 
-                key={restaurant.id}
-                restaurant={restaurant}
+              <Card 
+                key={restaurant.id} 
+                className="restaurant-card overflow-hidden"
                 onClick={() => handleRestaurantClick(restaurant.id)}
-              />
+              >
+                <div className="flex border-b">
+                  <div className="w-24 h-24 bg-gray-200">
+                    <img 
+                      src={restaurant.image || "/lovable-uploads/72ce3268-fe10-45d6-9c12-aecfe184f7ed.png"} 
+                      alt={restaurant.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.src = "/lovable-uploads/72ce3268-fe10-45d6-9c12-aecfe184f7ed.png";
+                      }}
+                    />
+                  </div>
+                  <div className="flex-1 p-3 text-left">
+                    <h3 className="font-bold">{restaurant.name}</h3>
+                    <div className="flex items-center my-1">
+                      <StarRating rating={restaurant.rating} size="sm" />
+                      <span className="text-xs text-gray-600 ml-1">{restaurant.reviews}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-gray-600">{restaurant.cuisine}</span>
+                      {restaurant.distance && (
+                        <span className="text-gray-500 flex items-center">
+                          <MapPin size={12} className="mr-1" /> {restaurant.distance}
+                        </span>
+                      )}
+                    </div>
+                    <div className="mt-1">
+                      <span className="green-tag text-xs">100% Gluten Free</span>
+                    </div>
+                  </div>
+                </div>
+              </Card>
             ))
           ) : (
-            <div className="text-center py-10 text-gray-500">
-              <Search size={48} className="mx-auto opacity-20 mb-4" />
-              <p className="text-lg">Nessun ristorante senza glutine trovato</p>
-              <p className="mt-2">Prova a cambiare i filtri o la ricerca</p>
-            </div>
-          )}
-          
-          {isOffline && (
-            <div className="p-3 text-center text-sm text-amber-700 bg-amber-50 rounded-lg border border-amber-200 mt-4">
-              Sei offline. I dati mostrati potrebbero non essere aggiornati.
+            <div className="text-center py-8">
+              <Search size={48} className="mx-auto text-gray-300 mb-2" />
+              <p className="text-gray-600">Nessun ristorante trovato</p>
+              <p className="text-sm text-gray-500">Prova a modificare i parametri di ricerca</p>
             </div>
           )}
         </div>
