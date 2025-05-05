@@ -17,6 +17,8 @@ export interface Restaurant {
     lat: number;
     lng: number;
   };
+  coverImage?: string;
+  totalReviews?: number;
 }
 
 export interface RegionStatus {

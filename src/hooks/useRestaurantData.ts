@@ -107,9 +107,10 @@ export const useRestaurantData = () => {
 
   return {
     restaurants,
+    defaultRestaurant: sampleRestaurant,
     setRestaurants,
     isLoading,
-    setIsLoading, // Explicitly return setIsLoading
+    setIsLoading,
     isOffline,
     fetchRestaurants,
     ensureSampleRestaurantPresent,

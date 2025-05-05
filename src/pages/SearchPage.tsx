@@ -1,15 +1,15 @@
 
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ChefHat, MapPin, Navigation, Info, AlertTriangle, Settings, Sliders } from 'lucide-react';
+import { ChefHat, MapPin, Navigation, Info, AlertTriangle, Settings, Sliders, Star } from 'lucide-react';
 import { RestaurantMap } from '@/components/Map/RestaurantMap';
 import { toast } from 'sonner';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { isInAvailableRegion, requestGeolocationPermission, checkGeolocationPermission } from '@/utils/geolocation';
 import { Slider } from '@/components/ui/slider';
-import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
+import { collection, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useRestaurantData } from '@/hooks/useRestaurantData';
 import { sampleRestaurant } from '@/data/sampleRestaurant';
@@ -30,6 +30,7 @@ interface Restaurant {
 }
 
 const SearchPage = () => {
+  const navigate = useNavigate();
   const [userPosition, setUserPosition] = useState<{ lat: number; lng: number } | null>(null);
   const [isLocating, setIsLocating] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
@@ -147,6 +148,35 @@ const SearchPage = () => {
         });
       }
       
+      // Aggiungiamo sempre il ristorante di esempio se non è presente
+      const hasSampleRestaurant = fetchedRestaurants.some(r => r.id === sampleRestaurant.id);
+      if (!hasSampleRestaurant) {
+        const restaurantLocation = sampleRestaurant.location || { lat: 40.8388, lng: 14.2488 };
+        let distanceValue = 0;
+        if (position) {
+          distanceValue = calculateDistance(
+            position.lat, 
+            position.lng, 
+            restaurantLocation.lat, 
+            restaurantLocation.lng
+          );
+        }
+        
+        fetchedRestaurants.push({
+          id: sampleRestaurant.id || '1',
+          name: sampleRestaurant.name,
+          location: restaurantLocation,
+          address: sampleRestaurant.address,
+          distance: position ? `${distanceValue.toFixed(1)} km` : 'Distanza non disponibile',
+          distanceValue: distanceValue,
+          image: sampleRestaurant.image,
+          rating: Number(sampleRestaurant.rating) || 0,
+          reviews: Number(sampleRestaurant.reviews) || 0,
+          cuisine: 'Italiana',
+          isFavorite: false
+        });
+      }
+      
       // Filtra per distanza massima se l'utente ha impostato la posizione
       if (position) {
         console.log("Prima del filtro:", fetchedRestaurants.length, "ristoranti");
@@ -206,6 +236,20 @@ const SearchPage = () => {
   useEffect(() => {
     if (userPosition) {
       fetchRestaurants(userPosition);
+    } else {
+      // Carica almeno il ristorante di esempio
+      setRestaurants([{
+        id: sampleRestaurant.id || '1',
+        name: sampleRestaurant.name,
+        location: sampleRestaurant.location || { lat: 40.8388, lng: 14.2488 },
+        address: sampleRestaurant.address,
+        distance: 'Posizione utente non disponibile',
+        image: sampleRestaurant.image,
+        rating: Number(sampleRestaurant.rating) || 0,
+        reviews: Number(sampleRestaurant.reviews) || 0,
+        cuisine: 'Italiana',
+        isFavorite: false
+      }]);
     }
   }, [userPosition, maxDistance]); // Ricarica quando la posizione o la distanza massima cambiano
   
@@ -298,6 +342,20 @@ const SearchPage = () => {
   useEffect(() => {
     // Aggiorna lo stato dei permessi all'avvio
     checkPermissionStatus();
+    
+    // Carica subito il ristorante di esempio
+    setRestaurants([{
+      id: sampleRestaurant.id || '1',
+      name: sampleRestaurant.name,
+      location: sampleRestaurant.location || { lat: 40.8388, lng: 14.2488 },
+      address: sampleRestaurant.address,
+      distance: 'Posizione utente non disponibile',
+      image: sampleRestaurant.image,
+      rating: Number(sampleRestaurant.rating) || 0,
+      reviews: Number(sampleRestaurant.reviews) || 0,
+      cuisine: 'Italiana',
+      isFavorite: false
+    }]);
   }, []);
   
   const openSettingsGuide = () => {
@@ -307,6 +365,30 @@ const SearchPage = () => {
   const handleDistanceChange = (value: number[]) => {
     console.log("Nuova distanza massima impostata:", value[0], "km");
     setMaxDistance(value[0]);
+  };
+  
+  const navigateToRestaurant = (restaurantId: string) => {
+    navigate(`/restaurant/${restaurantId}`);
+  };
+  
+  // Funzione per renderizzare le stelle di valutazione
+  const renderRatingStars = (rating: number = 0) => {
+    return (
+      <div className="flex items-center">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <Star
+            key={star}
+            size={14}
+            className={`${
+              star <= rating
+                ? 'text-yellow-400 fill-yellow-400'
+                : 'text-gray-300'
+            }`}
+          />
+        ))}
+        <span className="ml-1 text-xs text-gray-600">({rating.toFixed(1)})</span>
+      </div>
+    );
   };
 
   return (
@@ -440,16 +522,29 @@ const SearchPage = () => {
                   restaurants.map(restaurant => (
                     <div 
                       key={restaurant.id} 
-                      className="bg-white p-3 m-2 rounded-lg shadow-sm flex items-start gap-2 hover:bg-gray-50 cursor-pointer transition-colors"
-                      onClick={() => {/* Navigate to restaurant details */}}
+                      className="bg-white p-3 m-2 rounded-lg shadow-sm flex items-start gap-3 hover:bg-gray-50 cursor-pointer transition-colors"
+                      onClick={() => navigateToRestaurant(restaurant.id)}
                     >
                       <MapPin className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
                       <div className="flex-1">
                         <h5 className="font-medium">{restaurant.name}</h5>
                         <p className="text-sm text-gray-600">{restaurant.address}</p>
-                        <p className="text-sm font-medium text-primary">{restaurant.distance}</p>
+                        {restaurant.rating !== undefined && (
+                          <div className="mt-1">
+                            {renderRatingStars(restaurant.rating)}
+                          </div>
+                        )}
+                        <p className="text-sm font-medium text-primary mt-1">{restaurant.distance}</p>
                       </div>
-                      <Button variant="outline" size="icon" className="h-8 w-8 flex-shrink-0">
+                      <Button 
+                        variant="outline" 
+                        size="icon" 
+                        className="h-8 w-8 flex-shrink-0"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigateToRestaurant(restaurant.id);
+                        }}
+                      >
                         <Navigation className="h-4 w-4" />
                       </Button>
                     </div>
