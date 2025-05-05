@@ -281,10 +281,10 @@ const RestaurantPage = () => {
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center">
                   <StarRating rating={restaurant.rating} className="mr-2" />
-                  <span className="font-bold">{restaurant.rating}</span>
+                  <span className="font-bold">{restaurant.rating.toFixed(1)}</span>
                 </div>
                 <span className="text-sm bg-gray-100 text-gray-600 px-3 py-1 rounded-full">
-                  {restaurant.reviews} recensioni
+                  {restaurant.reviews.toString()} recensioni
                 </span>
               </div>
               
