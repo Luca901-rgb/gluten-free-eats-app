@@ -13,7 +13,7 @@ import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 import RestaurantLogin from "./pages/RestaurantLogin";
 import RestaurantPage from "./pages/RestaurantPage"; 
-import RestaurantDashboard from "./pages/RestaurantDashboard"; // Import the actual component
+import RestaurantDashboard from "./pages/RestaurantDashboard";
 import { BookingProvider } from "./context/BookingContext";
 import Register from "./pages/Register";
 import RestaurantRegister from "./pages/RestaurantRegister";
@@ -33,8 +33,8 @@ const App: React.FC = () => {
       <BookingProvider>
         <TableProvider>
           <Routes>
-            {/* Redirect root to home for direct access to the featured restaurant */}
-            <Route path="/" element={<Navigate to="/home" replace />} />
+            {/* Redirect root to search page instead of home */}
+            <Route path="/" element={<Navigate to="/search" replace />} />
             
             {/* Public Routes */}
             <Route path="/home" element={<Index />} />
