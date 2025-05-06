@@ -4,17 +4,12 @@ import Layout from '@/components/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import RestaurantCardRegistration from '@/components/Restaurant/RestaurantCardRegistration';
-import RestaurantRegistrationPayment from '@/components/Restaurant/RestaurantRegistrationPayment';
 import { useNavigate } from 'react-router-dom';
-import { Store, CreditCard, Clipboard, Check } from 'lucide-react';
+import { Store, Clipboard, Check } from 'lucide-react';
 
 const RestaurantRegister = () => {
   const navigate = useNavigate();
-  const [step, setStep] = useState<'payment' | 'information' | 'complete'>('payment');
-
-  const handlePaymentComplete = () => {
-    setStep('information');
-  };
+  const [step, setStep] = useState<'information' | 'complete'>('information');
 
   const handleInformationComplete = () => {
     setStep('complete');
@@ -31,13 +26,6 @@ const RestaurantRegister = () => {
         <div className="mb-8">
           <div className="flex items-center justify-center">
             <div className="flex items-center">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${step === 'payment' || step === 'information' || step === 'complete' ? 'bg-primary text-white' : 'bg-gray-200'}`}>
-                <CreditCard className="w-5 h-5" />
-              </div>
-              <div className={`w-16 h-1 ${step === 'information' || step === 'complete' ? 'bg-primary' : 'bg-gray-200'}`}></div>
-            </div>
-            
-            <div className="flex items-center">
               <div className={`w-10 h-10 rounded-full flex items-center justify-center ${step === 'information' || step === 'complete' ? 'bg-primary text-white' : 'bg-gray-200'}`}>
                 <Store className="w-5 h-5" />
               </div>
@@ -51,15 +39,10 @@ const RestaurantRegister = () => {
             </div>
           </div>
           <div className="flex justify-between text-sm mt-2 px-2">
-            <span className="text-center w-24">Programma Pilota</span>
             <span className="text-center w-24">Dati Ristorante</span>
             <span className="text-center w-24">Completamento</span>
           </div>
         </div>
-        
-        {step === 'payment' && (
-          <RestaurantRegistrationPayment onComplete={handlePaymentComplete} />
-        )}
         
         {step === 'information' && (
           <RestaurantCardRegistration onComplete={handleInformationComplete} />
