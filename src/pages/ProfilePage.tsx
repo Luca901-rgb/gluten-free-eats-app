@@ -1,14 +1,15 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import Layout from '@/components/Layout';
-import { Settings, Shield, LogOut } from 'lucide-react';
+import { Settings, Shield, LogOut, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { logoutUser } from '@/lib/firebase';
 import { toast } from 'sonner';
 
 const ProfilePage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   
   const handleLogout = async () => {
     try {
@@ -19,6 +20,11 @@ const ProfilePage = () => {
       toast.error("Errore durante la disconnessione");
     }
   };
+
+  // Determina se nascondere il badge basandosi sui parametri URL
+  useEffect(() => {
+    console.log("ProfilePage montato, location:", location.pathname);
+  }, [location]);
   
   return (
     <Layout>
@@ -62,6 +68,11 @@ const ProfilePage = () => {
           <div className="bg-white rounded-lg p-4 flex items-center shadow-sm">
             <Shield className="w-6 h-6 mr-4 text-gray-700" />
             <span className="text-lg">Area amministratore</span>
+          </div>
+          
+          <div className="bg-white rounded-lg p-4 flex items-center shadow-sm" onClick={() => navigate('/favorites')}>
+            <Heart className="w-6 h-6 mr-4 text-gray-700" />
+            <span className="text-lg">I miei preferiti</span>
           </div>
         </div>
         

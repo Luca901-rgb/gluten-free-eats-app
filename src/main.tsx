@@ -2,7 +2,6 @@
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
-import { BrowserRouter } from 'react-router-dom'
 import { Toaster } from './components/ui/toaster';
 import { Toaster as SonnerToaster } from 'sonner';
 
@@ -30,14 +29,10 @@ try {
     console.log("Elemento root trovato, rendering app...");
     const root = createRoot(rootElement);
     
-    // Avvolgiamo il rendering in un try-catch aggiuntivo e assicuriamo che BrowserRouter avvolga App
+    // Avvolgiamo il rendering in un try-catch aggiuntivo
     try {
       root.render(
-        <BrowserRouter>
-          <App />
-          <Toaster />
-          <SonnerToaster position="top-right" />
-        </BrowserRouter>
+        <App />
       );
       console.log("App renderizzata con successo");
     } catch (renderError) {

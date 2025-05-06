@@ -32,6 +32,9 @@ function App() {
   const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
   const userType = localStorage.getItem('userType') || 'customer';
 
+  // Log per debug
+  console.log("Page view:", window.location.pathname);
+
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
