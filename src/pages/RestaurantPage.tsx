@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import Layout from '@/components/Layout';
@@ -6,6 +5,7 @@ import RestaurantDetails, { RestaurantDetailProps } from '@/components/Restauran
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { toast } from 'sonner';
+import { sampleRestaurant } from '@/data/sampleRestaurant';
 
 const RestaurantPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -21,28 +21,44 @@ const RestaurantPage = () => {
       }
       
       try {
+        // If this is the sample restaurant (Keccabio), use its predefined data
+        if (id === sampleRestaurant.id) {
+          const keccabioDetails: RestaurantDetailProps = {
+            id: sampleRestaurant.id,
+            name: sampleRestaurant.name,
+            description: sampleRestaurant.description || 'Ristorante 100% gluten free specializzato in cucina campana tradizionale.',
+            coverImage: sampleRestaurant.image,
+            images: [
+              '/lovable-uploads/95f0a77e-f037-47c5-be02-90f2eaa053da.png',
+              '/lovable-uploads/b21bbbb3-e4d7-4dfe-9487-6771cefd5463.png',
+              '/lovable-uploads/6b05bf4a-3f83-4c13-a0a6-b1da63ae22c8.png',
+              '/lovable-uploads/980b8b9d-0d2d-4177-a121-51beeced8789.png',
+            ],
+            address: sampleRestaurant.address || 'Via Toledo 42, Napoli, 80132',
+            phone: sampleRestaurant.phone || '+39 081 123 4567',
+            openingHours: sampleRestaurant.openingHours || [
+              { days: 'Lunedì', hours: 'Chiuso' },
+              { days: 'Martedì-Venerdì', hours: '12:00-14:30, 19:00-22:30' },
+              { days: 'Sabato', hours: '12:00-15:00, 19:00-23:00' },
+              { days: 'Domenica', hours: '12:00-15:00, 19:00-22:00' }
+            ],
+            rating: sampleRestaurant.rating || 4.8,
+            reviews: sampleRestaurant.reviews || 128,
+            hasGlutenFreeOptions: true,
+            menuUrl: '/menu/keccabio',
+            awards: ['Certificato AIC', 'Miglior Ristorante Gluten Free 2024']
+          };
+          
+          setRestaurant(keccabioDetails);
+          setIsLoading(false);
+          return;
+        }
+        
+        // Otherwise try to fetch from Firebase
         const restaurantDoc = await getDoc(doc(db, "restaurants", id));
         
         if (!restaurantDoc.exists()) {
-          // If restaurant doesn't exist in Firestore, use sample data
-          const sampleRestaurant: RestaurantDetailProps = {
-            id: '1',
-            name: 'Trattoria Keccabio',
-            description: 'Ristorante 100% gluten free specializzato in cucina campana tradizionale. Il nostro locale è certificato dall\'Associazione Italiana Celiachia e tutto il nostro menù è privo di glutine. Dal pane alla pasta, dalle pizze ai dolci, offriamo un\'esperienza gastronomica completa senza compromessi sul gusto.',
-            coverImage: '/placeholder.svg',
-            images: ['/placeholder.svg', '/placeholder.svg', '/placeholder.svg', '/placeholder.svg'],
-            address: 'Via Toledo 42, Napoli, 80132',
-            phone: '+39 081 123 4567',
-            openingHours: [
-              { days: 'Lunedì-Venerdì', hours: '12:00-15:00, 19:00-23:00' },
-              { days: 'Sabato-Domenica', hours: '12:00-23:00' }
-            ],
-            rating: 4.7,
-            reviews: 128,
-            hasGlutenFreeOptions: true
-          };
-          
-          setRestaurant(sampleRestaurant);
+          toast.error("Ristorante non trovato");
           setIsLoading(false);
           return;
         }
@@ -76,40 +92,20 @@ const RestaurantPage = () => {
         
         setRestaurant({
           id,
-          name: data?.name || 'Trattoria Keccabio',
-          description: data?.description || 'Ristorante 100% gluten free specializzato in cucina campana tradizionale. Il nostro locale è certificato dall\'Associazione Italiana Celiachia e tutto il nostro menù è privo di glutine. Dal pane alla pasta, dalle pizze ai dolci, offriamo un\'esperienza gastronomica completa senza compromessi sul gusto.',
+          name: data?.name || 'Ristorante senza nome',
+          description: data?.description || 'Nessuna descrizione disponibile',
           coverImage: data?.coverImage || '/placeholder.svg',
-          images: data?.gallery || ['/placeholder.svg', '/placeholder.svg', '/placeholder.svg', '/placeholder.svg'],
-          address: data?.address || 'Via Toledo 42, Napoli, 80132',
-          phone: data?.phone || '+39 081 123 4567',
+          images: data?.gallery || ['/placeholder.svg'],
+          address: data?.address || 'Indirizzo non disponibile',
+          phone: data?.phone || 'Telefono non disponibile',
           openingHours,
-          rating: Number(data?.rating) || 4.7,
-          reviews: Number(data?.reviewCount) || 128,
-          hasGlutenFreeOptions: data?.hasGlutenFreeOptions || true
+          rating: Number(data?.rating) || 4.0,
+          reviews: Number(data?.reviewCount) || 0,
+          hasGlutenFreeOptions: data?.hasGlutenFreeOptions || false
         });
       } catch (error) {
         console.error("Error fetching restaurant details:", error);
         toast.error("Si è verificato un errore nel caricamento dei dettagli del ristorante");
-        
-        // Use sample data in case of error
-        const sampleRestaurant: RestaurantDetailProps = {
-          id: '1',
-          name: 'Trattoria Keccabio',
-          description: 'Ristorante 100% gluten free specializzato in cucina campana tradizionale. Il nostro locale è certificato dall\'Associazione Italiana Celiachia e tutto il nostro menù è privo di glutine. Dal pane alla pasta, dalle pizze ai dolci, offriamo un\'esperienza gastronomica completa senza compromessi sul gusto.',
-          coverImage: '/placeholder.svg',
-          images: ['/placeholder.svg', '/placeholder.svg', '/placeholder.svg', '/placeholder.svg'],
-          address: 'Via Toledo 42, Napoli, 80132',
-          phone: '+39 081 123 4567',
-          openingHours: [
-            { days: 'Lunedì-Venerdì', hours: '12:00-15:00, 19:00-23:00' },
-            { days: 'Sabato-Domenica', hours: '12:00-23:00' }
-          ],
-          rating: 4.7,
-          reviews: 128,
-          hasGlutenFreeOptions: true
-        };
-        
-        setRestaurant(sampleRestaurant);
       } finally {
         setIsLoading(false);
       }

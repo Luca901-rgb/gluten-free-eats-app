@@ -8,6 +8,7 @@ import { sampleRestaurant } from '@/data/sampleRestaurant';
 import { useOfflineRestaurants } from './useOfflineRestaurants';
 
 export const useRestaurantData = () => {
+  // Initialize with the sample restaurant so it's available immediately
   const [restaurants, setRestaurants] = useState<Restaurant[]>([sampleRestaurant]);
   const [isLoading, setIsLoading] = useState(true);
   
