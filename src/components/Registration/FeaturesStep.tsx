@@ -18,6 +18,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { getErrorMessage, getNestedError } from '@/utils/formErrorUtils';
 
 const FeaturesStep = () => {
   const { register, setValue, watch, formState: { errors } } = useFormContext();
@@ -25,11 +26,11 @@ const FeaturesStep = () => {
   const restaurantTypes = [
     { value: 'ristorante', label: 'Ristorante' },
     { value: 'pizzeria', label: 'Pizzeria' },
-    { value: 'pub', label: 'Pub' },
     { value: 'trattoria', label: 'Trattoria' },
     { value: 'osteria', label: 'Osteria' },
-    { value: 'agriturismo', label: 'Agriturismo' },
-    { value: 'bistrot', label: 'Bistrot' },
+    { value: 'fastfood', label: 'Fast Food' },
+    { value: 'pasticceria', label: 'Pasticceria' },
+    { value: 'gelateria', label: 'Gelateria' },
     { value: 'altro', label: 'Altro' },
   ];
   
@@ -89,9 +90,9 @@ const FeaturesStep = () => {
               className="mt-2"
             />
           )}
-          {errors?.features?.type && (
+          {getNestedError(errors, 'features.type') && (
             <p className="text-sm text-red-500 mt-1">
-              {String(errors.features.type)}
+              {getErrorMessage(getNestedError(errors, 'features.type'))}
             </p>
           )}
         </div>

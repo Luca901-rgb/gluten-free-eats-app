@@ -78,8 +78,7 @@ export interface RestaurantRegistrationForm {
       dinner: number;
     };
     cancellationPolicy: string;
-    requiresDeposit: boolean;
-    depositAmount?: number;
+    requiresDeposit?: boolean;
   };
   
   // Step 8: Promotions System
