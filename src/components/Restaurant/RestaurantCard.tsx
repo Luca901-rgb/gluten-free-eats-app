@@ -76,19 +76,21 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({
         </div>
         <div className="flex items-center mb-2">
           <StarRating rating={rating} />
-          <span className="text-sm text-gray-600 ml-2">{reviews} recensioni</span>
+          <span className="text-xs text-gray-600 ml-2">{reviews} recensioni</span>
         </div>
         <div className="flex justify-between items-center">
           <span className="text-sm text-gray-700">{cuisine}</span>
           {distance && (
-            <span className="text-sm text-gray-500 flex items-center">
-              <Navigation size={14} className="mr-1" /> {distance}
+            <span className="text-xs text-gray-500 flex items-center">
+              <img src="/lovable-uploads/cb016c24-7700-4927-b5e2-40af08e4b219.png" alt="Spiga" className="w-4 h-4 mr-1" />
+              {distance}
             </span>
           )}
         </div>
         {hasGlutenFreeOptions && (
           <div className="mt-2">
-            <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">
+            <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full flex items-center justify-center">
+              <img src="/lovable-uploads/cb016c24-7700-4927-b5e2-40af08e4b219.png" alt="Spiga" className="w-3 h-3 mr-1" />
               100% Gluten Free
             </span>
           </div>
