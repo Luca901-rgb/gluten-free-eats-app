@@ -1,25 +1,49 @@
 
 import React, { useEffect, useState } from 'react';
-import { Loader } from 'lucide-react';
+import { Loader, RefreshCw } from 'lucide-react';
+import { Button } from './ui/button';
 
 interface LoadingScreenProps {
   message?: string;
   timeout?: number;
+  onRetry?: () => void;
 }
 
 const LoadingScreen: React.FC<LoadingScreenProps> = ({ 
   message = 'Caricamento...', 
-  timeout = 15000 
+  timeout = 15000,
+  onRetry
 }) => {
   const [showTimeout, setShowTimeout] = useState(false);
+  const [showError, setShowError] = useState(false);
   
   useEffect(() => {
-    const timer = setTimeout(() => {
+    // Show timeout message after specified time
+    const timeoutTimer = setTimeout(() => {
       setShowTimeout(true);
     }, timeout);
     
-    return () => clearTimeout(timer);
+    // Show error message after double the timeout
+    const errorTimer = setTimeout(() => {
+      setShowError(true);
+    }, timeout * 2);
+    
+    return () => {
+      clearTimeout(timeoutTimer);
+      clearTimeout(errorTimer);
+    };
   }, [timeout]);
+
+  const handleRetry = () => {
+    if (onRetry) {
+      onRetry();
+      setShowTimeout(false);
+      setShowError(false);
+    } else {
+      // Se non è fornita una funzione di retry, ricarica la pagina
+      window.location.reload();
+    }
+  };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] bg-white">
@@ -32,8 +56,20 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
         <div className="mt-6 max-w-xs text-center">
           <p className="text-sm text-amber-600">
             Il caricamento sta richiedendo più tempo del previsto. 
-            Verifica la tua connessione o aggiorna la pagina.
+            {showError && "Potrebbe esserci un problema di connessione."}
           </p>
+          
+          {showError && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleRetry}
+              className="mt-3 flex items-center gap-2"
+            >
+              <RefreshCw size={14} />
+              Riprova
+            </Button>
+          )}
         </div>
       )}
     </div>

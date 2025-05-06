@@ -51,8 +51,9 @@ const RestaurantList: React.FC<RestaurantListProps> = ({
     );
   }
 
-  // Se c'è un errore di caricamento, mostriamo un bottone per riprovare
-  if (!isLoading && restaurants.length === 0) {
+  // Se c'è un errore di caricamento o nessun ristorante, mostriamo comunque Keccabio
+  // e un bottone per riprovare
+  if (!isLoading && (restaurants.length === 0 || !restaurants.find(r => r.id !== sampleRestaurant.id))) {
     return (
       <div className="space-y-6">
         <div className="animate-fade-in">

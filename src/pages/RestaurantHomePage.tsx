@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
-import { MapPin, Store, Calendar, Star, ArrowRight } from 'lucide-react';
+import { MapPin, Store, Calendar, Star, ArrowRight, RefreshCw } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { auth } from '@/lib/firebase';
@@ -14,19 +14,21 @@ import RestaurantLayout from '@/components/Restaurant/RestaurantLayout';
 const RestaurantHomePage = () => {
   const navigate = useNavigate();
   const [userRestaurant, setUserRestaurant] = useState(null);
-  const { restaurants, isLoading } = useRestaurantList();
+  const { restaurants, isLoading, refreshRestaurants } = useRestaurantList();
   const [nearbyRestaurants, setNearbyRestaurants] = useState([]);
   const [pageLoading, setPageLoading] = useState(true);
   const [authChecked, setAuthChecked] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
 
   useEffect(() => {
-    // Verifica autenticazione con timeout di sicurezza
+    // Verifica autenticazione con timeout di sicurezza ridotto
     const timeout = setTimeout(() => {
       if (!authChecked) {
         setPageLoading(false);
+        setLoadFailed(true);
         console.log("Timeout superato durante l'autenticazione");
       }
-    }, 5000);
+    }, 4000); // Ridotto da 5000 a 4000ms
     
     const unsubscribe = auth.onAuthStateChanged((user) => {
       setAuthChecked(true);
@@ -34,8 +36,11 @@ const RestaurantHomePage = () => {
       
       if (!user) {
         console.log("Nessun utente autenticato");
-        toast.error("Accesso richiesto");
-        navigate('/restaurant-login');
+        // Non facciamo subito il redirect per dare tempo alla pagina di caricare
+        setTimeout(() => {
+          toast.error("Accesso richiesto");
+          navigate('/restaurant-login');
+        }, 500);
         return;
       }
       
@@ -53,16 +58,41 @@ const RestaurantHomePage = () => {
       setPageLoading(false);
     });
 
+    // Impostiamo un timeout di sicurezza per assicurarci che la pagina si sblocchi
+    const fallbackTimeout = setTimeout(() => {
+      if (pageLoading) {
+        console.log("Timeout di caricamento principale raggiunto");
+        setPageLoading(false);
+        // Usiamo dati di esempio se non abbiamo caricato nulla
+        if (!userRestaurant) {
+          setUserRestaurant({
+            id: "1",
+            name: "Keccakè",
+            address: "Via Toledo 42, Napoli",
+            imageUrl: "/placeholder.svg"
+          });
+        }
+      }
+    }, 5000);
+
     return () => {
       clearTimeout(timeout);
+      clearTimeout(fallbackTimeout);
       unsubscribe();
     };
-  }, [navigate]);
+  }, [navigate, userRestaurant, pageLoading]);
 
   useEffect(() => {
     if (restaurants && restaurants.length > 0) {
       // Filtra i ristoranti nelle vicinanze (escludendo il proprio)
-      setNearbyRestaurants(restaurants.slice(0, 5));
+      try {
+        const nearby = restaurants.slice(0, 5);
+        setNearbyRestaurants(nearby);
+        console.log("Ristoranti nelle vicinanze caricati:", nearby.length);
+      } catch (error) {
+        console.error("Errore nel filtrare i ristoranti:", error);
+        setNearbyRestaurants([]);
+      }
     }
   }, [restaurants]);
 
@@ -74,10 +104,58 @@ const RestaurantHomePage = () => {
     navigate(`/restaurant/${restaurantId}`);
   };
 
+  const handleRetry = () => {
+    setPageLoading(true);
+    setLoadFailed(false);
+    refreshRestaurants();
+    // Riavvia la verifica dell'autenticazione
+    auth.onAuthStateChanged((user) => {
+      setAuthChecked(true);
+      if (!user) {
+        toast.error("Accesso richiesto");
+        navigate('/restaurant-login');
+        return;
+      }
+      
+      setUserRestaurant({
+        id: "1",
+        name: "Keccakè",
+        address: "Via Toledo 42, Napoli",
+        imageUrl: "/placeholder.svg"
+      });
+      
+      setPageLoading(false);
+    });
+  };
+
   if (pageLoading) {
     return (
       <RestaurantLayout>
-        <LoadingScreen message="Caricamento interfaccia ristoratore..." />
+        <LoadingScreen 
+          message="Caricamento interfaccia ristoratore..." 
+          timeout={4000}
+          onRetry={handleRetry}
+        />
+      </RestaurantLayout>
+    );
+  }
+
+  if (loadFailed) {
+    return (
+      <RestaurantLayout>
+        <div className="flex flex-col items-center justify-center min-h-screen p-4">
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-6 max-w-md text-center">
+            <p className="text-amber-800 mb-4">Impossibile caricare l'interfaccia ristoratore</p>
+            <Button 
+              variant="default" 
+              onClick={handleRetry} 
+              className="flex items-center gap-2"
+            >
+              <RefreshCw size={16} />
+              Riprova
+            </Button>
+          </div>
+        </div>
       </RestaurantLayout>
     );
   }
@@ -143,7 +221,12 @@ const RestaurantHomePage = () => {
       <div className="p-4">
         <div className="flex justify-between items-center mb-3">
           <h2 className="text-lg font-semibold">Ristoranti nelle vicinanze</h2>
-          <button className="text-sm text-green-600">Vedi tutti</button>
+          <button 
+            className="text-sm text-green-600"
+            onClick={refreshRestaurants}
+          >
+            Aggiorna
+          </button>
         </div>
         
         {isLoading ? (
@@ -182,6 +265,15 @@ const RestaurantHomePage = () => {
         ) : (
           <div className="text-center py-8 text-gray-500">
             <p>Nessun ristorante trovato nelle vicinanze</p>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={refreshRestaurants}
+              className="mt-4 flex items-center gap-2 mx-auto"
+            >
+              <RefreshCw size={14} />
+              Riprova
+            </Button>
           </div>
         )}
       </div>
