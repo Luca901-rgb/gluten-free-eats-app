@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
+import { getErrorMessage, getNestedError } from '@/utils/formErrorUtils';
 
 const ManagerInfoStep = () => {
   const { register, formState: { errors } } = useFormContext();
@@ -34,9 +35,9 @@ const ManagerInfoStep = () => {
             />
             <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={18} />
           </div>
-          {errors?.manager?.name && (
+          {getNestedError(errors, 'manager.name') && (
             <p className="text-sm text-red-500 mt-1">
-              {errors.manager.name.message as string}
+              {getErrorMessage(getNestedError(errors, 'manager.name'))}
             </p>
           )}
         </div>
@@ -59,9 +60,9 @@ const ManagerInfoStep = () => {
             />
             <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={18} />
           </div>
-          {errors?.manager?.email && (
+          {getNestedError(errors, 'manager.email') && (
             <p className="text-sm text-red-500 mt-1">
-              {errors.manager.email.message as string}
+              {getErrorMessage(getNestedError(errors, 'manager.email'))}
             </p>
           )}
         </div>
@@ -77,9 +78,9 @@ const ManagerInfoStep = () => {
             />
             <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={18} />
           </div>
-          {errors?.manager?.phone && (
+          {getNestedError(errors, 'manager.phone') && (
             <p className="text-sm text-red-500 mt-1">
-              {errors.manager.phone.message as string}
+              {getErrorMessage(getNestedError(errors, 'manager.phone'))}
             </p>
           )}
         </div>
@@ -109,9 +110,9 @@ const ManagerInfoStep = () => {
               {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
           </div>
-          {errors?.manager?.password && (
+          {getNestedError(errors, 'manager.password') && (
             <p className="text-sm text-red-500 mt-1">
-              {errors.manager.password.message as string}
+              {getErrorMessage(getNestedError(errors, 'manager.password'))}
             </p>
           )}
         </div>
@@ -139,9 +140,9 @@ const ManagerInfoStep = () => {
               {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
           </div>
-          {errors?.manager?.confirmPassword && (
+          {getNestedError(errors, 'manager.confirmPassword') && (
             <p className="text-sm text-red-500 mt-1">
-              {errors.manager.confirmPassword.message as string}
+              {getErrorMessage(getNestedError(errors, 'manager.confirmPassword'))}
             </p>
           )}
         </div>
@@ -158,9 +159,9 @@ const ManagerInfoStep = () => {
             Accetto i termini e le condizioni e l'informativa sulla privacy
           </label>
         </div>
-        {errors?.manager?.acceptTerms && (
+        {getNestedError(errors, 'manager.acceptTerms') && (
           <p className="text-sm text-red-500">
-            {errors.manager.acceptTerms.message as string}
+            {getErrorMessage(getNestedError(errors, 'manager.acceptTerms'))}
           </p>
         )}
       </div>

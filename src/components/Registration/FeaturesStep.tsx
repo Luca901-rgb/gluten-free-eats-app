@@ -4,11 +4,11 @@ import { useFormContext } from 'react-hook-form';
 import { 
   Utensils, 
   Check,
-  RadioTower,
+  RadioTower, 
   ParkingMeter, 
   Wifi, 
   AirVent, 
-  Wheelchair,
+  Accessibility, 
   Dog, 
   CreditCard,
   Package
@@ -36,7 +36,7 @@ const FeaturesStep = () => {
   const services = [
     { value: 'parking', label: 'Parcheggio', icon: ParkingMeter },
     { value: 'outdoor', label: 'Dehors/spazio all\'aperto', icon: RadioTower },
-    { value: 'accessibility', label: 'Accessibilità disabili', icon: Wheelchair },
+    { value: 'accessibility', label: 'Accessibilità disabili', icon: Accessibility },
     { value: 'pets', label: 'Accettazione animali', icon: Dog },
     { value: 'wifi', label: 'Wi-Fi gratuito', icon: Wifi },
     { value: 'airConditioning', label: 'Aria condizionata', icon: AirVent },
@@ -91,7 +91,7 @@ const FeaturesStep = () => {
           )}
           {errors?.features?.type && (
             <p className="text-sm text-red-500 mt-1">
-              {errors.features.type.message as string}
+              {String(errors.features.type)}
             </p>
           )}
         </div>

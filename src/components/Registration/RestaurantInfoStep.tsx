@@ -5,6 +5,7 @@ import { Store, MapPin, Mail, Phone, Globe, Building } from 'lucide-react';
 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { getErrorMessage, getNestedError } from '@/utils/formErrorUtils';
 
 const RestaurantInfoStep = () => {
   const { register, formState: { errors } } = useFormContext();
@@ -30,9 +31,9 @@ const RestaurantInfoStep = () => {
             />
             <Store className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={18} />
           </div>
-          {errors?.restaurant?.name && (
+          {getNestedError(errors, 'restaurant.name') && (
             <p className="text-sm text-red-500 mt-1">
-              {errors.restaurant.name.message as string}
+              {getErrorMessage(getNestedError(errors, 'restaurant.name'))}
             </p>
           )}
         </div>
@@ -48,9 +49,9 @@ const RestaurantInfoStep = () => {
             />
             <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={18} />
           </div>
-          {errors?.restaurant?.address && (
+          {getNestedError(errors, 'restaurant.address') && (
             <p className="text-sm text-red-500 mt-1">
-              {errors.restaurant.address.message as string}
+              {getErrorMessage(getNestedError(errors, 'restaurant.address'))}
             </p>
           )}
         </div>
@@ -63,9 +64,9 @@ const RestaurantInfoStep = () => {
               placeholder="00100"
               {...register('restaurant.zipCode', { required: "Obbligatorio" })}
             />
-            {errors?.restaurant?.zipCode && (
+            {getNestedError(errors, 'restaurant.zipCode') && (
               <p className="text-sm text-red-500 mt-1">
-                {errors.restaurant.zipCode.message as string}
+                {getErrorMessage(getNestedError(errors, 'restaurant.zipCode'))}
               </p>
             )}
           </div>
@@ -77,9 +78,9 @@ const RestaurantInfoStep = () => {
               placeholder="Roma"
               {...register('restaurant.city', { required: "Obbligatorio" })}
             />
-            {errors?.restaurant?.city && (
+            {getNestedError(errors, 'restaurant.city') && (
               <p className="text-sm text-red-500 mt-1">
-                {errors.restaurant.city.message as string}
+                {getErrorMessage(getNestedError(errors, 'restaurant.city'))}
               </p>
             )}
           </div>
@@ -91,9 +92,9 @@ const RestaurantInfoStep = () => {
               placeholder="RM"
               {...register('restaurant.province', { required: "Obbligatorio" })}
             />
-            {errors?.restaurant?.province && (
+            {getNestedError(errors, 'restaurant.province') && (
               <p className="text-sm text-red-500 mt-1">
-                {errors.restaurant.province.message as string}
+                {getErrorMessage(getNestedError(errors, 'restaurant.province'))}
               </p>
             )}
           </div>
@@ -117,9 +118,9 @@ const RestaurantInfoStep = () => {
             />
             <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={18} />
           </div>
-          {errors?.restaurant?.email && (
+          {getNestedError(errors, 'restaurant.email') && (
             <p className="text-sm text-red-500 mt-1">
-              {errors.restaurant.email.message as string}
+              {getErrorMessage(getNestedError(errors, 'restaurant.email'))}
             </p>
           )}
         </div>
@@ -135,9 +136,9 @@ const RestaurantInfoStep = () => {
             />
             <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={18} />
           </div>
-          {errors?.restaurant?.phone && (
+          {getNestedError(errors, 'restaurant.phone') && (
             <p className="text-sm text-red-500 mt-1">
-              {errors.restaurant.phone.message as string}
+              {getErrorMessage(getNestedError(errors, 'restaurant.phone'))}
             </p>
           )}
         </div>
@@ -166,9 +167,9 @@ const RestaurantInfoStep = () => {
             />
             <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={18} />
           </div>
-          {errors?.restaurant?.taxId && (
+          {getNestedError(errors, 'restaurant.taxId') && (
             <p className="text-sm text-red-500 mt-1">
-              {errors.restaurant.taxId.message as string}
+              {getErrorMessage(getNestedError(errors, 'restaurant.taxId'))}
             </p>
           )}
         </div>

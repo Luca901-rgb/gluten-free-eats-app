@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { getErrorMessage, getNestedError } from '@/utils/formErrorUtils';
 
 const OperationsStep = () => {
   const { register, setValue, watch, formState: { errors } } = useFormContext();
@@ -133,9 +134,9 @@ const OperationsStep = () => {
                 <SelectItem value="€€€€">€€€€ - Lusso</SelectItem>
               </SelectContent>
             </Select>
-            {errors?.operations?.priceRange && (
+            {getNestedError(errors, 'operations.priceRange') && (
               <p className="text-sm text-red-500 mt-1">
-                {errors.operations.priceRange.message as string}
+                {getErrorMessage(getNestedError(errors, 'operations.priceRange'))}
               </p>
             )}
           </div>
@@ -158,9 +159,9 @@ const OperationsStep = () => {
               />
               <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={18} />
             </div>
-            {errors?.operations?.capacity && (
+            {getNestedError(errors, 'operations.capacity') && (
               <p className="text-sm text-red-500 mt-1">
-                {errors.operations.capacity.message as string}
+                {getErrorMessage(getNestedError(errors, 'operations.capacity'))}
               </p>
             )}
           </div>

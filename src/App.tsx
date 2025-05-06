@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'sonner';
@@ -5,14 +6,11 @@ import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 
 import './App.css';
 
-import Home from './pages/Home';
+import Index from './pages/Index';
 import NotFound from './pages/NotFound';
 import Register from './pages/Register';
 import Login from './pages/Login';
 import RestaurantPage from './pages/RestaurantPage';
-import MapView from './pages/MapView';
-import Favorites from './pages/Favorites';
-import Bookings from './pages/Bookings';
 import RestaurantDashboard from './pages/RestaurantDashboard';
 import RestaurantRegistrationPage from './pages/RestaurantRegistrationPage';
 
@@ -34,14 +32,11 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<Index />} />
           <Route path="/register" element={<Register />} />
           <Route path="/restaurant-register" element={<RestaurantRegistrationPage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/restaurants/:id" element={<RestaurantPage />} />
-          <Route path="/map" element={<MapView />} />
-          <Route path="/favorites" element={<Favorites />} />
-          <Route path="/bookings" element={<Bookings />} />
           <Route
             path="/restaurant-dashboard/*"
             element={

@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { getErrorMessage, getNestedError } from '@/utils/formErrorUtils';
 
 const BookingsStep = () => {
   const { register, setValue, watch, formState: { errors } } = useFormContext();
@@ -42,9 +43,9 @@ const BookingsStep = () => {
               />
               <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={18} />
             </div>
-            {errors?.bookings?.tables?.lunch && (
+            {getNestedError(errors, 'bookings.tables.lunch') && (
               <p className="text-sm text-red-500 mt-1">
-                {errors.bookings.tables.lunch.message as string}
+                {getErrorMessage(getNestedError(errors, 'bookings.tables.lunch'))}
               </p>
             )}
           </div>
@@ -67,9 +68,9 @@ const BookingsStep = () => {
               />
               <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={18} />
             </div>
-            {errors?.bookings?.tables?.dinner && (
+            {getNestedError(errors, 'bookings.tables.dinner') && (
               <p className="text-sm text-red-500 mt-1">
-                {errors.bookings.tables.dinner.message as string}
+                {getErrorMessage(getNestedError(errors, 'bookings.tables.dinner'))}
               </p>
             )}
           </div>
@@ -128,9 +129,9 @@ const BookingsStep = () => {
                   }
                 })}
               />
-              {errors?.bookings?.depositAmount && (
+              {getNestedError(errors, 'bookings.depositAmount') && (
                 <p className="text-sm text-red-500 mt-1">
-                  {errors.bookings.depositAmount.message as string}
+                  {getErrorMessage(getNestedError(errors, 'bookings.depositAmount'))}
                 </p>
               )}
               <p className="text-xs text-gray-500">

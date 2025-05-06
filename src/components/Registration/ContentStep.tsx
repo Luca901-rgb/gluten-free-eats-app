@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { getErrorMessage, getNestedError } from '@/utils/formErrorUtils';
 
 const ContentStep = () => {
   const { register, setValue, watch, formState: { errors } } = useFormContext();
@@ -39,9 +40,9 @@ const ContentStep = () => {
             className="min-h-[200px]"
             {...register('content.description', { required: "Campo obbligatorio" })}
           />
-          {errors?.content?.description && (
+          {getNestedError(errors, 'content.description') && (
             <p className="text-sm text-red-500 mt-1">
-              {errors.content.description.message as string}
+              {getErrorMessage(getNestedError(errors, 'content.description'))}
             </p>
           )}
         </div>
