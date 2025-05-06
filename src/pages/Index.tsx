@@ -35,7 +35,7 @@ const Index = () => {
         {/* Header with title */}
         <div className="bg-green-500 text-white p-4 flex items-center justify-center">
           <h1 className="text-xl font-bold flex items-center">
-            <img src="/lovable-uploads/cb016c24-7700-4927-b5e2-40af08e4b219.png" alt="Logo" className="w-8 h-8 mr-2" />
+            <img src="/lovable-uploads/c40a4cd3-13d0-4541-bf02-9f35cda8a4ce.png" alt="Logo" className="w-8 h-8 mr-2" />
             GlutenFree Eats
           </h1>
         </div>
@@ -44,7 +44,7 @@ const Index = () => {
           {/* Large logo and subtitle */}
           <div className="flex flex-col items-center mb-6 mt-2">
             <div className="flex items-center text-4xl font-bold text-[#38414a] mb-2">
-              <img src="/lovable-uploads/cb016c24-7700-4927-b5e2-40af08e4b219.png" alt="Logo" className="w-14 h-14 mr-3" />
+              <img src="/lovable-uploads/c40a4cd3-13d0-4541-bf02-9f35cda8a4ce.png" alt="Logo" className="w-14 h-14 mr-3" />
               <span className="text-shadow">Gluten Free Eats</span>
             </div>
             <p className="text-[#38414a] text-lg">Scopri i ristoranti gluten free vicino a te</p>

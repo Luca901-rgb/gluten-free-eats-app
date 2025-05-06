@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Home, Search, Calendar, User } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
 interface LayoutProps {
@@ -23,28 +22,28 @@ const Layout: React.FC<LayoutProps> = ({ children, hideNavigation = false }) => 
             to="/home"
             className="flex flex-col items-center text-white px-4"
           >
-            <Home className="w-5 h-5 mb-1" />
+            <img src="/lovable-uploads/c40a4cd3-13d0-4541-bf02-9f35cda8a4ce.png" alt="App Logo" className="w-8 h-8 mb-1" />
             <span className="text-xs mt-1">Home</span>
           </Link>
           <Link
             to="/search"
             className="flex flex-col items-center text-white px-4"
           >
-            <Search className="w-5 h-5 mb-1" />
+            <img src="/lovable-uploads/c40a4cd3-13d0-4541-bf02-9f35cda8a4ce.png" alt="App Logo" className="w-8 h-8 mb-1" />
             <span className="text-xs mt-1">Ricerca</span>
           </Link>
           <Link
             to="/bookings"
             className="flex flex-col items-center text-white px-4"
           >
-            <Calendar className="w-5 h-5 mb-1" />
+            <img src="/lovable-uploads/c40a4cd3-13d0-4541-bf02-9f35cda8a4ce.png" alt="App Logo" className="w-8 h-8 mb-1" />
             <span className="text-xs mt-1">Prenotazioni</span>
           </Link>
           <Link
             to="/profile"
             className="flex flex-col items-center text-white px-4"
           >
-            <User className="w-5 h-5 mb-1" />
+            <img src="/lovable-uploads/c40a4cd3-13d0-4541-bf02-9f35cda8a4ce.png" alt="App Logo" className="w-8 h-8 mb-1" />
             <span className="text-xs mt-1">Profilo</span>
           </Link>
         </nav>

@@ -13,7 +13,7 @@ const NavigationButtons = ({ isRegionAvailable }: NavigationButtonsProps) => {
       {isRegionAvailable && (
         <Link to="/search">
           <button className="w-full py-4 px-3 bg-white shadow-md rounded-lg flex flex-col items-center justify-center hover:bg-gray-50 transition-colors">
-            <MapPin className="h-6 w-6 text-primary mb-2" />
+            <img src="/lovable-uploads/c40a4cd3-13d0-4541-bf02-9f35cda8a4ce.png" alt="App Logo" className="h-6 w-6 mb-2" />
             <span className="text-sm font-medium text-gray-700">Vicino a te</span>
           </button>
         </Link>
