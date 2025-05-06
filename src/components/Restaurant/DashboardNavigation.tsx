@@ -1,7 +1,7 @@
 
 import React, { useRef } from 'react';
 import { 
-  Home, Menu, VideoIcon, Image, 
+  Home, Menu, Video, Image, 
   CalendarRange, Star, Table
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -29,18 +29,18 @@ const DashboardNavigation = ({ isRestaurantOwner = false }: DashboardNavigationP
 
   // Definizione dei pulsanti di navigazione base
   let navigationButtons: NavigationButton[] = [
-    { id: 'home', label: 'Home', icon: <img src="/lovable-uploads/c40a4cd3-13d0-4541-bf02-9f35cda8a4ce.png" alt="App Logo" className="w-5 h-5" /> },
-    { id: 'menu', label: 'Menu', icon: <img src="/lovable-uploads/c40a4cd3-13d0-4541-bf02-9f35cda8a4ce.png" alt="App Logo" className="w-5 h-5" /> },
-    { id: 'videos', label: 'Videoricette', icon: <img src="/lovable-uploads/c40a4cd3-13d0-4541-bf02-9f35cda8a4ce.png" alt="App Logo" className="w-5 h-5" /> },
-    { id: 'gallery', label: 'Galleria', icon: <img src="/lovable-uploads/c40a4cd3-13d0-4541-bf02-9f35cda8a4ce.png" alt="App Logo" className="w-5 h-5" /> },
-    { id: 'bookings', label: 'Prenotazioni', icon: <img src="/lovable-uploads/c40a4cd3-13d0-4541-bf02-9f35cda8a4ce.png" alt="App Logo" className="w-5 h-5" /> },
-    { id: 'reviews', label: 'Recensioni', icon: <img src="/lovable-uploads/c40a4cd3-13d0-4541-bf02-9f35cda8a4ce.png" alt="App Logo" className="w-5 h-5" /> },
+    { id: 'home', label: 'Home', icon: <Home className="w-5 h-5" /> },
+    { id: 'menu', label: 'Menu', icon: <Menu className="w-5 h-5" /> },
+    { id: 'videos', label: 'Videoricette', icon: <Video className="w-5 h-5" /> },
+    { id: 'gallery', label: 'Galleria', icon: <Image className="w-5 h-5" /> },
+    { id: 'bookings', label: 'Prenotazioni', icon: <CalendarRange className="w-5 h-5" /> },
+    { id: 'reviews', label: 'Recensioni', icon: <Star className="w-5 h-5" /> },
   ];
 
   // Aggiungi la scheda "Tavoli" solo per i proprietari dei ristoranti
   if (isRestaurantOwner) {
     // Inseriamo "Tavoli" dopo "Menu"
-    navigationButtons.splice(2, 0, { id: 'tables', label: 'Tavoli', icon: <img src="/lovable-uploads/c40a4cd3-13d0-4541-bf02-9f35cda8a4ce.png" alt="App Logo" className="w-5 h-5" /> });
+    navigationButtons.splice(2, 0, { id: 'tables', label: 'Tavoli', icon: <Table className="w-5 h-5" /> });
   }
 
   return (
