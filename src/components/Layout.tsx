@@ -23,28 +23,28 @@ const Layout: React.FC<LayoutProps> = ({ children, hideNavigation = false }) => 
             to="/home"
             className="flex flex-col items-center text-white px-4"
           >
-            <img src="/lovable-uploads/cb016c24-7700-4927-b5e2-40af08e4b219.png" alt="Spiga" className="w-5 h-5 mb-1" />
+            <Home className="w-5 h-5 mb-1" />
             <span className="text-xs mt-1">Home</span>
           </Link>
           <Link
             to="/search"
             className="flex flex-col items-center text-white px-4"
           >
-            <img src="/lovable-uploads/cb016c24-7700-4927-b5e2-40af08e4b219.png" alt="Spiga" className="w-5 h-5 mb-1" />
+            <Search className="w-5 h-5 mb-1" />
             <span className="text-xs mt-1">Ricerca</span>
           </Link>
           <Link
             to="/bookings"
             className="flex flex-col items-center text-white px-4"
           >
-            <img src="/lovable-uploads/cb016c24-7700-4927-b5e2-40af08e4b219.png" alt="Spiga" className="w-5 h-5 mb-1" />
+            <Calendar className="w-5 h-5 mb-1" />
             <span className="text-xs mt-1">Prenotazioni</span>
           </Link>
           <Link
             to="/profile"
             className="flex flex-col items-center text-white px-4"
           >
-            <img src="/lovable-uploads/cb016c24-7700-4927-b5e2-40af08e4b219.png" alt="Spiga" className="w-5 h-5 mb-1" />
+            <User className="w-5 h-5 mb-1" />
             <span className="text-xs mt-1">Profilo</span>
           </Link>
         </nav>

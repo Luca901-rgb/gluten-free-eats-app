@@ -93,15 +93,10 @@ const Index = () => {
                     />
                     <div className="absolute top-2 right-2 flex space-x-2">
                       <button className="bg-white rounded-full p-2 shadow">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <line x1="12" y1="5" x2="12" y2="19"></line>
-                          <line x1="5" y1="12" x2="19" y2="12"></line>
-                        </svg>
+                        <img src="/lovable-uploads/cb016c24-7700-4927-b5e2-40af08e4b219.png" alt="Spiga" className="w-5 h-5" />
                       </button>
                       <button className="bg-white rounded-full p-2 shadow">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                        </svg>
+                        <img src="/lovable-uploads/cb016c24-7700-4927-b5e2-40af08e4b219.png" alt="Spiga" className="w-5 h-5" />
                       </button>
                     </div>
                   </div>
@@ -122,7 +117,8 @@ const Index = () => {
                     </div>
                     <p className="text-center text-gray-600 mb-2">Campana Gluten Free</p>
                     <div className="flex justify-center">
-                      <span className="px-3 py-1 text-sm bg-green-100 text-green-800 rounded-full">
+                      <span className="px-3 py-1 text-sm bg-green-100 text-green-800 rounded-full flex items-center">
+                        <img src="/lovable-uploads/cb016c24-7700-4927-b5e2-40af08e4b219.png" alt="Spiga" className="w-4 h-4 mr-1" />
                         100% Gluten Free
                       </span>
                     </div>

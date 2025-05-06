@@ -82,7 +82,7 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({
           <span className="text-sm text-gray-700">{cuisine}</span>
           {distance && (
             <span className="text-xs text-gray-500 flex items-center">
-              <img src="/lovable-uploads/cb016c24-7700-4927-b5e2-40af08e4b219.png" alt="Spiga" className="w-4 h-4 mr-1" />
+              <Navigation className="w-4 h-4 mr-1" />
               {distance}
             </span>
           )}
