@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
-import { Search, MapPin, SlidersHorizontal } from 'lucide-react';
+import { Search, MapPin, SlidersHorizontal, Wheat, PizzaIcon, UtensilsCrossed } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -24,7 +24,7 @@ const SearchPage = () => {
         {/* Search status message */}
         <div className="bg-white p-4 flex items-center space-x-2 rounded-lg m-4 shadow-sm">
           <div className="bg-black bg-opacity-10 p-2 rounded-full">
-            <img src="/lovable-uploads/cb016c24-7700-4927-b5e2-40af08e4b219.png" alt="Spiga" className="w-5 h-5" />
+            <Wheat className="w-5 h-5 text-green-700" />
           </div>
           <p className="text-gray-800 text-sm">Ricerca posizione in corso...</p>
         </div>
@@ -49,7 +49,7 @@ const SearchPage = () => {
             <Button 
               className="bg-white hover:bg-gray-100 text-gray-800 px-6 py-5 h-auto flex items-center space-x-1 rounded-lg border shadow-sm"
             >
-              <img src="/lovable-uploads/c40a4cd3-13d0-4541-bf02-9f35cda8a4ce.png" alt="App Logo" className="w-5 h-5 mr-1" />
+              <MapPin className="w-5 h-5 text-green-600 mr-1" />
               <span className="text-sm">Vicino a me</span>
             </Button>
           </div>
@@ -59,15 +59,15 @@ const SearchPage = () => {
         <div className="px-4 mb-6 overflow-x-auto">
           <div className="flex space-x-2">
             <button className="flex items-center space-x-2 px-4 py-2 bg-white bg-opacity-60 rounded-full border text-gray-800 whitespace-nowrap">
-              <img src="/lovable-uploads/cb016c24-7700-4927-b5e2-40af08e4b219.png" alt="Wheat" className="w-5 h-5" />
+              <PizzaIcon className="w-5 h-5 text-green-600" />
               <span className="text-xs">Pizzeria</span>
             </button>
             <button className="flex items-center space-x-2 px-4 py-2 bg-white bg-opacity-60 rounded-full border text-gray-800 whitespace-nowrap">
-              <img src="/lovable-uploads/cb016c24-7700-4927-b5e2-40af08e4b219.png" alt="Wheat" className="w-5 h-5" />
+              <UtensilsCrossed className="w-5 h-5 text-green-600" />
               <span className="text-xs">Ristorante</span>
             </button>
             <button className="flex items-center space-x-2 px-4 py-2 bg-white bg-opacity-60 rounded-full border text-gray-800 whitespace-nowrap">
-              <img src="/lovable-uploads/cb016c24-7700-4927-b5e2-40af08e4b219.png" alt="Wheat" className="w-5 h-5" />
+              <Wheat className="w-5 h-5 text-green-600" />
               <span className="text-xs">Trattoria</span>
             </button>
             <button className="p-3 bg-white rounded-lg border">
@@ -117,7 +117,7 @@ const SearchPage = () => {
                     <p className="text-xs text-gray-700">{restaurant.cuisine}</p>
                     {restaurant.hasGlutenFreeOptions && (
                       <span className="inline-flex items-center mt-1 px-2 py-0.5 text-xs bg-green-100 text-green-800 rounded-full">
-                        <img src="/lovable-uploads/cb016c24-7700-4927-b5e2-40af08e4b219.png" alt="Spiga" className="w-3 h-3 mr-1" />
+                        <Wheat className="w-3 h-3 mr-1 text-green-700" />
                         100% Gluten Free
                       </span>
                     )}

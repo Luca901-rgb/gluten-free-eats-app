@@ -90,7 +90,7 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({
         {hasGlutenFreeOptions && (
           <div className="mt-2">
             <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full flex items-center justify-center">
-              <Wheat className="w-3 h-3 mr-1" />
+              <Wheat className="w-3 h-3 mr-1 text-green-700" />
               100% Gluten Free
             </span>
           </div>

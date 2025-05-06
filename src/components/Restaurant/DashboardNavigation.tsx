@@ -2,7 +2,7 @@
 import React, { useRef } from 'react';
 import { 
   Home, Menu, Video, Image as ImageIcon, 
-  CalendarRange, Star, Table, Wheat
+  CalendarRange, Star, Table, Wheat, UtensilsCrossed
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { 
