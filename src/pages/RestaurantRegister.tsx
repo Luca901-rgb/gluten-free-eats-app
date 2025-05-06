@@ -14,7 +14,8 @@ const RestaurantRegister = () => {
   const handleInformationComplete = () => {
     setStep('complete');
     setTimeout(() => {
-      navigate('/restaurant-dashboard');
+      // Reindirizza alla nuova home page dei ristoratori
+      navigate('/restaurant-home');
     }, 2000);
   };
 

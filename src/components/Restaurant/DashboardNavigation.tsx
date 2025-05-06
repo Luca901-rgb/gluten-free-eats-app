@@ -11,6 +11,7 @@ import {
   CarouselItem,
 } from "@/components/ui/carousel";
 import { useTab } from '@/context/TabContext';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 interface NavigationButton {
   id: string;
@@ -25,10 +26,22 @@ interface DashboardNavigationProps {
 const DashboardNavigation = ({ isRestaurantOwner = false }: DashboardNavigationProps) => {
   const { activeTab, navigateToTab } = useTab();
   const tabsContainerRef = useRef<HTMLDivElement>(null);
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Controlla se siamo nella dashboard o in una pagina specifica
+  const handleTabClick = (tabId: string) => {
+    navigateToTab(tabId);
+    
+    // Se c'è un parametro nella URL, aggiornalo
+    const searchParams = new URLSearchParams(location.search);
+    searchParams.set('tab', tabId);
+    navigate(`${location.pathname}?${searchParams.toString()}`, { replace: true });
+  };
 
   // Definizione dei pulsanti di navigazione base
   let navigationButtons: NavigationButton[] = [
-    { id: 'home', label: 'Home', icon: <Home className="w-4 h-4" /> },
+    { id: 'home', label: 'Info', icon: <Home className="w-4 h-4" /> },
     { id: 'menu', label: 'Menu', icon: <Menu className="w-4 h-4" /> },
     { id: 'videos', label: 'Videoricette', icon: <Video className="w-4 h-4" /> },
     { id: 'gallery', label: 'Galleria', icon: <ImageIcon className="w-4 h-4" /> },
@@ -58,7 +71,7 @@ const DashboardNavigation = ({ isRestaurantOwner = false }: DashboardNavigationP
                 <Button
                   variant={activeTab === button.id ? 'default' : 'outline'}
                   size="sm"
-                  onClick={() => navigateToTab(button.id)}
+                  onClick={() => handleTabClick(button.id)}
                   className="flex items-center gap-1 whitespace-nowrap py-1 h-8 text-xs"
                   data-tab={button.id}
                 >

@@ -1,10 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import Layout from '@/components/Layout';
-import DashboardHeader from '@/components/Restaurant/DashboardHeader';
-import DashboardNavigation from '@/components/Restaurant/DashboardNavigation';
-import DashboardContent from '@/components/Restaurant/DashboardContent';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { TabProvider } from '@/context/TabContext';
 import { Button } from '@/components/ui/button';
 import { LogOut, Loader2, RefreshCw } from 'lucide-react';
@@ -15,11 +11,17 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 import { TableProvider } from '@/context/TableContext';
 import { BookingProvider } from '@/context/BookingContext';
 
+import RestaurantLayout from '@/components/Restaurant/RestaurantLayout';
+import DashboardHeader from '@/components/Restaurant/DashboardHeader';
+import DashboardNavigation from '@/components/Restaurant/DashboardNavigation';
+import DashboardContent from '@/components/Restaurant/DashboardContent';
+
 const RestaurantDashboard = () => {
   const [user, loading] = useAuthState(auth);
+  const [searchParams, setSearchParams] = useSearchParams();
   const [restaurantData, setRestaurantData] = useState({
     id: '1',
-    name: 'Trattoria Keccabio',
+    name: 'Keccakè',
     address: 'Via Toledo 42, Napoli, 80132',
     rating: 4.7,
     totalReviews: 128,
@@ -29,51 +31,60 @@ const RestaurantDashboard = () => {
   const [loadingError, setLoadingError] = useState<string | null>(null);
   const navigate = useNavigate();
   
+  // Controlla se ci sono parametri nell'URL per impostare la tab
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam) {
+      // La tab verrà impostata dal TabProvider
+      console.log("Tab from URL:", tabParam);
+    }
+  }, [searchParams]);
+  
   const loadRestaurantData = async () => {
     setIsLoading(true);
     setLoadingError(null);
 
     try {
-      // Fallback to default data if no user or connection issues
+      // Fallback ai dati predefiniti se non c'è utente o problemi di connessione
       if (!user) {
-        console.log("No authenticated user found, using default data");
+        console.log("Nessun utente autenticato trovato, utilizzo dati predefiniti");
         setTimeout(() => {
           setIsLoading(false);
         }, 800);
         return;
       }
 
-      console.log("Loading restaurant data for user:", user.uid);
+      console.log("Caricamento dati ristorante per l'utente:", user.uid);
       
       // Cerca il ristorante associato all'utente corrente
       const userDoc = await getDoc(doc(db, "users", user.uid));
       
       if (userDoc.exists() && userDoc.data().restaurantId) {
         const restaurantId = userDoc.data().restaurantId;
-        console.log("Found restaurant ID:", restaurantId);
+        console.log("ID ristorante trovato:", restaurantId);
         
         const restaurantDoc = await getDoc(doc(db, "restaurants", restaurantId));
         
         if (restaurantDoc.exists()) {
           const data = restaurantDoc.data();
-          console.log("Restaurant data loaded successfully:", data.name);
+          console.log("Dati ristorante caricati con successo:", data.name);
           
           setRestaurantData({
             id: restaurantId,
-            name: data.name || 'Il mio ristorante',
+            name: data.name || 'Keccakè',
             address: data.address || 'Indirizzo non disponibile',
             rating: data.rating || 0,
             totalReviews: data.reviewCount || 0,
             coverImage: data.coverImage || '/placeholder.svg'
           });
         } else {
-          console.warn("Restaurant document not found, using default data");
+          console.warn("Documento ristorante non trovato, utilizzo dati predefiniti");
         }
       } else {
-        console.warn("No restaurant ID associated with user, using default data");
+        console.warn("Nessun ID ristorante associato all'utente, utilizzo dati predefiniti");
       }
     } catch (error) {
-      console.error("Error loading restaurant data:", error);
+      console.error("Errore caricamento dati ristorante:", error);
       setLoadingError("Impossibile caricare i dati del ristorante. Verifica la connessione internet.");
       toast.error("Errore nel caricamento dei dati del ristorante");
     } finally {
@@ -82,7 +93,7 @@ const RestaurantDashboard = () => {
   };
 
   useEffect(() => {
-    // Only attempt to load data once the auth state is determined
+    // Carica i dati solo quando lo stato di autenticazione è determinato
     if (!loading) {
       loadRestaurantData();
     }
@@ -125,22 +136,22 @@ const RestaurantDashboard = () => {
     loadRestaurantData();
   };
 
-  // Loading state with better feedback
+  // Stato di caricamento con feedback migliore
   if (loading) {
     return (
-      <Layout hideNavigation={true}>
+      <RestaurantLayout>
         <div className="flex flex-col items-center justify-center min-h-screen p-4">
           <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
           <p className="text-gray-600">Verifica credenziali...</p>
         </div>
-      </Layout>
+      </RestaurantLayout>
     );
   }
 
-  // Error state with retry option
+  // Stato di errore con opzione di riprova
   if (loadingError) {
     return (
-      <Layout hideNavigation={true}>
+      <RestaurantLayout>
         <div className="flex flex-col items-center justify-center min-h-screen p-4">
           <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md text-center">
             <p className="text-red-600 mb-4">{loadingError}</p>
@@ -154,14 +165,14 @@ const RestaurantDashboard = () => {
             </Button>
           </div>
         </div>
-      </Layout>
+      </RestaurantLayout>
     );
   }
 
-  // Loading data state
+  // Stato di caricamento dati
   if (isLoading) {
     return (
-      <Layout hideNavigation={true}>
+      <RestaurantLayout>
         <div className="bg-amber-50/50 p-4 text-center font-medium text-amber-800 border-b border-amber-200">
           Questa è l'interfaccia dedicata al ristoratore per gestire la propria attività
         </div>
@@ -169,12 +180,15 @@ const RestaurantDashboard = () => {
           <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
           <p className="text-gray-600">Caricamento della dashboard...</p>
         </div>
-      </Layout>
+      </RestaurantLayout>
     );
   }
 
+  // Ottieni la tab iniziale dall'URL o usa 'home' come default
+  const initialTab = searchParams.get('tab') || 'home';
+
   return (
-    <Layout hideNavigation={true}>
+    <RestaurantLayout>
       <div className="bg-amber-50/50 p-4 text-center font-medium text-amber-800 border-b border-amber-200">
         Questa è l'interfaccia dedicata al ristoratore per gestire la propria attività
       </div>
@@ -186,7 +200,7 @@ const RestaurantDashboard = () => {
       </div>
       <TableProvider>
         <BookingProvider>
-          <TabProvider>
+          <TabProvider defaultTab={initialTab}>
             <div className="relative">
               <DashboardHeader restaurantData={restaurantData} />
               <DashboardNavigation isRestaurantOwner={true} />
@@ -198,7 +212,7 @@ const RestaurantDashboard = () => {
           </TabProvider>
         </BookingProvider>
       </TableProvider>
-    </Layout>
+    </RestaurantLayout>
   );
 };
 

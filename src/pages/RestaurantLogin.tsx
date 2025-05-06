@@ -1,19 +1,145 @@
 
-import React from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
-import LoginForm from '@/components/Authentication/LoginForm';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Store, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth, db } from '@/lib/firebase';
+import { doc, getDoc } from 'firebase/firestore';
 
 const RestaurantLogin = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validazione base
+    if (!email || !password) {
+      toast.error('Inserisci email e password');
+      return;
+    }
+    
+    setIsLoading(true);
+    
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      
+      // Verifica che l'utente sia un ristoratore
+      const userDoc = await getDoc(doc(db, "users", user.uid));
+      
+      if (userDoc.exists() && userDoc.data().type === 'restaurant') {
+        localStorage.setItem('isAuthenticated', 'true');
+        localStorage.setItem('userType', 'restaurant');
+        localStorage.setItem('userEmail', email);
+        localStorage.setItem('userId', user.uid);
+        
+        toast.success('Login effettuato con successo!');
+        
+        // Reindirizza alla nuova home dei ristoratori
+        navigate('/restaurant-home');
+      } else {
+        await auth.signOut();
+        toast.error('Questo account non è registrato come ristorante');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      toast.error('Errore di login. Verifica email e password.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <Layout hideNavigation>
-      <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12 bg-gradient-to-b from-white to-green-50/50">
-        <div className="mb-6 text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Area Ristoratori</h1>
-          <p className="text-gray-600 max-w-md">
-            Accedi alla tua dashboard per gestire il tuo ristorante, prenotazioni, menu e recensioni.
-          </p>
+      <div className="container mx-auto px-4 py-8 max-w-md">
+        <div className="flex justify-center mb-6">
+          <div className="bg-green-100 rounded-full p-4">
+            <Store className="h-10 w-10 text-green-600" />
+          </div>
         </div>
-        <LoginForm userType="restaurant" />
+        
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-xl">Accesso Ristoratore</CardTitle>
+            <CardDescription>
+              Accedi per gestire il tuo ristorante, le prenotazioni e il menu
+            </CardDescription>
+          </CardHeader>
+          <form onSubmit={handleLogin}>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input 
+                  id="email"
+                  type="email" 
+                  placeholder="ristorante@esempio.com" 
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={isLoading}
+                />
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password">Password</Label>
+                  <a 
+                    href="#" 
+                    className="text-xs text-green-600 hover:underline"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      navigate('/forgot-password');
+                    }}
+                  >
+                    Dimenticata?
+                  </a>
+                </div>
+                <Input 
+                  id="password"
+                  type="password" 
+                  placeholder="••••••••" 
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={isLoading}
+                />
+              </div>
+            </CardContent>
+            <CardFooter className="flex-col space-y-4">
+              <Button 
+                type="submit" 
+                className="w-full" 
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Accesso in corso...
+                  </>
+                ) : "Accedi"}
+              </Button>
+              <p className="text-center text-sm">
+                Non hai ancora un ristorante?{' '}
+                <a 
+                  href="#" 
+                  className="text-green-600 hover:underline"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigate('/restaurant-register');
+                  }}
+                >
+                  Registrati
+                </a>
+              </p>
+            </CardFooter>
+          </form>
+        </Card>
       </div>
     </Layout>
   );
