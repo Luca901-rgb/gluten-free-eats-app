@@ -45,11 +45,12 @@ const queryClient = new QueryClient({
       retry: 2,
       refetchOnWindowFocus: false,
       staleTime: 5 * 60 * 1000, // 5 minuti
-      // Se siamo offline, non ritentiamo le query
       retryOnMount: navigator.onLine,
-      // Gestione errori di rete
-      onError: (error) => {
-        console.error("Query error:", error);
+      meta: {
+        // Spostato onError dentro meta per compatibilità con nuove versioni di react-query
+        errorHandler: (error: Error) => {
+          console.error("Query error:", error);
+        }
       }
     },
   },
