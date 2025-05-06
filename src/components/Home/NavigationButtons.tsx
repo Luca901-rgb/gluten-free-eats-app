@@ -19,7 +19,7 @@ const NavigationButtons = ({ isRegionAvailable }: NavigationButtonsProps) => {
         </Link>
       )}
       
-      <Link to="/restaurant/1">
+      <Link to="/restaurants/1">
         <button className="w-full py-4 px-3 bg-white shadow-md rounded-lg flex flex-col items-center justify-center hover:bg-gray-50 transition-colors">
           <Wheat className="h-5 w-5 mb-1 text-green-600" />
           <span className="text-xs font-medium text-gray-700">Keccabio</span>
