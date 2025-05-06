@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Navigation } from 'lucide-react';
+import { Navigation, Wheat } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import StarRating from '@/components/common/StarRating';
 import { toast } from 'sonner';
@@ -46,7 +46,7 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({
       className="overflow-hidden transition-all duration-300 hover:shadow-md cursor-pointer animate-fade-in"
       onClick={handleCardClick}
     >
-      <div className="relative h-48">
+      <div className="relative h-40">
         <img 
           src={image} 
           alt={name} 
@@ -56,33 +56,33 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({
             e.currentTarget.src = '/placeholder.svg';
           }}
         />
-        <div className="absolute top-3 right-3 flex gap-2">
+        <div className="absolute top-2 right-2 flex gap-2">
           <button 
-            className="p-2 rounded-full bg-white/80 hover:bg-white transition-colors"
+            className="p-1.5 rounded-full bg-white/80 hover:bg-white transition-colors"
             onClick={handleNavigateClick}
             title="Apri in Google Maps"
             aria-label="Apri in Google Maps"
           >
             <Navigation 
-              size={20} 
+              size={16} 
               className="text-primary" 
             />
           </button>
         </div>
       </div>
-      <CardContent className="p-4">
+      <CardContent className="p-3">
         <div className="flex justify-between items-start">
-          <h3 className="font-poppins font-semibold text-lg mb-1 text-primary">{name}</h3>
+          <h3 className="font-poppins font-semibold text-sm mb-1 text-primary">{name}</h3>
         </div>
-        <div className="flex items-center mb-2">
-          <StarRating rating={rating} />
+        <div className="flex items-center mb-1">
+          <StarRating rating={rating} size={14} />
           <span className="text-xs text-gray-600 ml-2">{reviews} recensioni</span>
         </div>
-        <div className="flex justify-between items-center">
-          <span className="text-sm text-gray-700">{cuisine}</span>
+        <div className="flex justify-between items-center text-xs">
+          <span className="text-gray-700">{cuisine}</span>
           {distance && (
-            <span className="text-xs text-gray-500 flex items-center">
-              <Navigation className="w-4 h-4 mr-1" />
+            <span className="text-gray-500 flex items-center">
+              <Navigation className="w-3 h-3 mr-1" />
               {distance}
             </span>
           )}
@@ -90,7 +90,7 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({
         {hasGlutenFreeOptions && (
           <div className="mt-2">
             <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full flex items-center justify-center">
-              <img src="/lovable-uploads/cb016c24-7700-4927-b5e2-40af08e4b219.png" alt="Spiga" className="w-3 h-3 mr-1" />
+              <Wheat className="w-3 h-3 mr-1" />
               100% Gluten Free
             </span>
           </div>

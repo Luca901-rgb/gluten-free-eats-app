@@ -18,34 +18,34 @@ const Layout: React.FC<LayoutProps> = ({ children, hideNavigation = false }) => 
       </div>
       
       {!hideNavigation && (
-        <nav className="fixed bottom-0 w-full bg-green-500 h-16 flex justify-around items-center z-10">
+        <nav className="fixed bottom-0 w-full bg-green-500 h-14 flex justify-around items-center z-10 shadow-lg">
           <Link
             to="/home"
-            className="flex flex-col items-center text-white px-4"
+            className={`flex flex-col items-center text-white px-3 ${location.pathname === '/home' ? 'opacity-100' : 'opacity-80'}`}
           >
-            <Home className="w-6 h-6 mb-1" />
-            <span className="text-xs mt-1">Home</span>
+            <Home className="w-5 h-5" />
+            <span className="text-[10px] mt-0.5">Home</span>
           </Link>
           <Link
             to="/search"
-            className="flex flex-col items-center text-white px-4"
+            className={`flex flex-col items-center text-white px-3 ${location.pathname === '/search' ? 'opacity-100' : 'opacity-80'}`}
           >
-            <Search className="w-6 h-6 mb-1" />
-            <span className="text-xs mt-1">Ricerca</span>
+            <Search className="w-5 h-5" />
+            <span className="text-[10px] mt-0.5">Ricerca</span>
           </Link>
           <Link
             to="/bookings"
-            className="flex flex-col items-center text-white px-4"
+            className={`flex flex-col items-center text-white px-3 ${location.pathname === '/bookings' ? 'opacity-100' : 'opacity-80'}`}
           >
-            <Calendar className="w-6 h-6 mb-1" />
-            <span className="text-xs mt-1">Prenotazioni</span>
+            <Calendar className="w-5 h-5" />
+            <span className="text-[10px] mt-0.5">Prenotazioni</span>
           </Link>
           <Link
             to="/profile"
-            className="flex flex-col items-center text-white px-4"
+            className={`flex flex-col items-center text-white px-3 ${location.pathname === '/profile' ? 'opacity-100' : 'opacity-80'}`}
           >
-            <User className="w-6 h-6 mb-1" />
-            <span className="text-xs mt-1">Profilo</span>
+            <User className="w-5 h-5" />
+            <span className="text-[10px] mt-0.5">Profilo</span>
           </Link>
         </nav>
       )}
