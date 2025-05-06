@@ -36,10 +36,10 @@ const RestaurantList: React.FC<RestaurantListProps> = ({
     );
   }
 
-  // Garantisci sempre la presenza del ristorante di esempio, prima di tutto
+  // Always make sure Keccabio is the first restaurant
   let displayRestaurants = [sampleRestaurant];
   
-  // Aggiungi altri ristoranti se esistono, escludendo duplicati del ristorante esempio
+  // Add other restaurants if they exist, excluding duplicates of the sample restaurant
   if (restaurants && restaurants.length > 0) {
     const otherRestaurants = restaurants.filter(r => r.id !== sampleRestaurant.id);
     displayRestaurants = [sampleRestaurant, ...otherRestaurants];

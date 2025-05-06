@@ -22,17 +22,17 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({
     if (onClick) {
       onClick();
     } else {
-      // Fallback alla navigazione tradizionale
+      // Fallback to traditional navigation
       window.location.href = `/restaurant/${id}`;
     }
   };
   
-  // Funzione per aprire Google Maps
+  // Function to open Google Maps
   const handleNavigateClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Previene l'attivazione dell'onClick del Card
+    e.stopPropagation(); // Prevents card onClick activation
     
     if (location) {
-      // Apri Google Maps nella posizione del ristorante
+      // Open Google Maps at restaurant location
       const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${location.lat},${location.lng}`;
       window.open(googleMapsUrl, '_blank');
       toast.success('Apertura mappa del ristorante');
@@ -41,9 +41,12 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({
     }
   };
 
+  // Highlight the sample restaurant (Keccabio)
+  const isKeccabio = id === '1';
+
   return (
     <Card 
-      className="overflow-hidden transition-all duration-300 hover:shadow-md cursor-pointer animate-fade-in"
+      className={`overflow-hidden transition-all duration-300 hover:shadow-md cursor-pointer animate-fade-in ${isKeccabio ? 'border-green-500 border-2' : ''}`}
       onClick={handleCardClick}
     >
       <div className="relative h-40">
@@ -52,7 +55,7 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({
           alt={name} 
           className="w-full h-full object-cover"
           onError={(e) => {
-            // Fallback se l'immagine non si carica
+            // Fallback if image doesn't load
             e.currentTarget.src = '/placeholder.svg';
           }}
         />
@@ -69,10 +72,15 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({
             />
           </button>
         </div>
+        {isKeccabio && (
+          <div className="absolute top-2 left-2 bg-green-500 text-white px-2 py-1 rounded-full text-xs">
+            Consigliato
+          </div>
+        )}
       </div>
       <CardContent className="p-3">
         <div className="flex justify-between items-start">
-          <h3 className="font-poppins font-semibold text-sm mb-1 text-primary">{name}</h3>
+          <h3 className={`font-poppins font-semibold text-sm mb-1 ${isKeccabio ? 'text-green-700' : 'text-primary'}`}>{name}</h3>
         </div>
         <div className="flex items-center mb-1">
           <StarRating rating={rating} size={14} />
