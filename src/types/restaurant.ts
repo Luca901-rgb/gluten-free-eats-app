@@ -24,6 +24,9 @@ export interface Restaurant {
     days: string;
     hours: string;
   }>;
+  menuUrl?: string;
+  capacity?: number;
+  services?: string[];
 }
 
 export interface RegionStatus {
@@ -31,4 +34,24 @@ export interface RegionStatus {
   inRegion: boolean;
   regionName?: string;
   error?: string;
+}
+
+// Add booking related types
+export interface BookingRequest {
+  restaurantId: string;
+  date: string;
+  time: string;
+  people: number;
+  name: string;
+  email: string;
+  phone: string;
+  notes?: string;
+  specialRequirements?: string[];
+}
+
+export interface BookingResponse {
+  id: string;
+  bookingCode: string;
+  status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
+  restaurantReviewCode?: string;
 }

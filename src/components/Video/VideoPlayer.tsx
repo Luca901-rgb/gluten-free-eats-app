@@ -28,6 +28,11 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const [isMuted, setIsMuted] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isControlsVisible, setIsControlsVisible] = useState(true);
+  const [isHovering, setIsHovering] = useState(false);
+  const controlsTimeoutRef = useRef<number | null>(null);
+  const playerRef = useRef<HTMLDivElement>(null);
 
   // Handle video loading metadata
   useEffect(() => {
@@ -51,16 +56,46 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       setCurrentTime(video.currentTime);
     };
 
+    // Check for video end
+    const handleEnded = () => {
+      setIsPlaying(false);
+    };
+
     video.addEventListener('loadedmetadata', handleLoadedMetadata);
     video.addEventListener('error', handleError);
     video.addEventListener('timeupdate', handleTimeUpdate);
+    video.addEventListener('ended', handleEnded);
+
+    // Add fullscreen change event listeners
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+
+    // Auto-play if set (with browser restrictions in mind)
+    if (autoPlay) {
+      video.play().catch(err => {
+        console.error('Auto-play prevented:', err);
+        setIsPlaying(false);
+      });
+    }
 
     return () => {
       video.removeEventListener('loadedmetadata', handleLoadedMetadata);
       video.removeEventListener('error', handleError);
       video.removeEventListener('timeupdate', handleTimeUpdate);
+      video.removeEventListener('ended', handleEnded);
+      
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
+      
+      if (controlsTimeoutRef.current) {
+        window.clearTimeout(controlsTimeoutRef.current);
+      }
     };
-  }, [videoUrl, onError]);
+  }, [videoUrl, onError, autoPlay]);
 
   // Toggle play/pause
   const togglePlay = () => {
@@ -77,6 +112,9 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       });
       setIsPlaying(true);
     }
+    
+    // Show controls briefly when toggling play/pause
+    showControlsTemporarily();
   };
 
   // Handle seek
@@ -87,6 +125,9 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     const newTime = value[0];
     video.currentTime = newTime;
     setCurrentTime(newTime);
+    
+    // Show controls briefly when seeking
+    showControlsTemporarily();
   };
 
   // Toggle mute
@@ -96,6 +137,9 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
     video.muted = !video.muted;
     setIsMuted(!isMuted);
+    
+    // Show controls briefly
+    showControlsTemporarily();
   };
 
   // Handle volume change
@@ -113,6 +157,9 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       setIsMuted(false);
       video.muted = false;
     }
+    
+    // Show controls briefly
+    showControlsTemporarily();
   };
 
   // Skip backward 10 seconds
@@ -121,6 +168,9 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     if (!video) return;
     
     video.currentTime = Math.max(0, video.currentTime - 10);
+    
+    // Show controls briefly
+    showControlsTemporarily();
   };
 
   // Skip forward 10 seconds
@@ -129,23 +179,103 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     if (!video) return;
     
     video.currentTime = Math.min(video.duration, video.currentTime + 10);
+    
+    // Show controls briefly
+    showControlsTemporarily();
   };
 
-  // Enter fullscreen
-  const enterFullscreen = () => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    if (video.requestFullscreen) {
-      video.requestFullscreen();
+  // Handle fullscreen
+  const toggleFullscreen = () => {
+    if (!playerRef.current) return;
+    
+    try {
+      if (!isFullscreen) {
+        if (playerRef.current.requestFullscreen) {
+          playerRef.current.requestFullscreen();
+        } else if ((playerRef.current as any).webkitRequestFullscreen) {
+          (playerRef.current as any).webkitRequestFullscreen();
+        } else if ((playerRef.current as any).mozRequestFullScreen) {
+          (playerRef.current as any).mozRequestFullScreen();
+        } else if ((playerRef.current as any).msRequestFullscreen) {
+          (playerRef.current as any).msRequestFullscreen();
+        }
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        } else if ((document as any).webkitExitFullscreen) {
+          (document as any).webkitExitFullscreen();
+        } else if ((document as any).mozCancelFullScreen) {
+          (document as any).mozCancelFullScreen();
+        } else if ((document as any).msExitFullscreen) {
+          (document as any).msExitFullscreen();
+        }
+      }
+    } catch (err) {
+      console.error('Fullscreen error:', err);
     }
+    
+    // Show controls briefly
+    showControlsTemporarily();
   };
 
   // Format time (seconds to MM:SS)
   const formatTime = (time: number): string => {
+    if (!isFinite(time) || time < 0) return '00:00';
     const minutes = Math.floor(time / 60);
     const seconds = Math.floor(time % 60);
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  // Handle fullscreen change
+  const handleFullscreenChange = () => {
+    const isCurrentlyFullscreen = !!(
+      document.fullscreenElement ||
+      (document as any).webkitFullscreenElement ||
+      (document as any).mozFullScreenElement ||
+      (document as any).msFullscreenElement
+    );
+    
+    setIsFullscreen(isCurrentlyFullscreen);
+  };
+
+  // Show controls temporarily and hide after delay
+  const showControlsTemporarily = () => {
+    setIsControlsVisible(true);
+    
+    if (controlsTimeoutRef.current) {
+      window.clearTimeout(controlsTimeoutRef.current);
+    }
+    
+    if (isPlaying && !isHovering) {
+      controlsTimeoutRef.current = window.setTimeout(() => {
+        setIsControlsVisible(false);
+      }, 3000);
+    }
+  };
+
+  // Mouse events for controls visibility
+  const handleMouseEnter = () => {
+    setIsHovering(true);
+    setIsControlsVisible(true);
+    
+    if (controlsTimeoutRef.current) {
+      window.clearTimeout(controlsTimeoutRef.current);
+    }
+  };
+  
+  const handleMouseLeave = () => {
+    setIsHovering(false);
+    
+    if (isPlaying && controlsTimeoutRef.current === null) {
+      controlsTimeoutRef.current = window.setTimeout(() => {
+        setIsControlsVisible(false);
+        controlsTimeoutRef.current = null;
+      }, 3000);
+    }
+  };
+  
+  const handleMouseMove = () => {
+    showControlsTemporarily();
   };
 
   // Determine if the video is playable or if we should show an error/thumbnail
@@ -153,12 +283,18 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const showThumbnail = !isVideoReady || (!isPlaying && thumbnail);
 
   return (
-    <div className="relative rounded-lg overflow-hidden bg-black">
+    <div 
+      ref={playerRef} 
+      className={`relative rounded-lg overflow-hidden bg-black group ${isFullscreen ? 'w-full h-full' : ''}`}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      onMouseMove={handleMouseMove}
+    >
       {/* Video or Thumbnail */}
       <div className="relative aspect-video">
         {showThumbnail && thumbnail && (
           <div 
-            className="absolute inset-0 bg-center bg-cover" 
+            className="absolute inset-0 bg-center bg-cover cursor-pointer" 
             style={{ backgroundImage: `url(${thumbnail})` }}
             onClick={togglePlay}
           >
@@ -186,7 +322,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         <video
           ref={videoRef}
           src={videoUrl}
-          className={`w-full h-full object-contain ${showThumbnail ? 'invisible' : 'visible'}`}
+          className={`w-full h-full object-contain ${showThumbnail ? 'invisible' : 'visible'} cursor-pointer`}
           poster={thumbnail}
           onClick={togglePlay}
           preload="metadata"
@@ -194,8 +330,22 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         />
       </div>
 
-      {/* Controls */}
-      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4">
+      {/* Big Play/Pause button overlay (shows only when controls are visible) */}
+      {isControlsVisible && isPlaying && (
+        <div 
+          className="absolute inset-0 flex items-center justify-center bg-transparent cursor-pointer"
+          onClick={togglePlay}
+        >
+          {/* Hidden transparent div for play/pause functionality */}
+        </div>
+      )}
+
+      {/* Controls - Visible conditionally */}
+      <div 
+        className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 transition-opacity duration-300 ${
+          isControlsVisible ? 'opacity-100' : 'opacity-0'
+        }`}
+      >
         {/* Title (if provided) */}
         {title && (
           <div className="mb-2 text-white text-sm font-medium">
@@ -273,7 +423,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
             variant="ghost" 
             size="icon" 
             className="text-white hover:bg-white/20"
-            onClick={enterFullscreen}
+            onClick={toggleFullscreen}
           >
             <Maximize size={18} />
           </Button>
