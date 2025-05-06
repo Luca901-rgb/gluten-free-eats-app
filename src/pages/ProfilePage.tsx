@@ -1,250 +1,77 @@
 
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { auth, db, logoutUser } from '@/lib/firebase';
-import { doc, getDoc } from 'firebase/firestore';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Avatar } from '@/components/ui/avatar';
-import { Loader2, LogOut, Settings, User, Shield, AlertTriangle } from 'lucide-react';
-import { toast } from 'sonner';
-import { Skeleton } from '@/components/ui/skeleton';
+import React from 'react';
 import Layout from '@/components/Layout';
-import safeStorage from '@/lib/safeStorage';
+import { Settings, Shield, LogOut } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
+import { logoutUser } from '@/lib/firebase';
+import { toast } from 'sonner';
 
-const ProfilePage: React.FC = () => {
-  const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
-  const [error, setError] = useState<string | null>(null);
+const ProfilePage = () => {
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const loadUserProfile = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        console.log("ProfilePage - Caricamento profilo utente...");
-        
-        // Usa sia localStorage che auth.currentUser per massima compatibilità
-        const currentUser = auth.currentUser;
-        const userIdFromStorage = safeStorage.getItem('userId');
-        const userEmailFromStorage = safeStorage.getItem('userEmail');
-        const userNameFromStorage = safeStorage.getItem('userName');
-        const isAuthenticated = safeStorage.getItem('isAuthenticated');
-        
-        console.log("ProfilePage - currentUser:", currentUser);
-        console.log("ProfilePage - userIdFromStorage:", userIdFromStorage);
-        console.log("ProfilePage - userEmailFromStorage:", userEmailFromStorage);
-        console.log("ProfilePage - isAuthenticated:", isAuthenticated);
-        
-        // Se non c'è un utente autenticato né in storage, reindirizza al login
-        if ((!currentUser && !userIdFromStorage && !userEmailFromStorage) || isAuthenticated !== 'true') {
-          console.log("Nessun utente autenticato trovato, reindirizzo al login");
-          toast.error("Effettua il login per visualizzare il profilo");
-          setTimeout(() => navigate('/login'), 500);
-          return;
-        }
-        
-        // Crea un oggetto utente minimo usando i dati disponibili
-        let userData = {
-          uid: currentUser?.uid || userIdFromStorage || 'guest-user',
-          email: currentUser?.email || userEmailFromStorage || 'Utente offline',
-          displayName: currentUser?.displayName || userNameFromStorage || "Utente",
-          photoURL: currentUser?.photoURL || null
-        };
-        
-        // Se siamo online, prova a recuperare altri dati da Firestore
-        if (navigator.onLine) {
-          try {
-            if (currentUser) {
-              const userDoc = await getDoc(doc(db, "users", currentUser.uid));
-              
-              if (userDoc.exists()) {
-                userData = {
-                  ...userData,
-                  ...userDoc.data()
-                };
-                
-                // Salva dati importanti nel safeStorage per accesso offline
-                safeStorage.setItem('userName', userData.displayName);
-                safeStorage.setItem('userEmail', userData.email);
-                if (userData.photoURL) safeStorage.setItem('userPhotoURL', userData.photoURL);
-              }
-            } else if (userIdFromStorage) {
-              // Prova a caricare dati usando l'ID utente in storage
-              try {
-                const userDoc = await getDoc(doc(db, "users", userIdFromStorage));
-                if (userDoc.exists()) {
-                  userData = {
-                    ...userData,
-                    ...userDoc.data()
-                  };
-                }
-              } catch (e) {
-                console.warn("Errore nel caricamento dati utente da Firestore usando ID in storage", e);
-              }
-            }
-          } catch (firestoreError) {
-            console.error("Errore nel caricamento dati da Firestore:", firestoreError);
-          }
-        }
-        
-        console.log("ProfilePage - userData caricato:", userData);
-        setUser(userData);
-      } catch (err) {
-        console.error("Errore nel caricamento del profilo:", err);
-        setError("Si è verificato un errore nel caricamento del profilo");
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    loadUserProfile();
-    
-    // Timeout di sicurezza - se dopo 2 secondi ancora carica, forziamo la fine
-    const safetyTimeout = setTimeout(() => {
-      if (loading) {
-        setLoading(false);
-        setUser({
-          displayName: safeStorage.getItem('userName') || "Utente",
-          email: safeStorage.getItem('userEmail') || "utente@esempio.com",
-          photoURL: safeStorage.getItem('userPhotoURL') || null
-        });
-      }
-    }, 2000);
-    
-    return () => clearTimeout(safetyTimeout);
-  }, [navigate]);
   
   const handleLogout = async () => {
     try {
       await logoutUser();
-      toast.success("Logout effettuato con successo");
+      toast.success("Disconnessione effettuata con successo");
       navigate('/login');
     } catch (error) {
-      console.error("Errore durante il logout:", error);
-      
-      // Fallback per logout offline
-      safeStorage.removeItem('isAuthenticated');
-      safeStorage.removeItem('userType');
-      safeStorage.removeItem('userId');
-      safeStorage.removeItem('userEmail');
-      safeStorage.removeItem('userName');
-      
-      toast.success("Logout effettuato");
-      navigate('/login');
+      toast.error("Errore durante la disconnessione");
     }
   };
   
-  if (loading) {
-    return (
-      <Layout>
-        <div className="container mx-auto p-4">
-          <h1 className="text-2xl font-bold mb-6">Il mio profilo</h1>
-          
-          <Card className="mb-6">
-            <CardHeader className="flex flex-row items-center gap-4">
-              <Skeleton className="h-16 w-16 rounded-full" />
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-3 w-32" />
-              </div>
-            </CardHeader>
-          </Card>
-          
-          <div className="grid gap-4">
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-10 w-full mt-6" />
-          </div>
-        </div>
-      </Layout>
-    );
-  }
-  
-  if (error) {
-    return (
-      <Layout>
-        <div className="container mx-auto p-4 text-center">
-          <AlertTriangle size={48} className="mx-auto text-amber-500 mb-4" />
-          <h1 className="text-2xl font-bold mb-4">Errore</h1>
-          <p className="mb-6">{error}</p>
-          <div className="flex gap-4 justify-center">
-            <Button onClick={() => window.location.reload()}>Riprova</Button>
-            <Button variant="outline" onClick={() => navigate('/login')}>Torna al login</Button>
-          </div>
-        </div>
-      </Layout>
-    );
-  }
-  
-  if (!user) {
-    return (
-      <Layout>
-        <div className="container mx-auto p-4 text-center">
-          <AlertTriangle size={48} className="mx-auto text-amber-500 mb-4" />
-          <h1 className="text-2xl font-bold mb-4">Sessione non valida</h1>
-          <p className="mb-6">La tua sessione è scaduta o non sei connesso.</p>
-          <Button onClick={() => navigate('/login')}>Accedi</Button>
-        </div>
-      </Layout>
-    );
-  }
-  
   return (
     <Layout>
-      <div className="container mx-auto p-4 pb-20">
-        <h1 className="text-2xl font-bold mb-6">Il mio profilo</h1>
+      <div className="min-h-screen bg-[#bfe5c0] pb-20">
+        {/* Header */}
+        <div className="bg-green-500 text-white p-4">
+          <h1 className="text-xl font-bold flex items-center justify-center">
+            <img src="/lovable-uploads/cb016c24-7700-4927-b5e2-40af08e4b219.png" alt="Logo" className="w-8 h-8 mr-2" />
+            GlutenFree Eats
+          </h1>
+        </div>
         
-        <Card className="mb-6">
-          <CardHeader className="flex flex-row items-center gap-4">
-            <Avatar className="h-16 w-16">
-              {user?.photoURL ? (
-                <img 
-                  src={user.photoURL} 
-                  alt={user.displayName || "Utente"} 
-                  className="h-full w-full object-cover"
-                  onError={(e) => {
-                    e.currentTarget.src = '/placeholder.svg';
-                  }}
-                />
-              ) : (
-                <User className="h-10 w-10" />
-              )}
-            </Avatar>
-            <div>
-              <CardTitle>{user?.displayName || "Utente"}</CardTitle>
-              <p className="text-sm text-muted-foreground">{user?.email}</p>
+        {/* Profile title */}
+        <div className="px-4 pt-4 pb-6">
+          <h1 className="text-3xl font-bold text-[#38414a]">Il mio profilo</h1>
+        </div>
+        
+        {/* User info card */}
+        <div className="bg-white rounded-lg mx-4 p-6 shadow-sm mb-6">
+          <div className="flex items-center">
+            <div className="bg-gray-100 w-16 h-16 rounded-full flex items-center justify-center mr-4">
+              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
             </div>
-          </CardHeader>
-        </Card>
+            <div>
+              <h2 className="text-2xl font-bold">Utente</h2>
+              <p className="text-gray-600">luca.cammarota@live.it</p>
+            </div>
+          </div>
+        </div>
         
-        <div className="grid gap-4">
-          <Button 
-            variant="outline" 
-            className="flex justify-start items-center"
-            onClick={() => navigate('/settings')}
-          >
-            <Settings className="h-5 w-5 mr-2" />
-            Anagrafica Utente
-          </Button>
+        {/* Menu items */}
+        <div className="space-y-4 mx-4">
+          <div className="bg-white rounded-lg p-4 flex items-center shadow-sm">
+            <Settings className="w-6 h-6 mr-4 text-gray-700" />
+            <span className="text-lg">Anagrafica Utente</span>
+          </div>
           
+          <div className="bg-white rounded-lg p-4 flex items-center shadow-sm">
+            <Shield className="w-6 h-6 mr-4 text-gray-700" />
+            <span className="text-lg">Area amministratore</span>
+          </div>
+        </div>
+        
+        {/* Logout button */}
+        <div className="mx-4 mt-8">
           <Button 
-            variant="outline" 
-            className="flex justify-start items-center"
-            onClick={() => navigate('/admin-dashboard')}
-          >
-            <Shield className="h-5 w-5 mr-2" />
-            Area amministratore
-          </Button>
-          
-          <Button 
-            variant="destructive" 
-            className="mt-6 flex justify-center items-center"
             onClick={handleLogout}
+            className="w-full bg-red-500 hover:bg-red-600 text-white py-6 h-auto text-lg flex items-center justify-center"
           >
-            <LogOut className="h-5 w-5 mr-2" />
+            <LogOut className="w-5 h-5 mr-2" />
             Disconnetti
           </Button>
         </div>

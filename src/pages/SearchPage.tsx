@@ -1,294 +1,129 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
-import { useSearchParams } from 'react-router-dom';
-import { useRestaurantList, RegionStatus } from '@/hooks/useRestaurantList';
-import { Restaurant } from '@/types/restaurant';
-import { toast } from 'sonner';
-import { CheckCircle, AlertTriangle, MapPin, Navigation } from 'lucide-react';
+import { Search, MapPin, SlidersHorizontal } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { useUserLocation } from '@/hooks/useUserLocation';
-import { RestaurantMap } from '@/components/Map/RestaurantMap';
+import { Card } from '@/components/ui/card';
+import StarRating from '@/components/common/StarRating';
+import { useRestaurantList } from '@/hooks/useRestaurantList';
+import { useNavigate } from 'react-router-dom';
 
 const SearchPage = () => {
-  const [searchParams] = useSearchParams();
-  const { restaurants, isLoading, regionStatus, userLocation, getUserLocation } = useRestaurantList();
-  const [userPosition, setUserPosition] = useState<{ lat: number | null, lng: number | null }>({ lat: null, lng: null });
-  const [locationPermission, setLocationPermission] = useState<PermissionState | null>(null);
-  const [inAvailableRegion, setInAvailableRegion] = useState<boolean | null>(null);
-  const [distanceFilter, setDistanceFilter] = useState<number | null>(null);
-  const [isMiles, setIsMiles] = useState(false);
-  const { checkPermissionStatus } = useUserLocation();
+  const [searchTerm, setSearchTerm] = useState("");
+  const { restaurants, isLoading } = useRestaurantList();
+  const navigate = useNavigate();
 
-  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
-    const R = isMiles ? 3958.8 : 6371; // Radius of earth in miles or kilometers
-    const dLat = deg2rad(lat2 - lat1);
-    const dLon = deg2rad(lon2 - lon1);
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
-      Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    const distance = R * c; // Distance in miles or kilometers
-    return distance.toFixed(1);
-  };
-
-  const deg2rad = (deg: number) => {
-    return deg * (Math.PI / 180)
-  }
-
-  const fetchRestaurants = useCallback(async () => {
-    if (userPosition.lat && userPosition.lng && restaurants) {
-      const updatedRestaurants = restaurants.map(restaurant => {
-        if (restaurant.location?.lat && restaurant.location?.lng) {
-          const distance = calculateDistance(
-            userPosition.lat,
-            userPosition.lng,
-            restaurant.location.lat,
-            restaurant.location.lng
-          );
-          return { ...restaurant, distance: `${distance} ${isMiles ? 'mi' : 'km'}` };
-        }
-        return restaurant;
-      });
-    }
-  }, [userPosition, restaurants, isMiles]);
-
-  useEffect(() => {
-    const getInitialLocation = async () => {
-      const location = searchParams.get('location');
-      if (location) {
-        try {
-          const [lat, lng] = location.split(',').map(parseFloat);
-          if (!isNaN(lat) && !isNaN(lng)) {
-            setUserPosition({ lat, lng });
-          } else {
-            toast.error("Invalid location coordinates in URL");
-          }
-        } catch (error) {
-          toast.error("Error parsing location from URL");
-        }
-      } else {
-        await getUserLocation();
-      }
-    };
-
-    getInitialLocation();
-  }, [searchParams, getUserLocation]);
-
-  useEffect(() => {
-    const checkRegionStatus = () => {
-      if (regionStatus) {
-        setInAvailableRegion(regionStatus.inRegion);
-      }
-    };
-
-    checkRegionStatus();
-  }, [regionStatus]);
-
-  useEffect(() => {
-    const getPermission = async () => {
-      const permission = await checkPermissionStatus();
-      setLocationPermission(permission);
-    };
-
-    getPermission();
-  }, [checkPermissionStatus]);
-
-  useEffect(() => {
-    fetchRestaurants();
-  }, [fetchRestaurants]);
-
-  const handleGetUserLocation = async () => {
-    try {
-      await getUserLocation();
-    } catch (error) {
-      console.error("Error getting user location:", error);
-      toast.error("Failed to retrieve user location");
-    }
-  };
-
-  const handleDistanceFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value;
-    setDistanceFilter(value === 'any' ? null : parseFloat(value));
-  };
-
-  // Add navigation handler for restaurant details
-  const navigateToRestaurantDetails = (restaurantId: string) => {
-    window.location.href = `/restaurant/${restaurantId}`;
+  const handleRestaurantClick = (id: string) => {
+    navigate(`/restaurant/${id}`);
   };
 
   return (
     <Layout>
-      <div className="p-4">
-        {/* Header with title and button */}
-        <div className="flex justify-between items-center mb-4">
-          <h1 className="text-2xl font-bold">Cerca Ristoranti</h1>
-          <Button onClick={handleGetUserLocation}>
-            Aggiorna posizione
-          </Button>
-        </div>
-        
-        {/* Region alerts and permission alerts */}
-        {regionStatus && regionStatus.error && (
-          <div className="rounded-md bg-red-50 p-4 mb-4">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <AlertTriangle className="h-5 w-5 text-red-400" aria-hidden="true" />
-              </div>
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-red-800">
-                  Errore di localizzazione
-                </h3>
-                <div className="mt-2 text-sm text-red-700">
-                  <p>{regionStatus.error}</p>
-                </div>
-              </div>
-            </div>
+      <div className="min-h-screen bg-[#bfe5c0] pb-20">
+        {/* Search status message */}
+        <div className="bg-white p-4 flex items-center space-x-2 rounded-lg m-4 shadow-sm">
+          <div className="bg-black bg-opacity-10 p-2 rounded-full">
+            <Search size={20} className="text-black" />
           </div>
-        )}
+          <p className="text-gray-800">Ricerca posizione in corso...</p>
+        </div>
 
-        {locationPermission === 'denied' && (
-          <div className="rounded-md bg-yellow-50 p-4 mb-4">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <AlertTriangle className="h-5 w-5 text-yellow-400" aria-hidden="true" />
-              </div>
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-yellow-800">
-                  Permessi di localizzazione disabilitati
-                </h3>
-                <div className="mt-2 text-sm text-yellow-700">
-                  <p>Per favore abilita i permessi di localizzazione per una migliore esperienza.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-        
-        {/* User location button and states */}
-        {userPosition.lat && userPosition.lng && (
-          <div className="rounded-md bg-green-50 p-4 mb-4">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <CheckCircle className="h-5 w-5 text-green-400" aria-hidden="true" />
-              </div>
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-green-800">
-                  Posizione rilevata
-                </h3>
-                <div className="mt-2 text-sm text-green-700">
-                  <p>Latitudine: {userPosition.lat}, Longitudine: {userPosition.lng}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-        
-        {/* Distance filter */}
-        <div className="mb-4">
-          <label htmlFor="distance" className="block text-sm font-medium text-gray-700">
-            Filtra per distanza massima:
-          </label>
-          <select
-            id="distance"
-            className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md"
-            defaultValue="any"
-            onChange={handleDistanceFilterChange}
-          >
-            <option value="any">Qualsiasi distanza</option>
-            <option value="5">5 km</option>
-            <option value="10">10 km</option>
-            <option value="20">20 km</option>
-          </select>
+        {/* Page title */}
+        <div className="px-4 pt-2 pb-6">
+          <h1 className="text-4xl font-bold text-[#38414a]">Cerca ristoranti senza glutine</h1>
         </div>
-        
-        {/* Map and List View - Modified layout */}
-        {inAvailableRegion !== false ? (
-          <div className="flex flex-col space-y-4">
-            {/* Map takes 50vh - half the screen height */}
-            <div className="h-[50vh] rounded-lg border overflow-hidden">
-              <RestaurantMap 
-                userLocation={userPosition}
-                restaurants={restaurants as any[]}
+
+        {/* Search input */}
+        <div className="px-4 mb-6">
+          <div className="flex items-center space-x-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <Input 
+                placeholder="Inserisci nome o indirizzo..." 
+                className="pl-10 bg-white py-6 text-base"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            
-            {/* Restaurant list below the map */}
-            <div className="border border-gray-200 rounded-lg shadow-sm overflow-hidden">
-              <div className="p-3 bg-gray-50 border-b">
-                <h4 className="font-medium">
-                  {isLoading ? 'Caricamento ristoranti...' : 
-                   restaurants.length > 0 ? `Ristoranti trovati (${restaurants.length})` : 
-                   'Nessun ristorante trovato'}
-                </h4>
-              </div>
-              <div className="max-h-[40vh] overflow-y-auto">
-                {isLoading ? (
-                  <div className="p-4 text-center">
-                    <div className="animate-pulse h-6 w-24 bg-gray-200 rounded mx-auto"></div>
+            <Button 
+              className="bg-white hover:bg-gray-100 text-gray-800 px-6 py-6 h-auto flex items-center space-x-1 rounded-lg border shadow-sm"
+            >
+              <MapPin size={20} />
+              <span>Vicino a me</span>
+            </Button>
+          </div>
+        </div>
+
+        {/* Filter buttons */}
+        <div className="px-4 mb-6 overflow-x-auto">
+          <div className="flex space-x-2">
+            <button className="flex items-center space-x-2 px-4 py-2 bg-white bg-opacity-60 rounded-full border text-gray-800 whitespace-nowrap">
+              <img src="/lovable-uploads/cb016c24-7700-4927-b5e2-40af08e4b219.png" alt="Wheat" className="w-6 h-6" />
+              <span>Pizzeria</span>
+            </button>
+            <button className="flex items-center space-x-2 px-4 py-2 bg-white bg-opacity-60 rounded-full border text-gray-800 whitespace-nowrap">
+              <img src="/lovable-uploads/cb016c24-7700-4927-b5e2-40af08e4b219.png" alt="Wheat" className="w-6 h-6" />
+              <span>Ristorante</span>
+            </button>
+            <button className="flex items-center space-x-2 px-4 py-2 bg-white bg-opacity-60 rounded-full border text-gray-800 whitespace-nowrap">
+              <img src="/lovable-uploads/cb016c24-7700-4927-b5e2-40af08e4b219.png" alt="Wheat" className="w-6 h-6" />
+              <span>Trattoria</span>
+            </button>
+            <button className="p-3 bg-white rounded-lg border">
+              <SlidersHorizontal size={20} className="text-gray-800" />
+            </button>
+          </div>
+        </div>
+
+        {/* Restaurant cards - loading skeletons */}
+        {isLoading ? (
+          <div className="px-4 space-y-4">
+            {[1, 2, 3].map((item) => (
+              <Card key={item} className="bg-white/60 p-4 h-28 animate-pulse">
+                <div className="flex">
+                  <div className="w-1/3 bg-gray-200 rounded-lg h-full"></div>
+                  <div className="w-2/3 pl-4 space-y-2">
+                    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                    <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                    <div className="h-3 bg-gray-200 rounded w-1/4"></div>
                   </div>
-                ) : restaurants.length > 0 ? (
-                  restaurants.map(restaurant => (
-                    <div 
-                      key={restaurant.id} 
-                      className="bg-white p-3 m-2 rounded-lg shadow-sm flex items-start gap-2 hover:bg-gray-50 cursor-pointer transition-colors"
-                      onClick={() => navigateToRestaurantDetails(restaurant.id)}
-                    >
-                      <MapPin className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                      <div className="flex-1">
-                        <h5 className="font-medium">{restaurant.name}</h5>
-                        <p className="text-sm text-gray-600">{restaurant.address}</p>
-                        <p className="text-sm font-medium text-primary">{restaurant.distance}</p>
-                      </div>
-                      <Button 
-                        variant="outline" 
-                        size="icon" 
-                        className="h-8 w-8 flex-shrink-0"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (restaurant.location) {
-                            const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${restaurant.location.lat},${restaurant.location.lng}`;
-                            window.open(googleMapsUrl, '_blank');
-                          }
-                        }}
-                      >
-                        <Navigation className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))
-                ) : (
-                  <div className="p-4 text-center">
-                    <p className="text-gray-500">Nessun ristorante trovato in questa zona.</p>
-                  </div>
-                )}
-              </div>
-            </div>
+                </div>
+              </Card>
+            ))}
           </div>
         ) : (
-          <div className="rounded-md bg-red-50 p-4">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <AlertTriangle className="h-5 w-5 text-red-400" aria-hidden="true" />
-              </div>
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-red-800">
-                  Regione non disponibile
-                </h3>
-                <div className="mt-2 text-sm text-red-700">
-                  <p>La tua regione non è ancora supportata. Riprova più tardi.</p>
+          <div className="px-4 space-y-4">
+            {restaurants.map((restaurant) => (
+              <Card
+                key={restaurant.id}
+                className="bg-white/60 hover:bg-white transition-colors overflow-hidden cursor-pointer"
+                onClick={() => handleRestaurantClick(restaurant.id)}
+              >
+                <div className="flex">
+                  <div className="w-1/3">
+                    <img
+                      src={restaurant.image || "/placeholder.svg"}
+                      alt={restaurant.name}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                  <div className="w-2/3 p-3">
+                    <h3 className="font-bold text-lg mb-1">{restaurant.name}</h3>
+                    <div className="flex items-center mb-1">
+                      <StarRating rating={restaurant.rating || 0} className="mr-1" size={16} />
+                      <span className="text-sm text-gray-600">{restaurant.reviews || 0} recensioni</span>
+                    </div>
+                    <p className="text-sm text-gray-700">{restaurant.cuisine}</p>
+                    {restaurant.hasGlutenFreeOptions && (
+                      <span className="inline-block mt-1 px-2 py-0.5 text-xs bg-green-100 text-green-800 rounded-full">
+                        100% Gluten Free
+                      </span>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </div>
-          </div>
-        )}
-        
-        {/* User position display */}
-        {userPosition.lat && userPosition.lng && (
-          <div className="mt-4">
-            <p className="text-sm text-gray-500">
-              La tua posizione: Latitudine {userPosition.lat}, Longitudine {userPosition.lng}
-            </p>
+              </Card>
+            ))}
           </div>
         )}
       </div>

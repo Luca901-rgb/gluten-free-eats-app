@@ -12,7 +12,7 @@ const Layout: React.FC<LayoutProps> = ({ children, hideNavigation = false }) => 
   const location = useLocation();
   
   return (
-    <div className="flex flex-col min-h-screen w-full bg-green-100/30 overflow-hidden">
+    <div className="flex flex-col min-h-screen w-full bg-[#a3e0a8] overflow-hidden">
       <div className="flex-1 overflow-y-auto pb-16 w-full">
         {children}
       </div>

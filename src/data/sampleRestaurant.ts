@@ -5,7 +5,7 @@ export const sampleRestaurant: Restaurant = {
   id: '1',
   name: 'Trattoria Keccabio',
   image: '/placeholder.svg', 
-  rating: 4.7,
+  rating: 4.0,
   reviews: 128,
   cuisine: 'Campana Gluten Free',
   description: 'Ristorante 100% gluten free specializzato in cucina campana tradizionale.',
