@@ -47,6 +47,13 @@ const Layout: React.FC<LayoutProps> = ({ children, hideNavigation = false }) => 
             <Calendar size={24} />
             <span className="text-xs mt-1">Prenotazioni</span>
           </Link>
+          <Link
+            to="/profile"
+            className="flex flex-col items-center text-white px-4"
+          >
+            <User size={24} />
+            <span className="text-xs mt-1">Profilo</span>
+          </Link>
         </nav>
       )}
     </div>

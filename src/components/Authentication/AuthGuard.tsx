@@ -2,7 +2,9 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
+import { auth } from '@/lib/firebase';
 import safeStorage from '@/lib/safeStorage';
+import { onAuthStateChanged } from 'firebase/auth';
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -50,9 +52,32 @@ const AuthGuard: React.FC<AuthGuardProps> = ({
       }
     };
     
-    // Verifica immediatamente, senza timeout
-    checkAuth();
+    // Verifica con Firebase Auth
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // Utente autenticato
+        setIsAuthenticated(true);
+        // Controlla se abbiamo salvato il tipo di utente
+        const storedUserType = safeStorage.getItem('userType');
+        setUserType(storedUserType);
+      } else {
+        // Fallback al localStorage per casi offline
+        const authStatus = safeStorage.getItem('isAuthenticated');
+        const storedUserType = safeStorage.getItem('userType');
+        
+        if (authStatus === 'true') {
+          setIsAuthenticated(true);
+          setUserType(storedUserType);
+        } else {
+          setIsAuthenticated(false);
+          setUserType(null);
+        }
+      }
+      setIsLoading(false);
+    });
     
+    // Cleanup
+    return () => unsubscribe();
   }, [location.pathname]);
 
   // Mentre verifichiamo l'autenticazione, mostriamo un loader
