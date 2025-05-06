@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import Layout from '@/components/Layout';
@@ -28,6 +29,7 @@ const RestaurantPage = () => {
             name: sampleRestaurant.name,
             description: sampleRestaurant.description || 'Ristorante 100% gluten free specializzato in cucina campana tradizionale.',
             coverImage: sampleRestaurant.image,
+            image: sampleRestaurant.image, // Adding the required 'image' property
             images: [
               '/lovable-uploads/95f0a77e-f037-47c5-be02-90f2eaa053da.png',
               '/lovable-uploads/b21bbbb3-e4d7-4dfe-9487-6771cefd5463.png',
@@ -46,7 +48,8 @@ const RestaurantPage = () => {
             reviews: sampleRestaurant.reviews || 128,
             hasGlutenFreeOptions: true,
             menuUrl: '/menu/keccabio',
-            awards: ['Certificato AIC', 'Miglior Ristorante Gluten Free 2024']
+            awards: ['Certificato AIC', 'Miglior Ristorante Gluten Free 2024'],
+            cuisine: sampleRestaurant.cuisine || 'Campana Gluten Free' // Adding the required 'cuisine' property
           };
           
           setRestaurant(keccabioDetails);
@@ -95,6 +98,8 @@ const RestaurantPage = () => {
           name: data?.name || 'Ristorante senza nome',
           description: data?.description || 'Nessuna descrizione disponibile',
           coverImage: data?.coverImage || '/placeholder.svg',
+          image: data?.image || data?.coverImage || '/placeholder.svg', // Adding the required 'image' property
+          cuisine: data?.cuisine || 'Italiana', // Adding the required 'cuisine' property
           images: data?.gallery || ['/placeholder.svg'],
           address: data?.address || 'Indirizzo non disponibile',
           phone: data?.phone || 'Telefono non disponibile',
