@@ -12,7 +12,8 @@ import Register from './pages/Register';
 import Login from './pages/Login';
 import RestaurantPage from './pages/RestaurantPage';
 import RestaurantDashboard from './pages/RestaurantDashboard';
-import RestaurantRegistrationPage from './pages/RestaurantRegistrationPage';
+import RestaurantRegister from './pages/RestaurantRegister';
+import RestaurantLogin from './pages/RestaurantLogin';
 import SearchPage from './pages/SearchPage';
 import BookingsPage from './pages/BookingsPage';
 import ProfilePage from './pages/ProfilePage';
@@ -46,16 +47,13 @@ function App() {
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/favorites" element={<FavoritesPage />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/restaurant-register" element={<RestaurantRegistrationPage />} />
+          <Route path="/restaurant-register" element={<RestaurantRegister />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/restaurant-login" element={<RestaurantLogin />} />
           <Route path="/restaurants/:id" element={<RestaurantPage />} />
           <Route path="/restaurant/:id" element={<RestaurantPage />} />
-          <Route
-            path="/restaurant-dashboard/*"
-            element={
-              <RestaurantDashboard />
-            }
-          />
+          <Route path="/restaurant-dashboard" element={<RestaurantDashboard />} />
+          <Route path="/restaurant-dashboard/*" element={<RestaurantDashboard />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
