@@ -8,20 +8,38 @@ import { Button } from '@/components/ui/button';
 import { auth } from '@/lib/firebase';
 import { toast } from 'sonner';
 import { useRestaurantList } from '@/hooks/useRestaurantList';
+import LoadingScreen from '@/components/LoadingScreen';
+import RestaurantLayout from '@/components/Restaurant/RestaurantLayout';
 
 const RestaurantHomePage = () => {
   const navigate = useNavigate();
   const [userRestaurant, setUserRestaurant] = useState(null);
   const { restaurants, isLoading } = useRestaurantList();
   const [nearbyRestaurants, setNearbyRestaurants] = useState([]);
+  const [pageLoading, setPageLoading] = useState(true);
+  const [authChecked, setAuthChecked] = useState(false);
 
   useEffect(() => {
-    // Verifica autenticazione
+    // Verifica autenticazione con timeout di sicurezza
+    const timeout = setTimeout(() => {
+      if (!authChecked) {
+        setPageLoading(false);
+        console.log("Timeout superato durante l'autenticazione");
+      }
+    }, 5000);
+    
     const unsubscribe = auth.onAuthStateChanged((user) => {
+      setAuthChecked(true);
+      clearTimeout(timeout);
+      
       if (!user) {
+        console.log("Nessun utente autenticato");
         toast.error("Accesso richiesto");
         navigate('/restaurant-login');
+        return;
       }
+      
+      console.log("Utente autenticato:", user.uid);
       
       // In una versione reale, qui recupereremmo i dati del ristorante dell'utente
       // Per ora, usiamo dati di esempio
@@ -31,9 +49,14 @@ const RestaurantHomePage = () => {
         address: "Via Toledo 42, Napoli",
         imageUrl: "/placeholder.svg"
       });
+      
+      setPageLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => {
+      clearTimeout(timeout);
+      unsubscribe();
+    };
   }, [navigate]);
 
   useEffect(() => {
@@ -50,6 +73,14 @@ const RestaurantHomePage = () => {
   const handleViewRestaurant = (restaurantId) => {
     navigate(`/restaurant/${restaurantId}`);
   };
+
+  if (pageLoading) {
+    return (
+      <RestaurantLayout>
+        <LoadingScreen message="Caricamento interfaccia ristoratore..." />
+      </RestaurantLayout>
+    );
+  }
 
   return (
     <Layout hideNavigation={true}>
@@ -99,7 +130,7 @@ const RestaurantHomePage = () => {
             <Button 
               variant="outline" 
               className="flex items-center justify-center gap-2 h-16"
-              onClick={() => navigate('/restaurant-dashboard')}
+              onClick={() => navigate('/restaurant-dashboard?tab=bookings')}
             >
               <Calendar className="h-5 w-5 text-green-600" />
               <span className="text-sm">Prenotazioni</span>
@@ -121,7 +152,7 @@ const RestaurantHomePage = () => {
               <div key={i} className="h-20 bg-gray-200 animate-pulse rounded-md"></div>
             ))}
           </div>
-        ) : (
+        ) : nearbyRestaurants.length > 0 ? (
           <div className="space-y-3">
             {nearbyRestaurants.map((restaurant) => (
               <Card 
@@ -134,7 +165,8 @@ const RestaurantHomePage = () => {
                     <h3 className="font-medium">{restaurant.name}</h3>
                     <p className="text-xs text-gray-500 flex items-center">
                       <MapPin size={12} className="mr-1" />
-                      {restaurant.address?.substring(0, 30)}...
+                      {restaurant.address?.substring(0, 30) || 'Indirizzo non disponibile'}
+                      {restaurant.address && restaurant.address.length > 30 && '...'}
                     </p>
                   </div>
                   <div className="w-1/3 flex justify-end">
@@ -146,6 +178,10 @@ const RestaurantHomePage = () => {
                 </CardContent>
               </Card>
             ))}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-gray-500">
+            <p>Nessun ristorante trovato nelle vicinanze</p>
           </div>
         )}
       </div>

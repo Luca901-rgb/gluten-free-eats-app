@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 
@@ -19,6 +19,19 @@ import SearchPage from './pages/SearchPage';
 import BookingsPage from './pages/BookingsPage';
 import ProfilePage from './pages/ProfilePage';
 import FavoritesPage from './pages/FavoritesPage';
+import LoadingScreen from './components/LoadingScreen';
+
+// Componente per reindirizzare gli utenti ristoratore alla dashboard
+const RestaurantRedirect = () => {
+  const navigate = useNavigate();
+  
+  useEffect(() => {
+    console.log("Reindirizzamento alla dashboard ristorante");
+    navigate("/restaurant-dashboard");
+  }, [navigate]);
+  
+  return <LoadingScreen message="Reindirizzamento..." />;
+};
 
 // Configure the query client
 const queryClient = new QueryClient({
@@ -26,17 +39,35 @@ const queryClient = new QueryClient({
     queries: {
       retry: 2,
       refetchOnWindowFocus: false,
+      staleTime: 5 * 60 * 1000, // 5 minuti
     },
   },
 });
 
 function App() {
+  const [isLoading, setIsLoading] = useState(true);
   const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
   const userType = localStorage.getItem('userType') || 'customer';
 
+  // Aggiungiamo un breve delay iniziale per garantire che localStorage sia caricato
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 300);
+    
+    return () => clearTimeout(timer);
+  }, []);
+
   // Log per debug
-  console.log("Page view:", window.location.pathname);
-  console.log("User type:", userType);
+  useEffect(() => {
+    console.log("Page view:", window.location.pathname);
+    console.log("User type:", userType);
+    console.log("Is authenticated:", isAuthenticated);
+  }, [userType, isAuthenticated]);
+
+  if (isLoading) {
+    return <LoadingScreen message="Inizializzazione..." timeout={3000} />;
+  }
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -62,6 +93,8 @@ function App() {
           <Route path="/restaurant-home" element={<RestaurantHomePage />} />
           <Route path="/restaurant-dashboard" element={<RestaurantDashboard />} />
           <Route path="/restaurant-dashboard/*" element={<RestaurantDashboard />} />
+          <Route path="/restaurants/dashboard" element={<RestaurantRedirect />} />
+          <Route path="/restaurant/dashboard" element={<RestaurantRedirect />} />
           
           {/* Pagina 404 */}
           <Route path="*" element={<NotFound />} />

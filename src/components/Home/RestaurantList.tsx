@@ -5,6 +5,8 @@ import RestaurantCard from '@/components/Restaurant/RestaurantCard';
 import { RegionStatus } from '@/hooks/useRestaurantList';
 import { Skeleton } from '@/components/ui/skeleton';
 import { sampleRestaurant } from '@/data/sampleRestaurant';
+import { Button } from '@/components/ui/button';
+import { RefreshCw } from 'lucide-react';
 
 interface RestaurantListProps {
   restaurants: Restaurant[];
@@ -49,6 +51,34 @@ const RestaurantList: React.FC<RestaurantListProps> = ({
     );
   }
 
+  // Se c'è un errore di caricamento, mostriamo un bottone per riprovare
+  if (!isLoading && restaurants.length === 0) {
+    return (
+      <div className="space-y-6">
+        <div className="animate-fade-in">
+          <RestaurantCard
+            restaurant={sampleRestaurant}
+            onClick={() => window.location.href = `/restaurant/${sampleRestaurant.id}`}
+            isHighlighted={true}
+          />
+        </div>
+        
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-center">
+          <p className="text-amber-800 mb-3">Non è stato possibile caricare altri ristoranti</p>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={onRetry}
+            className="flex items-center gap-2"
+          >
+            <RefreshCw size={14} />
+            Riprova
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   // Always make sure Keccabio is the first restaurant
   let displayRestaurants = [sampleRestaurant];
   
@@ -57,9 +87,6 @@ const RestaurantList: React.FC<RestaurantListProps> = ({
     const otherRestaurants = restaurants.filter(r => r.id !== sampleRestaurant.id);
     displayRestaurants = [sampleRestaurant, ...otherRestaurants];
   }
-  
-  console.log("Display restaurants:", displayRestaurants);
-  console.log("Restaurants length:", displayRestaurants.length);
 
   return (
     <div className="space-y-6 animate-fade-in">

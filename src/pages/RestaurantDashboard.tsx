@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { TabProvider } from '@/context/TabContext';
 import { Button } from '@/components/ui/button';
-import { LogOut, Loader2, RefreshCw } from 'lucide-react';
+import { LogOut, Loader, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { doc, getDoc } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
@@ -15,10 +15,11 @@ import RestaurantLayout from '@/components/Restaurant/RestaurantLayout';
 import DashboardHeader from '@/components/Restaurant/DashboardHeader';
 import DashboardNavigation from '@/components/Restaurant/DashboardNavigation';
 import DashboardContent from '@/components/Restaurant/DashboardContent';
+import LoadingScreen from '@/components/LoadingScreen';
 
 const RestaurantDashboard = () => {
   const [user, loading] = useAuthState(auth);
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const [restaurantData, setRestaurantData] = useState({
     id: '1',
     name: 'Keccakè',
@@ -29,7 +30,20 @@ const RestaurantDashboard = () => {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [loadingError, setLoadingError] = useState<string | null>(null);
+  const [authInitialized, setAuthInitialized] = useState(false);
   const navigate = useNavigate();
+  
+  // Aggiungiamo un timeout di sicurezza per evitare caricamenti infiniti
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (isLoading) {
+        console.log("Timeout di caricamento raggiunto, mostrando i dati predefiniti");
+        setIsLoading(false);
+      }
+    }, 8000);
+    
+    return () => clearTimeout(timer);
+  }, [isLoading]);
   
   // Controlla se ci sono parametri nell'URL per impostare la tab
   useEffect(() => {
@@ -86,7 +100,6 @@ const RestaurantDashboard = () => {
     } catch (error) {
       console.error("Errore caricamento dati ristorante:", error);
       setLoadingError("Impossibile caricare i dati del ristorante. Verifica la connessione internet.");
-      toast.error("Errore nel caricamento dei dati del ristorante");
     } finally {
       setIsLoading(false);
     }
@@ -95,13 +108,28 @@ const RestaurantDashboard = () => {
   useEffect(() => {
     // Carica i dati solo quando lo stato di autenticazione è determinato
     if (!loading) {
+      setAuthInitialized(true);
       loadRestaurantData();
     }
   }, [user, loading]);
 
   useEffect(() => {
+    // Aggiungiamo un timeout di sicurezza per l'autenticazione
+    const timer = setTimeout(() => {
+      if (!authInitialized) {
+        console.log("Timeout di autenticazione raggiunto, mostrando area predefinita");
+        setIsLoading(false);
+        setAuthInitialized(true);
+      }
+    }, 5000);
+    
+    return () => clearTimeout(timer);
+  }, [authInitialized]);
+
+  useEffect(() => {
     // Verifica che l'utente sia autenticato e sia di tipo "restaurant"
-    if (!loading && !user) {
+    if (authInitialized && !loading && !user) {
+      console.log("Nessun utente autenticato, reindirizzamento al login");
       toast.error("Accesso non autorizzato");
       navigate('/restaurant-login');
       return;
@@ -109,11 +137,12 @@ const RestaurantDashboard = () => {
     
     // Verifica il tipo di utente dal localStorage
     const userType = localStorage.getItem('userType');
-    if (!loading && userType !== 'restaurant') {
+    if (authInitialized && !loading && userType !== 'restaurant') {
+      console.log("Tipo utente non corretto:", userType);
       toast.error("Accesso riservato ai ristoratori");
       navigate('/restaurant-login');
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, navigate, authInitialized]);
 
   const handleLogout = () => {
     localStorage.removeItem('isAuthenticated');
@@ -136,14 +165,11 @@ const RestaurantDashboard = () => {
     loadRestaurantData();
   };
 
-  // Stato di caricamento con feedback migliore
-  if (loading) {
+  // Stato di caricamento per autenticazione
+  if (loading && !authInitialized) {
     return (
       <RestaurantLayout>
-        <div className="flex flex-col items-center justify-center min-h-screen p-4">
-          <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
-          <p className="text-gray-600">Verifica credenziali...</p>
-        </div>
+        <LoadingScreen message="Verifica credenziali..." />
       </RestaurantLayout>
     );
   }
@@ -176,10 +202,7 @@ const RestaurantDashboard = () => {
         <div className="bg-amber-50/50 p-4 text-center font-medium text-amber-800 border-b border-amber-200">
           Questa è l'interfaccia dedicata al ristoratore per gestire la propria attività
         </div>
-        <div className="flex flex-col items-center justify-center min-h-[80vh] p-4">
-          <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
-          <p className="text-gray-600">Caricamento della dashboard...</p>
-        </div>
+        <LoadingScreen message="Caricamento della dashboard..." />
       </RestaurantLayout>
     );
   }
