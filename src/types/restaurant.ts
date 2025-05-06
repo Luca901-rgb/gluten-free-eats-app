@@ -19,6 +19,11 @@ export interface Restaurant {
   };
   coverImage?: string;
   totalReviews?: number;
+  phone?: string;
+  openingHours?: Array<{
+    days: string;
+    hours: string;
+  }>;
 }
 
 export interface RegionStatus {
