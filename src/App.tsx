@@ -1,90 +1,59 @@
+import React from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Toaster } from 'sonner';
+import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 
-import React, { Suspense } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
-import { useAuthState } from "react-firebase-hooks/auth";
-import { auth } from "./lib/firebase";
-import Index from "./pages/Index";
-import SearchPage from "./pages/SearchPage";
-import BookingsPage from "./pages/BookingsPage";
-import ProfilePage from "./pages/ProfilePage";
-import LoadingScreen from "./components/LoadingScreen";
-import AuthGuard from "./components/Authentication/AuthGuard";
-import Login from "./pages/Login";
-import NotFound from "./pages/NotFound";
-import RestaurantLogin from "./pages/RestaurantLogin";
-import RestaurantPage from "./pages/RestaurantPage"; 
-import RestaurantDashboard from "./pages/RestaurantDashboard";
-import { BookingProvider } from "./context/BookingContext";
-import Register from "./pages/Register";
-import RestaurantRegister from "./pages/RestaurantRegister";
-import FavoritesPage from "./pages/FavoritesPage";
-import { TableProvider } from "./context/TableContext";
+import './App.css';
 
-const App: React.FC = () => {
-  const [user, loading] = useAuthState(auth);
+import Home from './pages/Home';
+import NotFound from './pages/NotFound';
+import Register from './pages/Register';
+import Login from './pages/Login';
+import RestaurantPage from './pages/RestaurantPage';
+import MapView from './pages/MapView';
+import Favorites from './pages/Favorites';
+import Bookings from './pages/Bookings';
+import RestaurantDashboard from './pages/RestaurantDashboard';
+import RestaurantRegistrationPage from './pages/RestaurantRegistrationPage';
 
-  if (loading) {
-    return <LoadingScreen />;
-  }
+// Configure the query client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 2,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
+function App() {
+  const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+  const userType = localStorage.getItem('userType') || 'customer';
 
   return (
-    <Suspense fallback={<LoadingScreen />}>
-      <BookingProvider>
-        <TableProvider>
-          <Routes>
-            {/* Redirect root to login page */}
-            <Route path="/" element={<Navigate to="/login" replace />} />
-            
-            {/* Public Routes */}
-            <Route path="/home" element={<Index />} />
-            <Route path="/search" element={<SearchPage />} />
-            <Route path="/restaurant/:id" element={<RestaurantPage />} />
-            <Route path="/login" element={
-              !user ? <Login /> : <Navigate to="/home" replace />
-            } />
-            <Route path="/register" element={
-              !user ? <Register /> : <Navigate to="/home" replace />
-            } />
-            <Route path="/restaurant-register" element={
-              !user ? <RestaurantRegister /> : <Navigate to="/restaurant-dashboard" replace />
-            } />
-            <Route path="/restaurant-login" element={
-              !user ? <RestaurantLogin /> : <Navigate to="/restaurant-dashboard" replace />
-            } />
-            
-            {/* Favorites page */}
-            <Route path="/favorites" element={<FavoritesPage />} />
-
-            {/* Protected Customer Routes */}
-            <Route path="/bookings" element={
-              <AuthGuard allowedUserTypes={["customer"]}>
-                <BookingsPage />
-              </AuthGuard>
-            } />
-            <Route path="/profile" element={
-              <AuthGuard allowedUserTypes={["customer", "restaurant"]}>
-                <ProfilePage />
-              </AuthGuard>
-            } />
-
-            {/* Protected Restaurant Routes */}
-            <Route path="/restaurant-dashboard/*" element={
-              <AuthGuard allowedUserTypes={["restaurant"]}>
-                <RestaurantDashboard />
-              </AuthGuard>
-            } />
-            <Route path="/dashboard/*" element={
-              <AuthGuard allowedUserTypes={["restaurant"]}>
-                <RestaurantDashboard />
-              </AuthGuard>
-            } />
-
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </TableProvider>
-      </BookingProvider>
-    </Suspense>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/restaurant-register" element={<RestaurantRegistrationPage />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/restaurants/:id" element={<RestaurantPage />} />
+          <Route path="/map" element={<MapView />} />
+          <Route path="/favorites" element={<Favorites />} />
+          <Route path="/bookings" element={<Bookings />} />
+          <Route
+            path="/restaurant-dashboard/*"
+            element={
+              <RestaurantDashboard />
+            }
+          />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
+      <Toaster />
+    </QueryClientProvider>
   );
-};
+}
 
 export default App;
