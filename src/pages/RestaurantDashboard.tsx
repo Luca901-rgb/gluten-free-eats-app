@@ -30,12 +30,38 @@ const RestaurantDashboard = () => {
     coverImage: '/placeholder.svg'
   };
   
-  const [isLoading, setIsLoading] = useState(false); // Iniziamo senza stato di loading
   const navigate = useNavigate();
   
   // Ottieni la tab iniziale dall'URL o usa 'home' come default
   const initialTab = searchParams.get('tab') || 'home';
   
+  // Controlla se il ristoratore ha completato la registrazione
+  const [hasCompletedRegistration, setHasCompletedRegistration] = useState(true);
+  
+  useEffect(() => {
+    // Verifica se l'utente ha completato la registrazione
+    const checkRegistrationStatus = () => {
+      // Qui dovresti verificare se l'utente ha completato tutti gli step
+      // Per ora, usiamo localStorage come esempio
+      const regData = localStorage.getItem('restaurantRegistrationData');
+      
+      // Se non ci sono dati di registrazione, consideriamo la registrazione incompleta
+      if (!regData) {
+        console.log("Registrazione incompleta, reindirizzamento...");
+        setHasCompletedRegistration(false);
+        // Rimandiamo alla pagina di registrazione con un piccolo delay
+        setTimeout(() => {
+          navigate('/restaurant-register');
+          toast.info("Per favore, completa la registrazione del ristorante");
+        }, 500);
+      } else {
+        setHasCompletedRegistration(true);
+      }
+    };
+    
+    checkRegistrationStatus();
+  }, [navigate]);
+
   const handleLogout = () => {
     try {
       localStorage.removeItem('isAuthenticated');
@@ -56,7 +82,11 @@ const RestaurantDashboard = () => {
     }
   };
 
-  // Rendiamo la UI immediatamente disponibile
+  // Se la registrazione non è completa, non mostriamo nulla mentre viene effettuato il redirect
+  if (!hasCompletedRegistration) {
+    return null;
+  }
+
   return (
     <RestaurantLayout>
       <div className="bg-amber-50/50 p-4 text-center font-medium text-amber-800 border-b border-amber-200">

@@ -1,63 +1,48 @@
 
 import React from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { MapPin, Store, Calendar, Star } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useTab } from '@/context/TabContext';
+import { Home, Book, Calendar, Settings, Users } from 'lucide-react';
 
 const RestaurantNavBar = () => {
   const navigate = useNavigate();
-  const location = useLocation();
+  const { setCurrentTab, currentTab } = useTab();
 
-  const navItems = [
-    { 
-      id: 'nearby', 
-      label: 'Nelle vicinanze', 
-      icon: <MapPin className="w-5 h-5" />, 
-      path: '/restaurant-home'
-    },
-    { 
-      id: 'restaurant', 
-      label: 'Il mio ristorante', 
-      icon: <Store className="w-5 h-5" />, 
-      path: '/restaurant-dashboard'
-    },
-    { 
-      id: 'bookings', 
-      label: 'Prenotazioni', 
-      icon: <Calendar className="w-5 h-5" />, 
-      path: '/restaurant-dashboard?tab=bookings'
-    },
-    { 
-      id: 'reviews', 
-      label: 'Recensioni', 
-      icon: <Star className="w-5 h-5" />, 
-      path: '/restaurant-dashboard?tab=reviews'
-    }
-  ];
-
-  const isActive = (path) => {
-    if (path.includes('?')) {
-      const basePath = path.split('?')[0];
-      const param = path.split('?')[1];
-      return location.pathname === basePath && location.search.includes(param);
-    }
-    return location.pathname === path;
+  const handleTabChange = (tab: string) => {
+    setCurrentTab(tab);
+    navigate(`/restaurant-dashboard?tab=${tab}`);
   };
 
+  const tabs = [
+    { id: 'home', label: 'Home', icon: Home },
+    { id: 'bookings', label: 'Prenotazioni', icon: Book },
+    { id: 'calendar', label: 'Calendario', icon: Calendar },
+    { id: 'clients', label: 'Clienti', icon: Users },
+    { id: 'settings', label: 'Impostazioni', icon: Settings }
+  ];
+
   return (
-    <nav className="fixed bottom-0 w-full bg-green-500 h-14 flex justify-around items-center z-10 shadow-lg">
-      {navItems.map((item) => (
-        <button
-          key={item.id}
-          onClick={() => navigate(item.path)}
-          className={`flex flex-col items-center text-white px-3 ${
-            isActive(item.path) ? 'opacity-100' : 'opacity-80'
-          }`}
-        >
-          {item.icon}
-          <span className="text-[10px] mt-0.5">{item.label}</span>
-        </button>
-      ))}
-    </nav>
+    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-10 p-2">
+      <div className="flex justify-around items-center max-w-md mx-auto">
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = currentTab === tab.id;
+          
+          return (
+            <button
+              key={tab.id}
+              onClick={() => handleTabChange(tab.id)}
+              className={`flex flex-col items-center justify-center p-2 ${
+                isActive ? 'text-green-600' : 'text-gray-500'
+              }`}
+            >
+              <Icon size={20} className={isActive ? 'text-green-600' : 'text-gray-500'} />
+              <span className="text-xs mt-1">{tab.label}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 };
 

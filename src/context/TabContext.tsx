@@ -1,45 +1,34 @@
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useState, useContext, ReactNode } from 'react';
 
 interface TabContextType {
-  activeTab: string;
-  navigateToTab: (tabId: string) => void;
+  currentTab: string;
+  setCurrentTab: (tab: string) => void;
 }
 
 const TabContext = createContext<TabContextType | undefined>(undefined);
-
-export const useTab = () => {
-  const context = useContext(TabContext);
-  if (!context) {
-    throw new Error('useTab must be used within a TabProvider');
-  }
-  return context;
-};
 
 interface TabProviderProps {
   children: ReactNode;
   defaultTab?: string;
 }
 
-export const TabProvider: React.FC<TabProviderProps> = ({ 
-  children, 
-  defaultTab = 'home' 
-}) => {
-  const [activeTab, setActiveTab] = useState(defaultTab);
+export const TabProvider: React.FC<TabProviderProps> = ({ children, defaultTab = 'home' }) => {
+  const [currentTab, setCurrentTab] = useState(defaultTab);
   
-  const navigateToTab = (tabId: string) => {
-    setActiveTab(tabId);
-    
-    // Scroll to the selected tab
-    const selectedButton = document.querySelector(`[data-tab="${tabId}"]`);
-    if (selectedButton) {
-      selectedButton.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-    }
-  };
-
   return (
-    <TabContext.Provider value={{ activeTab, navigateToTab }}>
+    <TabContext.Provider value={{ currentTab, setCurrentTab }}>
       {children}
     </TabContext.Provider>
   );
+};
+
+export const useTab = () => {
+  const context = useContext(TabContext);
+  
+  if (context === undefined) {
+    throw new Error('useTab deve essere usato all\'interno di un TabProvider');
+  }
+  
+  return context;
 };

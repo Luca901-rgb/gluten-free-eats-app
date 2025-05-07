@@ -1,7 +1,6 @@
 
 import React, { ReactNode, useState, useEffect } from 'react';
 import RestaurantNavBar from './RestaurantNavBar';
-import { Loader } from 'lucide-react';
 import { toast } from 'sonner';
 import LoadingScreen from '../LoadingScreen';
 
@@ -10,28 +9,12 @@ interface RestaurantLayoutProps {
 }
 
 const RestaurantLayout: React.FC<RestaurantLayoutProps> = ({ children }) => {
-  const [isVisible, setIsVisible] = useState(true); // Impostiamo subito come visibile
   const [hasError, setHasError] = useState(false);
-  const [isInitialized, setIsInitialized] = useState(true); // Già inizializzato
-
-  // Log per debug
-  useEffect(() => {
-    console.log("RestaurantLayout mounted");
-    
-    // Garantiamo che il layout sia sempre visibile
-    const timer = setTimeout(() => {
-      console.log("Setting visibility to true");
-      setIsVisible(true);
-      setIsInitialized(true);
-    }, 100); // Tempo ridotto drasticamente
-    
-    return () => {
-      clearTimeout(timer);
-    };
-  }, []);
 
   // Handler per errori globali di rendering
   useEffect(() => {
+    console.log("RestaurantLayout mounted");
+    
     const handleError = (event: ErrorEvent) => {
       console.error("Caught global error:", event.error);
       setHasError(true);
