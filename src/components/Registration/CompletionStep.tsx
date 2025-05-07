@@ -1,14 +1,40 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { CheckCircle, Clock } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 
 const CompletionStep = () => {
   const { getValues } = useFormContext();
-  const formData = getValues();
+  const navigate = useNavigate();
+  
+  // Make sure the registration data is saved in localStorage
+  useEffect(() => {
+    try {
+      const formData = getValues();
+      // Save registration data to localStorage if not already saved
+      if (!localStorage.getItem('restaurantRegistrationData')) {
+        console.log("Saving registration data to localStorage");
+        localStorage.setItem('restaurantRegistrationData', JSON.stringify(formData));
+      }
+    } catch (error) {
+      console.error("Error saving registration data:", error);
+    }
+  }, [getValues]);
+  
+  const handleGoToDashboard = () => {
+    try {
+      console.log("Navigating to dashboard");
+      navigate('/restaurant-dashboard?tab=home');
+    } catch (error) {
+      console.error("Navigation error:", error);
+      // Fallback if navigation fails
+      window.location.href = '/restaurant-dashboard?tab=home';
+    }
+  };
   
   return (
     <div className="space-y-6">
@@ -45,10 +71,8 @@ const CompletionStep = () => {
         </p>
         
         <div className="flex justify-center">
-          <Button asChild>
-            <Link to="/restaurant-dashboard">
-              Vai alla Dashboard
-            </Link>
+          <Button onClick={handleGoToDashboard}>
+            Vai alla Dashboard
           </Button>
         </div>
       </div>

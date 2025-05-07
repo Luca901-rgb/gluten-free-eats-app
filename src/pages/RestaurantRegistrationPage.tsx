@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm, FormProvider } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -32,6 +32,7 @@ import ContentStep from '@/components/Registration/ContentStep';
 import BookingsStep from '@/components/Registration/BookingsStep';
 import PromotionsStep from '@/components/Registration/PromotionsStep';
 import CompletionStep from '@/components/Registration/CompletionStep';
+import safeStorage from '@/lib/safeStorage';
 
 // Default values for the form
 const defaultValues: RestaurantRegistrationForm = {
@@ -100,6 +101,15 @@ const RestaurantRegistrationPage = () => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState<RegistrationStep>('manager');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Check if registration was already completed
+  useEffect(() => {
+    const registrationData = localStorage.getItem('restaurantRegistrationData');
+    if (registrationData) {
+      console.log("Registration data found, auto-advancing to complete step");
+      setCurrentStep('complete');
+    }
+  }, []);
   
   const methods = useForm<RestaurantRegistrationForm>({
     defaultValues,
@@ -181,11 +191,14 @@ const RestaurantRegistrationPage = () => {
     setIsSubmitting(true);
     
     try {
-      // TODO: Implement actual registration logic with Firebase
       console.log("Registration data:", data);
       
-      // Save to localStorage for demo purposes
+      // Save to localStorage for access in the dashboard
       localStorage.setItem('restaurantRegistrationData', JSON.stringify(data));
+      
+      // Also set flags to identify the user as a restaurant owner
+      safeStorage.setItem('isRestaurantOwner', 'true');
+      safeStorage.setItem('userType', 'restaurant');
       
       // Move to completion step
       setCurrentStep('complete');
@@ -281,32 +294,34 @@ const RestaurantRegistrationPage = () => {
             <h1 className="text-2xl font-bold text-center mb-2">Registrazione Ristorante</h1>
             <p className="text-gray-600 text-center mb-6">Compila tutte le informazioni per registrare il tuo ristorante</p>
             
-            <div className="relative">
-              <Progress value={progress} className="h-2" />
-              
-              <div className="flex justify-between mt-4">
-                {steps.map((step, index) => {
-                  if (step === 'complete') return null; // Don't show the complete step in the navigation
-                  
-                  const isActive = step === currentStep;
-                  const isPassed = steps.indexOf(currentStep) > index;
-                  
-                  return (
-                    <div key={step} className="flex flex-col items-center">
-                      <div 
-                        className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                          isActive ? 'bg-primary text-white' : 
-                          isPassed ? 'bg-green-500 text-white' : 'bg-gray-200'
-                        }`}
-                      >
-                        {getStepIcon(step as RegistrationStep)}
+            {currentStep !== 'complete' && (
+              <div className="relative">
+                <Progress value={progress} className="h-2" />
+                
+                <div className="flex justify-between mt-4">
+                  {steps.map((step, index) => {
+                    if (step === 'complete') return null; // Don't show the complete step in the navigation
+                    
+                    const isActive = step === currentStep;
+                    const isPassed = steps.indexOf(currentStep) > index;
+                    
+                    return (
+                      <div key={step} className="flex flex-col items-center">
+                        <div 
+                          className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                            isActive ? 'bg-primary text-white' : 
+                            isPassed ? 'bg-green-500 text-white' : 'bg-gray-200'
+                          }`}
+                        >
+                          {getStepIcon(step as RegistrationStep)}
+                        </div>
+                        <span className="text-xs mt-1 hidden md:block">{getStepTitle(step as RegistrationStep)}</span>
                       </div>
-                      <span className="text-xs mt-1 hidden md:block">{getStepTitle(step as RegistrationStep)}</span>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+            )}
           </div>
           
           <FormProvider {...methods}>
@@ -356,15 +371,7 @@ const RestaurantRegistrationPage = () => {
                         <ChevronRight className="ml-1 h-4 w-4" />
                       </Button>
                     )
-                  ) : (
-                    <Button 
-                      type="button"
-                      onClick={() => navigate('/restaurant-dashboard')}
-                      className="ml-auto"
-                    >
-                      Vai alla Dashboard
-                    </Button>
-                  )}
+                  ) : null}
                 </div>
               </div>
             </form>
