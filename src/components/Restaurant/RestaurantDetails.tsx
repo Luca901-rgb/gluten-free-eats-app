@@ -12,6 +12,23 @@ export interface RestaurantDetailProps extends Restaurant {
   images?: string[];
   awards?: string[];
   menuUrl?: string;
+  videos?: Array<{
+    title: string;
+    url: string;
+    thumbnail?: string;
+    description?: string;
+  }>;
+  menuItems?: Array<{
+    category: string;
+    items: Array<{
+      name: string;
+      description: string;
+      price: number;
+      glutenFree: boolean;
+      image?: string;
+      popular?: boolean;
+    }>;
+  }>;
 }
 
 interface RestaurantDetailsProps {
@@ -27,6 +44,7 @@ const RestaurantDetails: React.FC<RestaurantDetailsProps> = ({ restaurant }) => 
   const restaurantCode = searchParams.get('restaurantCode');
 
   const [activeTab, setActiveTab] = useState<string>(initialTab);
+  const [activeMenuTab, setActiveMenuTab] = useState('interactive');
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
@@ -62,8 +80,9 @@ const RestaurantDetails: React.FC<RestaurantDetailsProps> = ({ restaurant }) => 
 
       {/* Tabs */}
       <Tabs defaultValue={activeTab} value={activeTab} onValueChange={handleTabChange} className="w-full">
-        <TabsList className="grid w-full grid-cols-4 mb-6">
+        <TabsList className="grid w-full grid-cols-5 mb-6">
           <TabsTrigger value="info">Informazioni</TabsTrigger>
+          <TabsTrigger value="menu">Menù</TabsTrigger>
           <TabsTrigger value="book">Prenota</TabsTrigger>
           <TabsTrigger value="gallery">Galleria</TabsTrigger>
           <TabsTrigger value="reviews">Recensioni</TabsTrigger>
@@ -152,29 +171,106 @@ const RestaurantDetails: React.FC<RestaurantDetailsProps> = ({ restaurant }) => 
                 </div>
               </CardContent>
             </Card>
-            
-            {/* Menu */}
-            {restaurant.menuUrl && (
-              <Card className="md:col-span-2">
-                <CardContent className="p-4">
-                  <div className="flex items-start">
-                    <FileText className="w-5 h-5 text-gray-500 mt-0.5 mr-3 flex-shrink-0" />
-                    <div>
-                      <h3 className="font-medium mb-2">Menu</h3>
-                      <a 
-                        href={restaurant.menuUrl} 
-                        target="_blank" 
+          </div>
+        </TabsContent>
+
+        {/* Menu Tab */}
+        <TabsContent value="menu">
+          <Card>
+            <CardContent className="p-6">
+              <h2 className="text-xl font-semibold mb-4 flex items-center">
+                <FileText className="mr-2 text-primary" size={20} />
+                Menu
+              </h2>
+              
+              <Tabs value={activeMenuTab} onValueChange={setActiveMenuTab}>
+                <TabsList className="mb-4">
+                  <TabsTrigger value="interactive">Menu Interattivo</TabsTrigger>
+                  <TabsTrigger value="pdf">PDF</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="interactive">
+                  {restaurant.menuItems && restaurant.menuItems.length > 0 ? (
+                    <div className="space-y-8">
+                      {restaurant.menuItems.map((category, categoryIndex) => (
+                        <div key={categoryIndex}>
+                          <h3 className="text-lg font-semibold border-b pb-2 mb-4">{category.category}</h3>
+                          <div className="space-y-4">
+                            {category.items.map((item, itemIndex) => (
+                              <div key={itemIndex} className="flex justify-between pb-3 border-b border-gray-100">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2">
+                                    <h4 className="font-medium">{item.name}</h4>
+                                    {item.glutenFree && (
+                                      <span className="bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded-full">
+                                        Senza glutine
+                                      </span>
+                                    )}
+                                    {item.popular && (
+                                      <span className="bg-amber-100 text-amber-800 text-xs px-2 py-0.5 rounded-full">
+                                        Popolare
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className="text-sm text-gray-600 mt-1">{item.description}</p>
+                                </div>
+                                <div className="ml-4 font-semibold">
+                                  {item.price.toLocaleString('it-IT', { style: 'currency', currency: 'EUR' })}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      Informazioni sul menu in arrivo a breve.
+                    </div>
+                  )}
+                </TabsContent>
+                
+                <TabsContent value="pdf">
+                  {restaurant.menuUrl ? (
+                    <div className="rounded border p-4 text-center">
+                      <p className="mb-4">
+                        Visualizza o scarica il nostro menu in formato PDF:
+                      </p>
+                      <a
+                        href={restaurant.menuUrl}
+                        target="_blank"
                         rel="noopener noreferrer"
-                        className="text-primary hover:underline"
+                        className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90"
                       >
-                        Visualizza il menù completo
+                        <FileText className="mr-2 h-5 w-5" />
+                        Apri Menu PDF
                       </a>
                     </div>
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      Menu PDF non disponibile. Utilizza il menu interattivo.
+                    </div>
+                  )}
+                </TabsContent>
+              </Tabs>
+              
+              {restaurant.hasGlutenFreeOptions && (
+                <div className="mt-6 bg-green-50 rounded-lg p-3 flex items-center">
+                  <div className="mr-3">
+                    <div className="bg-green-100 p-2 rounded-full">
+                      <Check className="h-5 w-5 text-green-600" />
+                    </div>
                   </div>
-                </CardContent>
-              </Card>
-            )}
-          </div>
+                  <div>
+                    <h4 className="font-medium text-green-800">Menu senza glutine disponibile</h4>
+                    <p className="text-sm text-green-700">
+                      Questo locale offre opzioni specifiche per persone celiache o intolleranti al glutine.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* Booking Tab */}
@@ -221,11 +317,30 @@ const RestaurantDetails: React.FC<RestaurantDetailsProps> = ({ restaurant }) => 
                   <Video className="mr-2 text-primary" size={20} />
                   Video Presentazione
                 </h2>
-                <VideoPlayer 
-                  videoUrl="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
-                  thumbnail={restaurant.image}
-                  title={`Presentazione di ${restaurant.name}`}
-                />
+                
+                {restaurant.videos && restaurant.videos.length > 0 ? (
+                  <div className="space-y-6">
+                    {restaurant.videos.map((video, index) => (
+                      <div key={index} className="space-y-2">
+                        <h3 className="font-medium">{video.title}</h3>
+                        <VideoPlayer 
+                          videoUrl={video.url}
+                          thumbnail={video.thumbnail || restaurant.image}
+                          title={video.title}
+                        />
+                        {video.description && (
+                          <p className="text-sm text-gray-600 mt-2">{video.description}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <VideoPlayer 
+                    videoUrl="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+                    thumbnail={restaurant.image}
+                    title={`Presentazione di ${restaurant.name}`}
+                  />
+                )}
               </CardContent>
             </Card>
           </div>
@@ -263,7 +378,7 @@ const RestaurantDetails: React.FC<RestaurantDetailsProps> = ({ restaurant }) => 
                     </div>
                   </div>
                   
-                  {/* Placeholder for reviews */}
+                  {/* Placeholder per le recensioni */}
                   <div className="space-y-4">
                     <p className="text-gray-600 italic">
                       Clicca su "Scrivi una recensione" per leggere e aggiungere recensioni.
@@ -281,6 +396,26 @@ const RestaurantDetails: React.FC<RestaurantDetailsProps> = ({ restaurant }) => 
         </TabsContent>
       </Tabs>
     </div>
+  );
+};
+
+// Funzione di utilità aggiunta per i componenti
+const Check = ({ className }: { className?: string }) => {
+  return (
+    <svg 
+      xmlns="http://www.w3.org/2000/svg" 
+      width="24" 
+      height="24" 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      stroke="currentColor" 
+      strokeWidth="2" 
+      strokeLinecap="round" 
+      strokeLinejoin="round" 
+      className={className}
+    >
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
   );
 };
 

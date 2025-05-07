@@ -27,6 +27,23 @@ export interface Restaurant {
   menuUrl?: string;
   capacity?: number;
   services?: string[];
+  menuItems?: Array<{
+    category: string;
+    items: Array<{
+      name: string;
+      description: string;
+      price: number;
+      glutenFree: boolean;
+      image?: string;
+      popular?: boolean;
+    }>;
+  }>;
+  videos?: Array<{
+    title: string;
+    url: string;
+    thumbnail?: string;
+    description?: string;
+  }>;
 }
 
 export interface RegionStatus {

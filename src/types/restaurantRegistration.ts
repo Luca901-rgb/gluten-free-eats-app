@@ -61,6 +61,7 @@ export interface RestaurantRegistrationForm {
       title: string;
       url: string;
       thumbnail?: string;
+      description?: string;
     }>;
   };
   
@@ -68,6 +69,17 @@ export interface RestaurantRegistrationForm {
   content: {
     description: string;
     menuPdfUrl?: string;
+    menuItems?: Array<{
+      category: string;
+      items: Array<{
+        name: string;
+        description: string;
+        price: number;
+        glutenFree: boolean;
+        image?: string;
+        popular?: boolean;
+      }>;
+    }>;
     hasGlutenFreeMenu: boolean;
   };
   

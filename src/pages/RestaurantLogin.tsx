@@ -49,9 +49,18 @@ const RestaurantLogin = () => {
         
         toast.success('Login effettuato con successo!');
         
-        // Reindirizza alla dashboard ristoratore
-        navigate('/restaurant-dashboard');
+        // Controlla se il ristorante è stato completamente registrato
+        const restaurantDoc = await getDoc(doc(db, "restaurants", user.uid));
+        
+        if (restaurantDoc.exists() && restaurantDoc.data().registrationComplete) {
+          // Se la registrazione è completa, vai alla dashboard
+          navigate('/restaurant-dashboard?tab=home');
+        } else {
+          // Altrimenti, vai alla pagina di registrazione
+          navigate('/restaurant-registration');
+        }
       } else {
+        // Se l'utente non è un ristoratore, logout e mostra errore
         await auth.signOut();
         toast.error('Questo account non è registrato come ristorante');
       }

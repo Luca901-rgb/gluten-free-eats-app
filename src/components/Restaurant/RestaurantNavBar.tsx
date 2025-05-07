@@ -18,10 +18,13 @@ const RestaurantNavBar = () => {
     const userType = safeStorage.getItem('userType');
     
     if (isRestaurantOwner || userType === 'restaurant') {
-      // Naviga alla dashboard ristoratore con il parametro tab corretto
-      navigate(`/restaurant-dashboard?tab=${tab}`, { replace: true });
+      // Imposta il parametro corretto nella URL
+      const url = `/restaurant-dashboard?tab=${tab}`;
+      console.log("Navigando a:", url);
+      navigate(url, { replace: true });
     } else {
       // Se per qualche motivo l'utente non è un ristoratore, reindirizza alla pagina corretta
+      console.log("Utente non è ristoratore, reindirizzamento a user-redirect");
       navigate('/user-redirect');
     }
   };
@@ -29,7 +32,7 @@ const RestaurantNavBar = () => {
   const tabs = [
     { id: 'home', label: 'Home', icon: Home },
     { id: 'bookings', label: 'Prenotazioni', icon: Book },
-    { id: 'tables', label: 'Tavoli', icon: Calendar }, // Aggiunto tavoli direttamente nel menu principale
+    { id: 'tables', label: 'Tavoli', icon: Calendar },
     { id: 'clients', label: 'Clienti', icon: Users },
     { id: 'settings', label: 'Impostazioni', icon: Settings }
   ];

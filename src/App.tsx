@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 
@@ -21,6 +21,7 @@ import ProfilePage from './pages/ProfilePage';
 import FavoritesPage from './pages/FavoritesPage';
 import LoadingScreen from './components/LoadingScreen';
 import safeStorage from './lib/safeStorage';
+import RestaurantRegistrationPage from './pages/RestaurantRegistrationPage';
 
 // Componente per reindirizzare gli utenti ristoratore alla dashboard
 const RestaurantRedirect = () => {
@@ -30,7 +31,7 @@ const RestaurantRedirect = () => {
     console.log("Reindirizzamento alla dashboard ristorante");
     // Piccolo delay nel redirect per evitare problemi di navigazione
     const redirectTimer = setTimeout(() => {
-      navigate("/restaurant-dashboard");
+      navigate("/restaurant-dashboard?tab=home");
     }, 100);
     
     return () => clearTimeout(redirectTimer);
@@ -55,7 +56,7 @@ const UserTypeRedirect = () => {
       }
       
       if (isRestaurantOwner || userType === 'restaurant') {
-        navigate('/restaurant-dashboard');
+        navigate('/restaurant-dashboard?tab=home');
       } else {
         navigate('/home');
       }
@@ -154,6 +155,7 @@ function App() {
           {/* Rotte per ristoratori */}
           <Route path="/restaurant-register" element={<RestaurantRegister />} />
           <Route path="/restaurant-login" element={<RestaurantLogin />} />
+          <Route path="/restaurant-registration" element={<RestaurantRegistrationPage />} />
           <Route path="/restaurant-home" element={<RestaurantHomePage />} />
           <Route path="/restaurant-dashboard" element={<RestaurantDashboard />} />
           <Route path="/restaurant-dashboard/*" element={<RestaurantDashboard />} />

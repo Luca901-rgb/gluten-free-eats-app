@@ -1,13 +1,14 @@
 
 import React from 'react';
 import { useFormContext } from 'react-hook-form';
-import { Clock, DollarSign } from 'lucide-react';
+import { Clock, DollarSign, Plus, Trash } from 'lucide-react';
 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { getErrorMessage, getNestedError } from '@/utils/formErrorUtils';
+import { Button } from '@/components/ui/button';
 
 const OperationsStep = () => {
   const { register, setValue, watch, formState: { errors } } = useFormContext();
@@ -27,10 +28,32 @@ const OperationsStep = () => {
 
   const handleDayOpenChange = (day: string, isOpen: boolean) => {
     setValue(`operations.openingHours.${day}.open`, isOpen);
+    
+    // Se il giorno è chiuso, resetta i turni al valore di default
+    if (!isOpen) {
+      setValue(`operations.openingHours.${day}.shifts`, [
+        { from: '12:00', to: '15:00' },
+        { from: '19:00', to: '23:00' }
+      ]);
+    }
   };
 
   const handleTimeChange = (day: string, shiftIndex: number, field: 'from' | 'to', value: string) => {
     setValue(`operations.openingHours.${day}.shifts.${shiftIndex}.${field}`, value);
+  };
+  
+  const addShift = (day: string) => {
+    const currentShifts = watch(`operations.openingHours.${day}.shifts`) || [];
+    setValue(`operations.openingHours.${day}.shifts`, [...currentShifts, { from: '00:00', to: '00:00' }]);
+  };
+  
+  const removeShift = (day: string, shiftIndex: number) => {
+    const currentShifts = watch(`operations.openingHours.${day}.shifts`) || [];
+    if (currentShifts.length <= 1) return; // Mantieni almeno un turno
+    
+    const newShifts = [...currentShifts];
+    newShifts.splice(shiftIndex, 1);
+    setValue(`operations.openingHours.${day}.shifts`, newShifts);
   };
 
   return (
@@ -38,7 +61,7 @@ const OperationsStep = () => {
       <div>
         <h3 className="text-lg font-medium">Dettagli Operativi</h3>
         <p className="text-sm text-gray-500">
-          Imposta gli orari di apertura e altre informazioni operative.
+          Imposta gli orari di apertura e altre informazioni operative del tuo ristorante.
         </p>
       </div>
 
@@ -48,6 +71,7 @@ const OperationsStep = () => {
           <div className="border rounded-md p-4 space-y-4">
             {daysOfWeek.map((day) => {
               const isOpen = watch(`operations.openingHours.${day.id}.open`);
+              const shifts = watch(`operations.openingHours.${day.id}.shifts`) || [];
               
               return (
                 <div key={day.id} className="space-y-3">
@@ -64,54 +88,54 @@ const OperationsStep = () => {
                   </div>
                   
                   {isOpen && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-7">
-                      <div className="space-y-2">
-                        <Label className="text-sm text-gray-500">Pranzo</Label>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <Label htmlFor={`${day.id}-lunch-from`} className="text-xs">Dalle</Label>
-                            <Input
-                              id={`${day.id}-lunch-from`}
-                              type="time"
-                              value={watch(`operations.openingHours.${day.id}.shifts.0.from`)}
-                              onChange={(e) => handleTimeChange(day.id, 0, 'from', e.target.value)}
-                            />
+                    <div className="pl-7 space-y-3">
+                      {shifts.map((shift, shiftIndex) => (
+                        <div key={shiftIndex} className="flex items-center gap-2">
+                          <div className="grid grid-cols-2 gap-2 flex-1">
+                            <div>
+                              <Label htmlFor={`${day.id}-shift-${shiftIndex}-from`} className="text-xs">Dalle</Label>
+                              <Input
+                                id={`${day.id}-shift-${shiftIndex}-from`}
+                                type="time"
+                                value={shift.from}
+                                onChange={(e) => handleTimeChange(day.id, shiftIndex, 'from', e.target.value)}
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor={`${day.id}-shift-${shiftIndex}-to`} className="text-xs">Alle</Label>
+                              <Input
+                                id={`${day.id}-shift-${shiftIndex}-to`}
+                                type="time"
+                                value={shift.to}
+                                onChange={(e) => handleTimeChange(day.id, shiftIndex, 'to', e.target.value)}
+                              />
+                            </div>
                           </div>
-                          <div>
-                            <Label htmlFor={`${day.id}-lunch-to`} className="text-xs">Alle</Label>
-                            <Input
-                              id={`${day.id}-lunch-to`}
-                              type="time"
-                              value={watch(`operations.openingHours.${day.id}.shifts.0.to`)}
-                              onChange={(e) => handleTimeChange(day.id, 0, 'to', e.target.value)}
-                            />
-                          </div>
+                          
+                          {shifts.length > 1 && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="h-10 w-10 text-red-500"
+                              onClick={() => removeShift(day.id, shiftIndex)}
+                            >
+                              <Trash size={16} />
+                            </Button>
+                          )}
                         </div>
-                      </div>
+                      ))}
                       
-                      <div className="space-y-2">
-                        <Label className="text-sm text-gray-500">Cena</Label>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <Label htmlFor={`${day.id}-dinner-from`} className="text-xs">Dalle</Label>
-                            <Input
-                              id={`${day.id}-dinner-from`}
-                              type="time"
-                              value={watch(`operations.openingHours.${day.id}.shifts.1.from`)}
-                              onChange={(e) => handleTimeChange(day.id, 1, 'from', e.target.value)}
-                            />
-                          </div>
-                          <div>
-                            <Label htmlFor={`${day.id}-dinner-to`} className="text-xs">Alle</Label>
-                            <Input
-                              id={`${day.id}-dinner-to`}
-                              type="time"
-                              value={watch(`operations.openingHours.${day.id}.shifts.1.to`)}
-                              onChange={(e) => handleTimeChange(day.id, 1, 'to', e.target.value)}
-                            />
-                          </div>
-                        </div>
-                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="mt-2 flex items-center"
+                        onClick={() => addShift(day.id)}
+                      >
+                        <Plus size={16} className="mr-1" />
+                        Aggiungi fascia oraria
+                      </Button>
                     </div>
                   )}
                 </div>
