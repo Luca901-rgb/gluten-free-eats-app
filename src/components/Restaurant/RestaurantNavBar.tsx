@@ -6,17 +6,20 @@ import { Home, Book, Calendar, Settings, Users } from 'lucide-react';
 
 const RestaurantNavBar = () => {
   const navigate = useNavigate();
-  const { setCurrentTab, currentTab } = useTab();
+  const { currentTab, setCurrentTab } = useTab();
 
   const handleTabChange = (tab: string) => {
+    console.log("Cambiando tab a:", tab);
     setCurrentTab(tab);
-    navigate(`/restaurant-dashboard?tab=${tab}`);
+    
+    // Se c'è un parametro nella URL, aggiornalo
+    navigate(`/restaurant-dashboard?tab=${tab}`, { replace: true });
   };
 
   const tabs = [
     { id: 'home', label: 'Home', icon: Home },
     { id: 'bookings', label: 'Prenotazioni', icon: Book },
-    { id: 'calendar', label: 'Calendario', icon: Calendar },
+    { id: 'tables', label: 'Tavoli', icon: Calendar }, // Aggiunto tavoli direttamente nel menu principale
     { id: 'clients', label: 'Clienti', icon: Users },
     { id: 'settings', label: 'Impostazioni', icon: Settings }
   ];

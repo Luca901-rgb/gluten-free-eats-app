@@ -20,7 +20,7 @@ import LoadingScreen from '@/components/LoadingScreen';
 const RestaurantDashboard = () => {
   const [user] = useAuthState(auth);
   const [searchParams] = useSearchParams();
-  const [loading, setLoading] = useState(true);
+  const [loading, setIsLoading] = useState(true);
   
   // Dati del ristorante predefiniti
   const restaurantData = {
@@ -41,10 +41,12 @@ const RestaurantDashboard = () => {
   const [hasCompletedRegistration, setHasCompletedRegistration] = useState(false);
   
   useEffect(() => {
+    console.log("RestaurantDashboard: Inizializzazione con tab", initialTab);
+    
     // Simuliamo il caricamento
     const timer = setTimeout(() => {
-      setLoading(false);
-    }, 1000);
+      setIsLoading(false);
+    }, 800);
     
     // Verifica se l'utente ha completato la registrazione
     const checkRegistrationStatus = () => {
@@ -66,12 +68,12 @@ const RestaurantDashboard = () => {
           // Rimandiamo alla pagina di registrazione con un piccolo delay
           toast.info("Per favore, completa la registrazione del ristorante");
           setTimeout(() => {
-            navigate('/restaurant-register');
+            navigate('/restaurant-registration');
           }, 500);
         }
       } catch (error) {
         console.error("Errore durante il controllo dello stato di registrazione:", error);
-        // In caso di errore, mostriamo comunque la dashboard
+        // In caso di errore, mostriamo comunque la dashboard per evitare che l'utente rimanga bloccato
         setHasCompletedRegistration(true);
       }
     };
@@ -79,7 +81,7 @@ const RestaurantDashboard = () => {
     checkRegistrationStatus();
     
     return () => clearTimeout(timer);
-  }, [navigate]);
+  }, [navigate, initialTab]);
 
   const handleLogout = () => {
     try {

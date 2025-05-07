@@ -17,6 +17,8 @@ interface DashboardContentProps {
 const DashboardContent = ({ restaurantData, isRestaurantOwner }: DashboardContentProps) => {
   const { currentTab } = useTab();
   
+  console.log("DashboardContent: Rendering tab", currentTab);
+  
   return (
     <div className="px-4 py-4">
       {currentTab === 'home' && <RestaurantInfo restaurantData={restaurantData} />}

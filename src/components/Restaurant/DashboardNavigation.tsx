@@ -11,7 +11,7 @@ import {
   CarouselItem,
 } from "@/components/ui/carousel";
 import { useTab } from '@/context/TabContext';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 interface NavigationButton {
   id: string;
@@ -26,17 +26,15 @@ interface DashboardNavigationProps {
 const DashboardNavigation = ({ isRestaurantOwner = false }: DashboardNavigationProps) => {
   const { currentTab, setCurrentTab } = useTab();
   const tabsContainerRef = useRef<HTMLDivElement>(null);
-  const location = useLocation();
   const navigate = useNavigate();
 
   // Controlla se siamo nella dashboard o in una pagina specifica
   const handleTabClick = (tabId: string) => {
+    console.log("Cliccando su tab:", tabId);
     setCurrentTab(tabId);
     
-    // Se c'è un parametro nella URL, aggiornalo
-    const searchParams = new URLSearchParams(location.search);
-    searchParams.set('tab', tabId);
-    navigate(`${location.pathname}?${searchParams.toString()}`, { replace: true });
+    // Aggiorna l'URL con il parametro della tab
+    navigate(`/restaurant-dashboard?tab=${tabId}`, { replace: true });
   };
 
   // Definizione dei pulsanti di navigazione base
