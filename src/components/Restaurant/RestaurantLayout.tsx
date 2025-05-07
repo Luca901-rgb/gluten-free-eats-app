@@ -10,10 +10,16 @@ interface RestaurantLayoutProps {
 
 const RestaurantLayout: React.FC<RestaurantLayoutProps> = ({ children }) => {
   const [hasError, setHasError] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Handler per errori globali di rendering
   useEffect(() => {
     console.log("RestaurantLayout mounted");
+    
+    // Simula un breve caricamento per garantire che tutto sia pronto
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 300);
     
     const handleError = (event: ErrorEvent) => {
       console.error("Caught global error:", event.error);
@@ -22,8 +28,15 @@ const RestaurantLayout: React.FC<RestaurantLayoutProps> = ({ children }) => {
     };
 
     window.addEventListener('error', handleError);
-    return () => window.removeEventListener('error', handleError);
+    return () => {
+      window.removeEventListener('error', handleError);
+      clearTimeout(timer);
+    }
   }, []);
+
+  if (isLoading) {
+    return <LoadingScreen message="Caricamento layout..." timeout={1000} />;
+  }
 
   if (hasError) {
     return (

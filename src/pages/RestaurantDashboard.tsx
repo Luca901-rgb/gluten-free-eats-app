@@ -15,10 +15,12 @@ import DashboardHeader from '@/components/Restaurant/DashboardHeader';
 import DashboardNavigation from '@/components/Restaurant/DashboardNavigation';
 import DashboardContent from '@/components/Restaurant/DashboardContent';
 import { Skeleton } from '@/components/ui/skeleton';
+import LoadingScreen from '@/components/LoadingScreen';
 
 const RestaurantDashboard = () => {
   const [user] = useAuthState(auth);
   const [searchParams] = useSearchParams();
+  const [loading, setLoading] = useState(true);
   
   // Dati del ristorante predefiniti
   const restaurantData = {
@@ -36,30 +38,47 @@ const RestaurantDashboard = () => {
   const initialTab = searchParams.get('tab') || 'home';
   
   // Controlla se il ristoratore ha completato la registrazione
-  const [hasCompletedRegistration, setHasCompletedRegistration] = useState(true);
+  const [hasCompletedRegistration, setHasCompletedRegistration] = useState(false);
   
   useEffect(() => {
+    // Simuliamo il caricamento
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 1000);
+    
     // Verifica se l'utente ha completato la registrazione
     const checkRegistrationStatus = () => {
-      // Qui dovresti verificare se l'utente ha completato tutti gli step
-      // Per ora, usiamo localStorage come esempio
-      const regData = localStorage.getItem('restaurantRegistrationData');
-      
-      // Se non ci sono dati di registrazione, consideriamo la registrazione incompleta
-      if (!regData) {
-        console.log("Registrazione incompleta, reindirizzamento...");
-        setHasCompletedRegistration(false);
-        // Rimandiamo alla pagina di registrazione con un piccolo delay
-        setTimeout(() => {
-          navigate('/restaurant-register');
+      try {
+        // Qui dovresti verificare se l'utente ha completato tutti gli step
+        // Per ora, usiamo localStorage come esempio
+        const regData = localStorage.getItem('restaurantRegistrationData') || 
+                      localStorage.getItem('restaurantInfo');
+        
+        console.log("Dati di registrazione trovati:", regData ? "sì" : "no");
+        
+        // Se ci sono dati di registrazione, consideriamo la registrazione completata
+        if (regData) {
+          console.log("Registrazione completata, mostro la dashboard");
+          setHasCompletedRegistration(true);
+        } else {
+          console.log("Registrazione incompleta, reindirizzamento...");
+          setHasCompletedRegistration(false);
+          // Rimandiamo alla pagina di registrazione con un piccolo delay
           toast.info("Per favore, completa la registrazione del ristorante");
-        }, 500);
-      } else {
+          setTimeout(() => {
+            navigate('/restaurant-register');
+          }, 500);
+        }
+      } catch (error) {
+        console.error("Errore durante il controllo dello stato di registrazione:", error);
+        // In caso di errore, mostriamo comunque la dashboard
         setHasCompletedRegistration(true);
       }
     };
     
     checkRegistrationStatus();
+    
+    return () => clearTimeout(timer);
   }, [navigate]);
 
   const handleLogout = () => {
@@ -82,9 +101,14 @@ const RestaurantDashboard = () => {
     }
   };
 
+  // Se stiamo ancora caricando, mostra lo schermo di caricamento
+  if (loading) {
+    return <LoadingScreen message="Caricamento dashboard..." timeout={2000} />;
+  }
+
   // Se la registrazione non è completa, non mostriamo nulla mentre viene effettuato il redirect
   if (!hasCompletedRegistration) {
-    return null;
+    return <LoadingScreen message="Verifica registrazione..." timeout={2000} />;
   }
 
   return (
