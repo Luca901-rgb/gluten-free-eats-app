@@ -24,14 +24,14 @@ interface DashboardNavigationProps {
 }
 
 const DashboardNavigation = ({ isRestaurantOwner = false }: DashboardNavigationProps) => {
-  const { activeTab, navigateToTab } = useTab();
+  const { currentTab, setCurrentTab } = useTab();
   const tabsContainerRef = useRef<HTMLDivElement>(null);
   const location = useLocation();
   const navigate = useNavigate();
 
   // Controlla se siamo nella dashboard o in una pagina specifica
   const handleTabClick = (tabId: string) => {
-    navigateToTab(tabId);
+    setCurrentTab(tabId);
     
     // Se c'è un parametro nella URL, aggiornalo
     const searchParams = new URLSearchParams(location.search);
@@ -69,7 +69,7 @@ const DashboardNavigation = ({ isRestaurantOwner = false }: DashboardNavigationP
             {navigationButtons.map((button) => (
               <CarouselItem key={button.id} className="basis-auto pl-0 mr-1 min-w-min">
                 <Button
-                  variant={activeTab === button.id ? 'default' : 'outline'}
+                  variant={currentTab === button.id ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => handleTabClick(button.id)}
                   className="flex items-center gap-1 whitespace-nowrap py-1 h-8 text-xs"

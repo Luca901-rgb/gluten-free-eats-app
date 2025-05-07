@@ -15,44 +15,44 @@ interface DashboardContentProps {
 }
 
 const DashboardContent = ({ restaurantData, isRestaurantOwner }: DashboardContentProps) => {
-  const { activeTab } = useTab();
+  const { currentTab } = useTab();
   
   return (
     <div className="px-4 py-4">
-      {activeTab === 'home' && <RestaurantInfo restaurantData={restaurantData} />}
+      {currentTab === 'home' && <RestaurantInfo restaurantData={restaurantData} />}
       
-      {activeTab === 'menu' && (
+      {currentTab === 'menu' && (
         <div className="animate-fade-in">
           <MenuViewer isRestaurantOwner={isRestaurantOwner} />
         </div>
       )}
       
       {/* La gestione tavoli è visibile solo ai ristoratori */}
-      {activeTab === 'tables' && isRestaurantOwner && (
+      {currentTab === 'tables' && isRestaurantOwner && (
         <div className="animate-fade-in">
           <TableManagement restaurantId={restaurantData.id || '1'} />
         </div>
       )}
       
-      {activeTab === 'videos' && (
+      {currentTab === 'videos' && (
         <div className="animate-fade-in">
           <RestaurantVideos isRestaurantOwner={isRestaurantOwner} />
         </div>
       )}
       
-      {activeTab === 'gallery' && (
+      {currentTab === 'gallery' && (
         <div className="animate-fade-in">
           <RestaurantGallery />
         </div>
       )}
       
-      {activeTab === 'bookings' && (
+      {currentTab === 'bookings' && (
         <div className="animate-fade-in">
           <RestaurantBookings />
         </div>
       )}
       
-      {activeTab === 'reviews' && (
+      {currentTab === 'reviews' && (
         <div className="animate-fade-in">
           <RestaurantReviews />
         </div>

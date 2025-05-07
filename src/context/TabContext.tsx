@@ -27,7 +27,7 @@ export const useTab = () => {
   const context = useContext(TabContext);
   
   if (context === undefined) {
-    throw new Error('useTab deve essere usato all\'interno di un TabProvider');
+    throw new Error('useTab must be used within a TabProvider');
   }
   
   return context;
