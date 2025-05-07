@@ -20,6 +20,8 @@ export interface Restaurant {
   coverImage?: string;
   totalReviews?: number;
   phone?: string;
+  email?: string;
+  website?: string;
   openingHours?: Array<{
     days: string;
     hours: string;
@@ -44,6 +46,10 @@ export interface Restaurant {
     thumbnail?: string;
     description?: string;
   }>;
+  gallery?: {
+    environment: Array<{url: string, caption?: string}>;
+    dishes: Array<{url: string, caption?: string}>;
+  };
 }
 
 export interface RegionStatus {

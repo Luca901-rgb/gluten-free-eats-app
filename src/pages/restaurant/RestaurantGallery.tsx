@@ -1,106 +1,162 @@
 
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Upload, X, GalleryHorizontal } from 'lucide-react';
-import {
-  Dialog,
-  DialogContent,
-  DialogClose
-} from '@/components/ui/dialog';
+import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Image, Upload, Plus, Trash2, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 
-// Main image gallery component
+// Immagini di esempio per la galleria
+const sampleImages = {
+  environment: [
+    { url: '/placeholder.svg', caption: 'Sala principale' },
+    { url: '/placeholder.svg', caption: 'Area esterna' },
+    { url: '/placeholder.svg', caption: 'Bar' }
+  ],
+  dishes: [
+    { url: '/placeholder.svg', caption: 'Spaghetti alla carbonara' },
+    { url: '/placeholder.svg', caption: 'Tagliata di manzo' },
+    { url: '/placeholder.svg', caption: 'Tiramisù' }
+  ]
+};
+
 const RestaurantGallery = () => {
-  // State for uploaded images (mockup)
-  const [images, setImages] = useState<string[]>([]);
-  // Modal state for viewing image
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
-
-  // Simulate file input by adding a placeholder (replace with actual upload in production)
-  const handleAddImage = () => {
-    // In real implementation, open file picker and upload image here.
-    setImages([...images, '/placeholder.svg']);
-    toast.success("Immagine caricata (demo)");
+  const [galleryImages, setGalleryImages] = useState({
+    environment: [...sampleImages.environment],
+    dishes: [...sampleImages.dishes]
+  });
+  
+  // Carica le immagini dalla registrazione del ristorante se disponibili
+  React.useEffect(() => {
+    try {
+      const registrationData = localStorage.getItem('restaurantRegistrationData');
+      if (registrationData) {
+        const parsed = JSON.parse(registrationData);
+        if (parsed.media?.gallery) {
+          const gallery = parsed.media.gallery;
+          
+          setGalleryImages(prev => ({
+            environment: gallery.environment && gallery.environment.length > 0 ? 
+              gallery.environment : prev.environment,
+            dishes: gallery.dishes && gallery.dishes.length > 0 ? 
+              gallery.dishes : prev.dishes
+          }));
+        }
+      }
+    } catch (error) {
+      console.error("Errore nel caricamento della galleria:", error);
+    }
+  }, []);
+  
+  const handleImageUpload = (category: 'environment' | 'dishes') => {
+    // In un'implementazione reale, qui gestiremmo l'upload delle immagini
+    toast.info("Funzionalità di upload in sviluppo");
+    
+    // Per ora aggiungiamo un'immagine di esempio
+    setGalleryImages(prev => ({
+      ...prev,
+      [category]: [
+        ...prev[category],
+        { url: '/placeholder.svg', caption: 'Nuova immagine' }
+      ]
+    }));
   };
-
-  const handleDeleteImage = (index: number) => {
-    const newImages = [...images];
-    newImages.splice(index, 1);
-    setImages(newImages);
-    toast.success("Immagine eliminata");
+  
+  const handleImageDelete = (category: 'environment' | 'dishes', index: number) => {
+    setGalleryImages(prev => ({
+      ...prev,
+      [category]: prev[category].filter((_, idx) => idx !== index)
+    }));
+    
+    toast.success("Immagine rimossa dalla galleria");
   };
-
-  const openImageViewer = (image: string) => setSelectedImage(image);
-  const closeImageViewer = () => setSelectedImage(null);
-
-  return (
-    <div className="p-4 space-y-6 max-w-3xl mx-auto">
-      <div className="flex items-center gap-2 mb-2">
-        <span className="bg-primary/10 rounded-full p-2 text-primary">
-          <GalleryHorizontal size={28} className="text-primary" />
-        </span>
-        <h1 className="text-2xl font-poppins font-bold text-primary">Galleria Immagini</h1>
-      </div>
-      <div className="flex justify-end mb-2">
-        <Button onClick={handleAddImage} className="flex items-center gap-2">
-          <Upload size={16} />
-          Carica Nuova
-        </Button>
-      </div>
-      {images.length > 0 ? (
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {images.map((image, index) => (
-            <div key={index} className="relative group rounded-lg border overflow-hidden">
-              <img
-                src={image}
-                alt={`Gallery image ${index + 1}`}
-                className="w-full aspect-square object-cover transition-transform duration-200 group-hover:scale-105 cursor-pointer"
-                onClick={() => openImageViewer(image)}
-              />
-              <div className="absolute inset-0 flex justify-center items-center bg-black/0 group-hover:bg-black/40 transition-all opacity-0 group-hover:opacity-100">
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  className="z-10"
-                  onClick={() => handleDeleteImage(index)}
-                >
-                  Elimina
-                </Button>
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="flex flex-col items-center justify-center py-16 bg-secondary/20 rounded-lg">
-          <GalleryHorizontal size={42} className="mb-3 text-primary" />
-          <p className="text-gray-600 mb-3">Nessuna immagine nella galleria</p>
-          <Button onClick={handleAddImage} className="flex items-center gap-2">
-            <Upload size={16} />
-            Carica la prima immagine
+  
+  const ImageGallery = ({ images, category }: { images: Array<{url: string, caption?: string}>, category: 'environment' | 'dishes' }) => {
+    return (
+      <div>
+        {images.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {images.map((image, idx) => (
+              <Card key={idx} className="overflow-hidden">
+                <div className="relative aspect-video bg-gray-100">
+                  <img
+                    src={image.url}
+                    alt={image.caption || `Immagine ${idx + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute top-2 right-2 flex gap-1">
+                    <Button 
+                      size="icon" 
+                      variant="secondary" 
+                      className="h-8 w-8 bg-white/90 hover:bg-white"
+                      onClick={() => window.open(image.url, '_blank')}
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      size="icon" 
+                      variant="destructive" 
+                      className="h-8 w-8"
+                      onClick={() => handleImageDelete(category, idx)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+                <CardContent className="p-3">
+                  <p className="text-sm truncate">{image.caption || `Immagine ${idx + 1}`}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-10 border rounded-lg">
+            <Image className="mx-auto h-12 w-12 text-gray-400" />
+            <h3 className="mt-2 text-lg font-medium">Nessuna immagine</h3>
+            <p className="text-gray-500">Carica delle immagini per la tua galleria</p>
+          </div>
+        )}
+        
+        <div className="mt-4 text-center">
+          <Button onClick={() => handleImageUpload(category)}>
+            <Upload className="mr-2 h-4 w-4" />
+            Carica immagine
           </Button>
         </div>
-      )}
-
-      {/* Image Viewer Modal */}
-      <Dialog open={selectedImage !== null} onOpenChange={closeImageViewer}>
-        <DialogContent className="max-w-2xl p-0 bg-transparent border-none">
-          <div className="relative w-full flex items-center justify-center">
-            <DialogClose className="absolute right-2 top-2 z-10 bg-black/50 text-white rounded-full p-2 hover:bg-black/70">
-              <X className="h-5 w-5" />
-            </DialogClose>
-            {selectedImage && (
-              <img
-                src={selectedImage}
-                alt="Enlarged view"
-                className="w-full h-auto max-h-[80vh] object-contain rounded-lg shadow-lg"
-              />
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+      </div>
+    );
+  };
+  
+  return (
+    <div className="p-4 space-y-6 animate-fade-in">
+      <div className="flex items-center justify-between">
+        <h2 className="font-poppins font-semibold text-lg flex items-center">
+          <Image className="mr-2 h-5 w-5 text-green-600" />
+          Galleria Fotografica
+        </h2>
+        
+        <Button size="sm" className="flex items-center gap-1">
+          <Plus className="h-4 w-4" />
+          <span>Nuova categoria</span>
+        </Button>
+      </div>
+      
+      <Tabs defaultValue="environment" className="w-full">
+        <TabsList className="mb-4">
+          <TabsTrigger value="environment">Ambienti</TabsTrigger>
+          <TabsTrigger value="dishes">Piatti</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="environment">
+          <ImageGallery images={galleryImages.environment} category="environment" />
+        </TabsContent>
+        
+        <TabsContent value="dishes">
+          <ImageGallery images={galleryImages.dishes} category="dishes" />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
 
 export default RestaurantGallery;
-

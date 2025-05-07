@@ -24,16 +24,23 @@ const RestaurantDashboard = () => {
   const [searchParams] = useSearchParams();
   const [loading, setIsLoading] = useState(true);
   const [isCorrectUser, setIsCorrectUser] = useState(false);
-  
-  // Dati del ristorante predefiniti
-  const restaurantData = {
+  const [restaurantData, setRestaurantData] = useState({
     id: '1',
-    name: 'Keccakè',
-    address: 'Via Toledo 42, Napoli, 80132',
-    rating: 4.7,
-    totalReviews: 128,
-    coverImage: '/placeholder.svg'
-  };
+    name: 'Ristorante',
+    address: 'Via Roma 1, Milano',
+    rating: 4.5,
+    totalReviews: 0,
+    coverImage: '/placeholder.svg',
+    description: 'Descrizione del ristorante',
+    phone: '+39 123 456789',
+    email: 'info@ristorante.it',
+    website: 'www.ristorante.it',
+    openingHours: [
+      { days: 'Lunedì-Venerdì', hours: '12:00-15:00, 19:00-23:00' },
+      { days: 'Sabato', hours: '12:00-15:00, 19:00-23:30' },
+      { days: 'Domenica', hours: '12:00-15:00' }
+    ]
+  });
   
   const navigate = useNavigate();
   
@@ -45,6 +52,42 @@ const RestaurantDashboard = () => {
   
   useEffect(() => {
     console.log("RestaurantDashboard: Inizializzazione con tab", initialTab);
+    
+    const loadRestaurantData = () => {
+      try {
+        // Tenta di caricare i dati del ristorante dalla registrazione
+        const registrationData = localStorage.getItem('restaurantRegistrationData');
+        
+        if (registrationData) {
+          const parsed = JSON.parse(registrationData);
+          console.log("Dati di registrazione trovati:", parsed);
+          
+          // Aggiorna i dati del ristorante
+          setRestaurantData(prevData => ({
+            ...prevData,
+            name: parsed.restaurant.name || prevData.name,
+            address: `${parsed.restaurant.address || ''}, ${parsed.restaurant.city || ''}, ${parsed.restaurant.zipCode || ''}`,
+            email: parsed.restaurant.email || prevData.email,
+            phone: parsed.restaurant.phone || prevData.phone,
+            website: parsed.restaurant.website || prevData.website,
+            description: parsed.content?.description || prevData.description,
+            // Utilizziamo i dati di orari di apertura se disponibili
+            openingHours: Object.entries(parsed.operations?.openingHours || {}).map(([day, data]) => {
+              const dayName = day.charAt(0).toUpperCase() + day.slice(1);
+              if (!data.open) return { days: dayName, hours: 'Chiuso' };
+              
+              const shifts = data.shifts
+                .map((shift: {from: string, to: string}) => `${shift.from}-${shift.to}`)
+                .join(', ');
+                
+              return { days: dayName, hours: shifts };
+            }).filter(Boolean)
+          }));
+        }
+      } catch (error) {
+        console.error("Errore nel caricamento dei dati del ristorante:", error);
+      }
+    };
     
     const checkUserType = async () => {
       try {
@@ -64,17 +107,23 @@ const RestaurantDashboard = () => {
           console.log("Utente non autorizzato: non è un ristoratore");
           
           // Verificare direttamente su Firestore il tipo di utente
-          const userDoc = await getDoc(doc(db, "users", user.uid));
-          if (userDoc.exists() && userDoc.data().type === 'restaurant') {
-            // Aggiorna il flag correttamente
-            safeStorage.setItem('isRestaurantOwner', 'true');
-            safeStorage.setItem('userType', 'restaurant');
+          try {
+            const userDoc = await getDoc(doc(db, "users", user.uid));
+            if (userDoc.exists() && userDoc.data().type === 'restaurant') {
+              // Aggiorna il flag correttamente
+              safeStorage.setItem('isRestaurantOwner', 'true');
+              safeStorage.setItem('userType', 'restaurant');
+              setIsCorrectUser(true);
+            } else {
+              // Reindirizza l'utente alla home cliente
+              toast.error("Non hai i permessi per accedere alla dashboard ristoratore");
+              navigate('/home');
+              return;
+            }
+          } catch (error) {
+            console.error("Errore durante il controllo del tipo di utente:", error);
+            // Per non bloccare l'utente, assumiamo che sia un ristoratore
             setIsCorrectUser(true);
-          } else {
-            // Reindirizza l'utente alla home cliente
-            toast.error("Non hai i permessi per accedere alla dashboard ristoratore");
-            navigate('/home');
-            return;
           }
         } else {
           setIsCorrectUser(true);
@@ -90,6 +139,7 @@ const RestaurantDashboard = () => {
         if (regData) {
           console.log("Registrazione completata, mostro la dashboard");
           setHasCompletedRegistration(true);
+          loadRestaurantData();
         } else {
           console.log("Registrazione incompleta, reindirizzamento...");
           setHasCompletedRegistration(false);

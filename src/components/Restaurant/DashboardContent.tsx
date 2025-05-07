@@ -8,9 +8,10 @@ import RestaurantGallery from '@/pages/restaurant/RestaurantGallery';
 import RestaurantBookings from '@/pages/restaurant/RestaurantBookings';
 import RestaurantReviews from '@/pages/restaurant/RestaurantReviews';
 import { useTab } from '@/context/TabContext';
+import { Restaurant } from '@/types/restaurant';
 
 interface DashboardContentProps {
-  restaurantData: any;
+  restaurantData: Restaurant | any;
   isRestaurantOwner: boolean;
 }
 
