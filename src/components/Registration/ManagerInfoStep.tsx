@@ -10,9 +10,16 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/comp
 import { getErrorMessage, getNestedError } from '@/utils/formErrorUtils';
 
 const ManagerInfoStep = () => {
-  const { register, formState: { errors } } = useFormContext();
+  const { register, formState: { errors }, setValue, watch } = useFormContext();
   const [showPassword, setShowPassword] = React.useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
+  
+  const acceptTerms = watch('manager.acceptTerms');
+
+  // Handle checkbox change properly
+  const handleCheckboxChange = (checked: boolean) => {
+    setValue('manager.acceptTerms', checked, { shouldValidate: true });
+  };
 
   return (
     <div className="space-y-6">
@@ -150,14 +157,16 @@ const ManagerInfoStep = () => {
         <div className="flex items-center space-x-2">
           <Checkbox 
             id="manager.acceptTerms"
-            {...register('manager.acceptTerms', { required: "Devi accettare i termini e le condizioni" })}
+            checked={!!acceptTerms}
+            onCheckedChange={handleCheckboxChange}
           />
-          <label
+          <Label
             htmlFor="manager.acceptTerms"
-            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+            onClick={() => handleCheckboxChange(!acceptTerms)}
           >
             Accetto i termini e le condizioni e l'informativa sulla privacy
-          </label>
+          </Label>
         </div>
         {getNestedError(errors, 'manager.acceptTerms') && (
           <p className="text-sm text-red-500">

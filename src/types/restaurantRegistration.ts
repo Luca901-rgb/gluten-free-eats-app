@@ -1,4 +1,3 @@
-
 export interface RestaurantRegistrationForm {
   // Step 1: Manager Information
   manager: {
