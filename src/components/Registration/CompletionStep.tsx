@@ -6,12 +6,13 @@ import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
+import safeStorage from '@/lib/safeStorage';
 
 const CompletionStep = () => {
   const { getValues } = useFormContext();
   const navigate = useNavigate();
   
-  // Make sure the registration data is saved in localStorage
+  // Make sure the registration data is saved in localStorage and user is marked as restaurant owner
   useEffect(() => {
     try {
       const formData = getValues();
@@ -20,6 +21,10 @@ const CompletionStep = () => {
         console.log("Saving registration data to localStorage");
         localStorage.setItem('restaurantRegistrationData', JSON.stringify(formData));
       }
+      
+      // Set flags to identify the user as a restaurant owner
+      safeStorage.setItem('isRestaurantOwner', 'true');
+      safeStorage.setItem('userType', 'restaurant');
     } catch (error) {
       console.error("Error saving registration data:", error);
     }
@@ -27,7 +32,12 @@ const CompletionStep = () => {
   
   const handleGoToDashboard = () => {
     try {
-      console.log("Navigating to dashboard");
+      // Ensure user is marked as restaurant owner before navigating
+      safeStorage.setItem('isRestaurantOwner', 'true'); 
+      safeStorage.setItem('userType', 'restaurant');
+      safeStorage.setItem('isAuthenticated', 'true');
+      
+      console.log("Navigating to restaurant dashboard");
       navigate('/restaurant-dashboard?tab=home');
     } catch (error) {
       console.error("Navigation error:", error);

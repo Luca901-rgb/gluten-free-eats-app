@@ -87,15 +87,20 @@ const DashboardHeader = ({ restaurantData }: DashboardHeaderProps) => {
   };
 
   return (
-    <div className="relative h-56 md:h-72">
+    <div className="relative h-40 md:h-64">
+      <div className="absolute inset-0 bg-gradient-radial from-green-50 to-green-100"></div>
       <img 
         src={coverImage} 
         alt={restaurantData.name} 
-        className="w-full h-full object-cover"
+        className="w-full h-full object-cover opacity-60"
+        onError={(e) => {
+          e.currentTarget.src = "/lovable-uploads/cb016c24-7700-4927-b5e2-40af08e4b219.png";
+          e.currentTarget.className = "w-full h-full object-contain p-8";
+        }}
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-4">
         <div className="text-white">
-          <h1 className="font-poppins font-bold text-2xl mb-1">{restaurantData.name}</h1>
+          <h1 className="font-bold text-2xl mb-1">{restaurantData.name}</h1>
           <div className="flex items-center mb-1">
             <div className="flex">
               {[...Array(5)].map((_, i) => (
@@ -105,7 +110,7 @@ const DashboardHeader = ({ restaurantData }: DashboardHeaderProps) => {
                 />
               ))}
             </div>
-            <span className="text-sm ml-2">{restaurantData.totalReviews} recensioni</span>
+            <span className="text-sm ml-2">{restaurantData.totalReviews || 0} recensioni</span>
           </div>
           <div className="flex items-center text-sm">
             <MapPin size={14} className="mr-1" />

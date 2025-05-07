@@ -2,7 +2,7 @@
 import React, { useRef } from 'react';
 import { 
   Home, Menu, Video, Image as ImageIcon, 
-  CalendarRange, Star, Table, Wheat, UtensilsCrossed
+  CalendarRange, Star, Table, Wheat, UtensilsCrossed, Settings, Users
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { 
@@ -37,8 +37,8 @@ const DashboardNavigation = ({ isRestaurantOwner = false }: DashboardNavigationP
     navigate(`/restaurant-dashboard?tab=${tabId}`, { replace: true });
   };
 
-  // Definizione dei pulsanti di navigazione base
-  let navigationButtons: NavigationButton[] = [
+  // Definizione dei pulsanti di navigazione per i clienti
+  let clientNavigationButtons: NavigationButton[] = [
     { id: 'home', label: 'Info', icon: <Home className="w-4 h-4" /> },
     { id: 'menu', label: 'Menu', icon: <Menu className="w-4 h-4" /> },
     { id: 'videos', label: 'Videoricette', icon: <Video className="w-4 h-4" /> },
@@ -47,11 +47,18 @@ const DashboardNavigation = ({ isRestaurantOwner = false }: DashboardNavigationP
     { id: 'reviews', label: 'Recensioni', icon: <Star className="w-4 h-4" /> },
   ];
 
-  // Aggiungi la scheda "Tavoli" solo per i proprietari dei ristoranti
-  if (isRestaurantOwner) {
-    // Inseriamo "Tavoli" dopo "Menu"
-    navigationButtons.splice(2, 0, { id: 'tables', label: 'Tavoli', icon: <Table className="w-4 h-4" /> });
-  }
+  // Definizione dei pulsanti di navigazione per i ristoratori
+  let restaurantOwnerButtons: NavigationButton[] = [
+    { id: 'home', label: 'Info', icon: <Home className="w-4 h-4" /> },
+    { id: 'menu', label: 'Menu', icon: <Menu className="w-4 h-4" /> },
+    { id: 'tables', label: 'Tavoli', icon: <Table className="w-4 h-4" /> },
+    { id: 'bookings', label: 'Prenotazioni', icon: <CalendarRange className="w-4 h-4" /> },
+    { id: 'clients', label: 'Clienti', icon: <Users className="w-4 h-4" /> },
+    { id: 'settings', label: 'Impostazioni', icon: <Settings className="w-4 h-4" /> },
+  ];
+
+  // Usa i pulsanti appropriati in base al tipo di utente
+  const navigationButtons = isRestaurantOwner ? restaurantOwnerButtons : clientNavigationButtons;
 
   return (
     <div className="bg-white shadow-sm sticky top-0 z-10" ref={tabsContainerRef}>

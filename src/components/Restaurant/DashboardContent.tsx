@@ -18,7 +18,7 @@ interface DashboardContentProps {
 const DashboardContent = ({ restaurantData, isRestaurantOwner }: DashboardContentProps) => {
   const { currentTab } = useTab();
   
-  console.log("DashboardContent: Rendering tab", currentTab);
+  console.log("DashboardContent: Rendering tab", currentTab, "isRestaurantOwner:", isRestaurantOwner);
   
   return (
     <div className="px-4 py-4">
@@ -58,6 +58,21 @@ const DashboardContent = ({ restaurantData, isRestaurantOwner }: DashboardConten
       {currentTab === 'reviews' && (
         <div className="animate-fade-in">
           <RestaurantReviews />
+        </div>
+      )}
+      
+      {/* Sezioni specifiche per i ristoratori */}
+      {currentTab === 'clients' && isRestaurantOwner && (
+        <div className="animate-fade-in">
+          <h2 className="text-xl font-semibold mb-4">Gestione Clienti</h2>
+          <p className="text-gray-500">Qui potrai visualizzare e gestire i clienti del tuo ristorante.</p>
+        </div>
+      )}
+      
+      {currentTab === 'settings' && isRestaurantOwner && (
+        <div className="animate-fade-in">
+          <h2 className="text-xl font-semibold mb-4">Impostazioni Ristorante</h2>
+          <p className="text-gray-500">Qui potrai modificare le impostazioni del tuo ristorante.</p>
         </div>
       )}
     </div>

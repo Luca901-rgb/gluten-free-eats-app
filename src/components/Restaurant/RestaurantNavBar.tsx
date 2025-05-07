@@ -2,7 +2,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTab } from '@/context/TabContext';
-import { Home, Book, Calendar, Settings, Users } from 'lucide-react';
+import { Home, Book, Calendar, Settings, Users, Menu, Database } from 'lucide-react';
 import safeStorage from '@/lib/safeStorage';
 
 const RestaurantNavBar = () => {
@@ -30,7 +30,8 @@ const RestaurantNavBar = () => {
   };
 
   const tabs = [
-    { id: 'home', label: 'Home', icon: Home },
+    { id: 'home', label: 'Info', icon: Home },
+    { id: 'menu', label: 'Menu', icon: Menu },
     { id: 'bookings', label: 'Prenotazioni', icon: Book },
     { id: 'tables', label: 'Tavoli', icon: Calendar },
     { id: 'clients', label: 'Clienti', icon: Users },
