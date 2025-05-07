@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -77,18 +78,6 @@ const RegisterForm = () => {
         }
       }
     });
-  };
-
-  const handlePaymentComplete = (success: boolean) => {
-    setShowPaymentDialog(false);
-    if (success) {
-      setCardRegistered(true);
-      toast.success("Registrazione completata con successo");
-      
-      completeRegistration();
-    } else {
-      toast.error("Registrazione non riuscita");
-    }
   };
 
   const completeRegistration = async () => {
@@ -782,4 +771,33 @@ const RegisterForm = () => {
         disabled={isLoading}
       >
         <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
-          <path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 13
+          <path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z" />
+        </svg>
+        Registrati con Google
+      </Button>
+    </form>
+  );
+
+  return (
+    <div className="w-full mx-auto max-w-md bg-white p-6 rounded-lg shadow-md">
+      <Tabs defaultValue="customer" className="w-full" onValueChange={(value) => setUserType(value as 'customer' | 'restaurant')}>
+        <TabsList className="grid w-full grid-cols-2 mb-6">
+          <TabsTrigger value="customer">Cliente</TabsTrigger>
+          <TabsTrigger value="restaurant">Ristoratore</TabsTrigger>
+        </TabsList>
+        <TabsContent value="customer">
+          {renderCustomerForm()}
+        </TabsContent>
+        <TabsContent value="restaurant">
+          {renderRestaurantForm()}
+        </TabsContent>
+      </Tabs>
+      
+      <div className="mt-6 text-center text-sm text-gray-600">
+        Hai già un account? <Link to="/login" className="text-primary font-medium">Accedi</Link>
+      </div>
+    </div>
+  );
+};
+
+export default RegisterForm;
