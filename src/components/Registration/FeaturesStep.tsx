@@ -28,6 +28,7 @@ const FeaturesStep = () => {
     { value: 'pizzeria', label: 'Pizzeria' },
     { value: 'trattoria', label: 'Trattoria' },
     { value: 'osteria', label: 'Osteria' },
+    { value: 'pub', label: 'Pub/Birreria' },
     { value: 'fastfood', label: 'Fast Food' },
     { value: 'pasticceria', label: 'Pasticceria' },
     { value: 'gelateria', label: 'Gelateria' },
@@ -74,7 +75,7 @@ const FeaturesStep = () => {
           <RadioGroup
             defaultValue={watch('features.type')}
             onValueChange={handleTypeChange}
-            className="grid grid-cols-2 md:grid-cols-4 gap-2"
+            className="grid grid-cols-2 md:grid-cols-3 gap-2"
           >
             {restaurantTypes.map((type) => (
               <div key={type.value} className="flex items-center space-x-2">

@@ -34,7 +34,7 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({
           {isGuarantee 
             ? "Garanzia non richiesta" 
             : isRestaurantRegistration 
-              ? "Registrazione non richiesta"
+              ? "Registrazione gratuita"
               : "Servizio gratuito"}
         </CardTitle>
         <CardDescription>
@@ -45,7 +45,7 @@ const PaymentManager: React.FC<PaymentManagerProps> = ({
         <div className="text-sm flex items-start gap-2 bg-blue-50 p-3 rounded-md">
           <Info className="h-4 w-4 text-blue-500 flex-shrink-0 mt-0.5" />
           <span className="text-blue-700">
-            Questo servizio è completamente gratuito e non richiede alcun pagamento.
+            La registrazione del ristorante è completamente gratuita.
           </span>
         </div>
       </CardContent>

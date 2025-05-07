@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -7,14 +6,14 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { User, Mail, Lock, Phone, MapPin, Store, CreditCard, Clock, AlignLeft, Globe } from 'lucide-react';
+import { User, Mail, Lock, Phone, MapPin, Store, Globe, AlignLeft } from 'lucide-react';
 import { registerUser, signInWithGoogle } from '@/lib/firebase';
-import PaymentForm from '@/components/Booking/PaymentForm';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Clock } from 'lucide-react';
 
 const RegisterForm = () => {
   const navigate = useNavigate();
@@ -38,7 +37,8 @@ const RegisterForm = () => {
     phone: '',
     website: '',
     description: '',
-    cuisine: '',
+    restaurantType: '',
+    otherType: '',
     priceRange: '',
     openingHours: {
       monday: { open: true, from: '12:00', to: '15:00', fromDinner: '19:00', toDinner: '23:00' },
@@ -83,11 +83,11 @@ const RegisterForm = () => {
     setShowPaymentDialog(false);
     if (success) {
       setCardRegistered(true);
-      toast.success("Carta di credito registrata con successo");
+      toast.success("Registrazione completata con successo");
       
       completeRegistration();
     } else {
-      toast.error("Registrazione carta non riuscita");
+      toast.error("Registrazione non riuscita");
     }
   };
 
@@ -114,9 +114,8 @@ const RegisterForm = () => {
         localStorage.setItem('restaurantPhone', formData.phone);
         localStorage.setItem('restaurantWebsite', formData.website || '');
         localStorage.setItem('restaurantDescription', formData.description || '');
-        localStorage.setItem('restaurantCuisine', formData.cuisine || '');
+        localStorage.setItem('restaurantType', formData.restaurantType || '');
         localStorage.setItem('restaurantPriceRange', formData.priceRange || '');
-        localStorage.setItem('hasPaymentMethod', 'true');
         navigate('/restaurant-dashboard');
       } else {
         navigate('/');
@@ -325,6 +324,18 @@ const RegisterForm = () => {
     { id: 'sunday', label: 'Domenica' },
   ];
 
+  const restaurantTypes = [
+    { value: 'ristorante', label: 'Ristorante' },
+    { value: 'pizzeria', label: 'Pizzeria' },
+    { value: 'trattoria', label: 'Trattoria' },
+    { value: 'osteria', label: 'Osteria' },
+    { value: 'pub', label: 'Pub/Birreria' },
+    { value: 'fastfood', label: 'Fast Food' },
+    { value: 'pasticceria', label: 'Pasticceria' },
+    { value: 'gelateria', label: 'Gelateria' },
+    { value: 'altro', label: 'Altro' },
+  ];
+
   const renderRestaurantForm = () => (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
@@ -408,20 +419,26 @@ const RegisterForm = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="cuisine">Tipo di cucina</Label>
-          <Select value={formData.cuisine} onValueChange={(value) => handleSelectChange('cuisine', value)}>
-            <SelectTrigger id="cuisine">
-              <SelectValue placeholder="Seleziona tipo di cucina" />
+          <Label htmlFor="restaurantType">Tipo di ristorante</Label>
+          <Select value={formData.restaurantType} onValueChange={(value) => handleSelectChange('restaurantType', value)}>
+            <SelectTrigger id="restaurantType">
+              <SelectValue placeholder="Seleziona tipo di ristorante" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="italiana">Italiana</SelectItem>
-              <SelectItem value="pizzeria">Pizzeria</SelectItem>
-              <SelectItem value="internazionale">Internazionale</SelectItem>
-              <SelectItem value="fusion">Fusion</SelectItem>
-              <SelectItem value="asiatica">Asiatica</SelectItem>
-              <SelectItem value="americana">Americana</SelectItem>
+              {restaurantTypes.map(type => (
+                <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
+          {formData.restaurantType === 'altro' && (
+            <Input
+              placeholder="Specifica tipologia"
+              name="otherType"
+              value={formData.otherType}
+              onChange={handleChange}
+              className="mt-2"
+            />
+          )}
         </div>
 
         <div className="space-y-2">
@@ -687,7 +704,7 @@ const RegisterForm = () => {
             id="password"
             name="password"
             type={showPassword ? "text" : "password"}
-            placeholder="••••••��•"
+            placeholder="••••••••"
             required
             value={formData.password}
             onChange={handleChange}
@@ -727,14 +744,6 @@ const RegisterForm = () => {
           </button>
         </div>
       </div>
-
-      <div className="flex items-start gap-2 bg-amber-50 p-3 rounded border border-amber-200">
-        <CreditCard className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
-        <div className="text-sm text-amber-700">
-          <p className="font-medium">Pagamento Richiesto</p>
-          <p>Per completare la registrazione del ristorante, sarà necessario registrare un metodo di pagamento.</p>
-        </div>
-      </div>
       
       <div className="flex items-center space-x-2 my-4">
         <Checkbox 
@@ -756,7 +765,7 @@ const RegisterForm = () => {
         className="w-full bg-primary hover:bg-primary/90" 
         disabled={isLoading}
       >
-        {isLoading ? 'Registrazione in corso...' : cardRegistered ? 'Completa registrazione' : 'Continua alla registrazione carta'}
+        {isLoading ? 'Registrazione in corso...' : 'Completa registrazione'}
       </Button>
       
       <div className="relative flex items-center my-4">
@@ -773,72 +782,4 @@ const RegisterForm = () => {
         disabled={isLoading}
       >
         <svg className="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
-          <path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z" />
-        </svg>
-        Registrati con Google
-      </Button>
-    </form>
-  );
-
-  return (
-    <div className="w-full max-w-md mx-auto p-6">
-      <div className="text-center mb-8">
-        <h1 className="text-2xl font-bold text-primary font-poppins">Registrati</h1>
-        <p className="text-gray-600 mt-2">Crea il tuo account su Gluten Free Eats</p>
-      </div>
-
-      <Tabs defaultValue="customer" className="w-full mb-6" onValueChange={(value) => setUserType(value as 'customer' | 'restaurant')}>
-        <TabsList className="grid w-full grid-cols-2 mb-8">
-          <TabsTrigger value="customer" className="flex items-center justify-center gap-2">
-            <User size={16} />
-            <span>Cliente</span>
-          </TabsTrigger>
-          <TabsTrigger value="restaurant" className="flex items-center justify-center gap-2">
-            <Store size={16} />
-            <span>Ristoratore</span>
-          </TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="customer">
-          {renderCustomerForm()}
-        </TabsContent>
-        
-        <TabsContent value="restaurant">
-          {renderRestaurantForm()}
-        </TabsContent>
-      </Tabs>
-
-      <div className="text-center mt-6">
-        <p className="text-sm text-gray-600">
-          Hai già un account?{' '}
-          <Link to="/login" className="text-accent hover:underline font-medium">
-            Accedi
-          </Link>
-        </p>
-      </div>
-      
-      <Dialog open={showPaymentDialog} onOpenChange={(open) => {
-        if (!open) {
-          setIsLoading(false);
-        }
-        setShowPaymentDialog(open);
-      }}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Registra metodo di pagamento</DialogTitle>
-          </DialogHeader>
-          <div className="py-4">
-            <PaymentForm 
-              onComplete={handlePaymentComplete} 
-              isGuarantee={false}
-              amount={0.99}
-              isRestaurantRegistration={true}
-            />
-          </div>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-};
-
-export default RegisterForm;
+          <path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 13
