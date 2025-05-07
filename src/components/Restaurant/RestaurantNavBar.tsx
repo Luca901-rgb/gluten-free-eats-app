@@ -3,6 +3,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTab } from '@/context/TabContext';
 import { Home, Book, Calendar, Settings, Users } from 'lucide-react';
+import safeStorage from '@/lib/safeStorage';
 
 const RestaurantNavBar = () => {
   const navigate = useNavigate();
@@ -12,8 +13,17 @@ const RestaurantNavBar = () => {
     console.log("Cambiando tab a:", tab);
     setCurrentTab(tab);
     
-    // Se c'è un parametro nella URL, aggiornalo
-    navigate(`/restaurant-dashboard?tab=${tab}`, { replace: true });
+    // Verifica se l'utente è un ristoratore prima di navigare
+    const isRestaurantOwner = safeStorage.getItem('isRestaurantOwner') === 'true';
+    const userType = safeStorage.getItem('userType');
+    
+    if (isRestaurantOwner || userType === 'restaurant') {
+      // Naviga alla dashboard ristoratore con il parametro tab corretto
+      navigate(`/restaurant-dashboard?tab=${tab}`, { replace: true });
+    } else {
+      // Se per qualche motivo l'utente non è un ristoratore, reindirizza alla pagina corretta
+      navigate('/user-redirect');
+    }
   };
 
   const tabs = [

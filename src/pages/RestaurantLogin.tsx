@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
+import safeStorage from '@/lib/safeStorage';
 
 const RestaurantLogin = () => {
   const [email, setEmail] = useState('');
@@ -37,15 +38,19 @@ const RestaurantLogin = () => {
       const userDoc = await getDoc(doc(db, "users", user.uid));
       
       if (userDoc.exists() && userDoc.data().type === 'restaurant') {
-        localStorage.setItem('isAuthenticated', 'true');
-        localStorage.setItem('userType', 'restaurant');
-        localStorage.setItem('userEmail', email);
-        localStorage.setItem('userId', user.uid);
+        // Utilizziamo safeStorage invece di localStorage per maggiore sicurezza
+        safeStorage.setItem('isAuthenticated', 'true');
+        safeStorage.setItem('userType', 'restaurant');
+        safeStorage.setItem('userEmail', email);
+        safeStorage.setItem('userId', user.uid);
+        
+        // Salviamo specificamente il flag che identifica l'utente come ristoratore
+        safeStorage.setItem('isRestaurantOwner', 'true');
         
         toast.success('Login effettuato con successo!');
         
-        // Reindirizza alla nuova home dei ristoratori
-        navigate('/restaurant-home');
+        // Reindirizza alla dashboard ristoratore
+        navigate('/restaurant-dashboard');
       } else {
         await auth.signOut();
         toast.error('Questo account non è registrato come ristorante');

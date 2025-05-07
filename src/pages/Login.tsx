@@ -29,6 +29,12 @@ const Login = () => {
       safeStorage.setItem('userEmail', email);
       safeStorage.setItem('userId', user.uid);
       
+      // Imposta specificamente il flag che identifica l'utente come cliente quando userType è 'customer'
+      if (userType === 'customer') {
+        safeStorage.setItem('isCustomer', 'true');
+        safeStorage.removeItem('isRestaurantOwner'); // Rimuovi flag ristoratore se presente
+      }
+      
       toast.success("Accesso effettuato con successo");
       
       // Reindirizza in base al tipo di utente
@@ -63,6 +69,15 @@ const Login = () => {
       safeStorage.setItem('userType', userType);
       safeStorage.setItem('userEmail', user.email || '');
       safeStorage.setItem('userId', user.uid);
+      
+      // Imposta specificamente il flag che identifica il tipo di utente
+      if (userType === 'customer') {
+        safeStorage.setItem('isCustomer', 'true');
+        safeStorage.removeItem('isRestaurantOwner'); // Rimuovi flag ristoratore se presente
+      } else {
+        safeStorage.setItem('isRestaurantOwner', 'true');
+        safeStorage.removeItem('isCustomer'); // Rimuovi flag cliente se presente
+      }
       
       toast.success("Accesso con Google effettuato con successo");
       

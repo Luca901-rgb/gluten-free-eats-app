@@ -5,10 +5,12 @@ import { TabProvider } from '@/context/TabContext';
 import { Button } from '@/components/ui/button';
 import { LogOut } from 'lucide-react';
 import { toast } from 'sonner';
-import { auth } from '@/lib/firebase';
+import { auth, db } from '@/lib/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { TableProvider } from '@/context/TableContext';
 import { BookingProvider } from '@/context/BookingContext';
+import { doc, getDoc } from 'firebase/firestore';
+import safeStorage from '@/lib/safeStorage';
 
 import RestaurantLayout from '@/components/Restaurant/RestaurantLayout';
 import DashboardHeader from '@/components/Restaurant/DashboardHeader';
@@ -21,6 +23,7 @@ const RestaurantDashboard = () => {
   const [user] = useAuthState(auth);
   const [searchParams] = useSearchParams();
   const [loading, setIsLoading] = useState(true);
+  const [isCorrectUser, setIsCorrectUser] = useState(false);
   
   // Dati del ristorante predefiniti
   const restaurantData = {
@@ -43,18 +46,43 @@ const RestaurantDashboard = () => {
   useEffect(() => {
     console.log("RestaurantDashboard: Inizializzazione con tab", initialTab);
     
-    // Simuliamo il caricamento
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 800);
-    
-    // Verifica se l'utente ha completato la registrazione
-    const checkRegistrationStatus = () => {
+    const checkUserType = async () => {
       try {
-        // Qui dovresti verificare se l'utente ha completato tutti gli step
-        // Per ora, usiamo localStorage come esempio
+        // Verifica se l'utente è autenticato
+        if (!user) {
+          console.log("Nessun utente autenticato, reindirizzamento al login");
+          toast.error("Accesso richiesto");
+          navigate('/restaurant-login');
+          return;
+        }
+        
+        // Verifica se l'utente è un ristoratore
+        const isRestaurantOwner = safeStorage.getItem('isRestaurantOwner') === 'true';
+        const userType = safeStorage.getItem('userType');
+        
+        if (!isRestaurantOwner && userType !== 'restaurant') {
+          console.log("Utente non autorizzato: non è un ristoratore");
+          
+          // Verificare direttamente su Firestore il tipo di utente
+          const userDoc = await getDoc(doc(db, "users", user.uid));
+          if (userDoc.exists() && userDoc.data().type === 'restaurant') {
+            // Aggiorna il flag correttamente
+            safeStorage.setItem('isRestaurantOwner', 'true');
+            safeStorage.setItem('userType', 'restaurant');
+            setIsCorrectUser(true);
+          } else {
+            // Reindirizza l'utente alla home cliente
+            toast.error("Non hai i permessi per accedere alla dashboard ristoratore");
+            navigate('/home');
+            return;
+          }
+        } else {
+          setIsCorrectUser(true);
+        }
+        
+        // Verifica se l'utente ha completato la registrazione
         const regData = localStorage.getItem('restaurantRegistrationData') || 
-                      localStorage.getItem('restaurantInfo');
+                        localStorage.getItem('restaurantInfo');
         
         console.log("Dati di registrazione trovati:", regData ? "sì" : "no");
         
@@ -72,23 +100,30 @@ const RestaurantDashboard = () => {
           }, 500);
         }
       } catch (error) {
-        console.error("Errore durante il controllo dello stato di registrazione:", error);
+        console.error("Errore durante il controllo dello stato utente:", error);
         // In caso di errore, mostriamo comunque la dashboard per evitare che l'utente rimanga bloccato
+        setIsCorrectUser(true);
         setHasCompletedRegistration(true);
+      } finally {
+        setIsLoading(false);
       }
     };
     
-    checkRegistrationStatus();
+    // Simuliamo il caricamento
+    const timer = setTimeout(() => {
+      checkUserType();
+    }, 800);
     
     return () => clearTimeout(timer);
-  }, [navigate, initialTab]);
+  }, [navigate, initialTab, user]);
 
   const handleLogout = () => {
     try {
-      localStorage.removeItem('isAuthenticated');
-      localStorage.removeItem('userType');
-      localStorage.removeItem('userEmail');
-      localStorage.removeItem('userId');
+      safeStorage.removeItem('isAuthenticated');
+      safeStorage.removeItem('userType'); 
+      safeStorage.removeItem('userEmail');
+      safeStorage.removeItem('userId');
+      safeStorage.removeItem('isRestaurantOwner');
       
       auth.signOut()
         .then(() => {
@@ -106,6 +141,11 @@ const RestaurantDashboard = () => {
   // Se stiamo ancora caricando, mostra lo schermo di caricamento
   if (loading) {
     return <LoadingScreen message="Caricamento dashboard..." timeout={2000} />;
+  }
+
+  // Se l'utente non è un ristoratore, non mostriamo nulla mentre viene effettuato il redirect
+  if (!isCorrectUser) {
+    return <LoadingScreen message="Verifica permessi..." timeout={2000} />;
   }
 
   // Se la registrazione non è completa, non mostriamo nulla mentre viene effettuato il redirect

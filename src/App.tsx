@@ -20,6 +20,7 @@ import BookingsPage from './pages/BookingsPage';
 import ProfilePage from './pages/ProfilePage';
 import FavoritesPage from './pages/FavoritesPage';
 import LoadingScreen from './components/LoadingScreen';
+import safeStorage from './lib/safeStorage';
 
 // Componente per reindirizzare gli utenti ristoratore alla dashboard
 const RestaurantRedirect = () => {
@@ -36,6 +37,32 @@ const RestaurantRedirect = () => {
   }, [navigate]);
   
   return <LoadingScreen message="Reindirizzamento..." timeout={2000} />;
+};
+
+// Componente per controllare il tipo di utente e reindirizzare di conseguenza
+const UserTypeRedirect = () => {
+  const navigate = useNavigate();
+  
+  useEffect(() => {
+    const isAuthenticated = safeStorage.getItem('isAuthenticated') === 'true';
+    const userType = safeStorage.getItem('userType');
+    const isRestaurantOwner = safeStorage.getItem('isRestaurantOwner') === 'true';
+    
+    setTimeout(() => {
+      if (!isAuthenticated) {
+        navigate('/login');
+        return;
+      }
+      
+      if (isRestaurantOwner || userType === 'restaurant') {
+        navigate('/restaurant-dashboard');
+      } else {
+        navigate('/home');
+      }
+    }, 100);
+  }, [navigate]);
+  
+  return <LoadingScreen message="Reindirizzamento in corso..." timeout={2000} />;
 };
 
 // Configurazione migliorata del query client con gestione offline
@@ -58,8 +85,8 @@ const queryClient = new QueryClient({
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
-  const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
-  const userType = localStorage.getItem('userType') || 'customer';
+  const isAuthenticated = safeStorage.getItem('isAuthenticated') === 'true';
+  const userType = safeStorage.getItem('userType') || 'customer';
   const [initComplete, setInitComplete] = useState(false);
 
   // Aggiungiamo un breve delay iniziale per garantire che localStorage sia caricato
@@ -86,6 +113,7 @@ function App() {
     console.log("Page view:", window.location.pathname);
     console.log("User type:", userType);
     console.log("Is authenticated:", isAuthenticated);
+    console.log("Is restaurant owner:", safeStorage.getItem('isRestaurantOwner') === 'true');
     console.log("Network status:", navigator.onLine ? "online" : "offline");
   }, [userType, isAuthenticated]);
 
@@ -131,6 +159,9 @@ function App() {
           <Route path="/restaurant-dashboard/*" element={<RestaurantDashboard />} />
           <Route path="/restaurants/dashboard" element={<RestaurantRedirect />} />
           <Route path="/restaurant/dashboard" element={<RestaurantRedirect />} />
+          
+          {/* Rotta di reindirizzamento in base al tipo di utente */}
+          <Route path="/user-redirect" element={<UserTypeRedirect />} />
           
           {/* Pagina 404 */}
           <Route path="*" element={<NotFound />} />
