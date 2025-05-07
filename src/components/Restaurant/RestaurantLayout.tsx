@@ -2,6 +2,7 @@
 import React, { ReactNode, useState, useEffect } from 'react';
 import RestaurantNavBar from './RestaurantNavBar';
 import { Loader } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface RestaurantLayoutProps {
   children: ReactNode;
@@ -9,51 +10,48 @@ interface RestaurantLayoutProps {
 
 const RestaurantLayout: React.FC<RestaurantLayoutProps> = ({ children }) => {
   const [isVisible, setIsVisible] = useState(false);
-  const [renderError, setRenderError] = useState<Error | null>(null);
+  const [hasError, setHasError] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  // Garantiamo che il layout sia sempre visibile dopo un breve timeout
+  // Log per debug
   useEffect(() => {
+    console.log("RestaurantLayout mounted");
+    
+    // Garantiamo che il layout sia sempre visibile dopo un breve timeout
     const timer = setTimeout(() => {
+      console.log("Setting visibility to true");
       setIsVisible(true);
+      setIsInitialized(true);
     }, 300);
+    
+    // Fallback per garantire che l'UI sia sempre visibile
+    const fallbackTimer = setTimeout(() => {
+      if (!isVisible) {
+        console.log("Force visibility via fallback");
+        setIsVisible(true);
+        setIsInitialized(true);
+      }
+    }, 1500);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(fallbackTimer);
+    };
   }, []);
 
-  // Cattura errori di rendering per evitare schermo vuoto
-  try {
-    return (
-      <div className="flex flex-col min-h-screen w-full bg-white overflow-hidden">
-        {!isVisible && (
-          <div className="fixed inset-0 flex items-center justify-center bg-white">
-            <Loader className="w-10 h-10 text-primary animate-spin" />
-            <p className="ml-2 text-gray-600">Caricamento dashboard...</p>
-          </div>
-        )}
-        <div className={`flex-1 overflow-y-auto pb-16 w-full ${isVisible ? 'block' : 'opacity-0'}`}>
-          {renderError ? (
-            <div className="p-6 text-center">
-              <h2 className="text-lg font-medium text-red-600 mb-2">Si è verificato un errore</h2>
-              <p className="text-gray-600 mb-4">Impossibile caricare il contenuto della dashboard</p>
-              <button 
-                className="px-4 py-2 bg-primary text-white rounded-md"
-                onClick={() => window.location.reload()}
-              >
-                Riprova
-              </button>
-            </div>
-          ) : (
-            children
-          )}
-        </div>
-        <RestaurantNavBar />
-      </div>
-    );
-  } catch (error) {
-    // In caso di errore nel rendering, mostra un messaggio di fallback
-    console.error("Errore nel rendering del layout:", error);
-    setRenderError(error instanceof Error ? error : new Error("Errore sconosciuto"));
-    
+  // Handler per errori globali di rendering
+  useEffect(() => {
+    const handleError = (event: ErrorEvent) => {
+      console.error("Caught global error:", event.error);
+      setHasError(true);
+      toast.error("Si è verificato un errore. Ricarica la pagina.");
+    };
+
+    window.addEventListener('error', handleError);
+    return () => window.removeEventListener('error', handleError);
+  }, []);
+
+  if (hasError) {
     return (
       <div className="flex flex-col min-h-screen w-full bg-white p-4">
         <div className="flex-1 flex items-center justify-center">
@@ -61,7 +59,7 @@ const RestaurantLayout: React.FC<RestaurantLayoutProps> = ({ children }) => {
             <h2 className="text-xl font-semibold text-red-600 mb-2">Impossibile caricare la dashboard</h2>
             <p className="text-gray-600 mb-4">Si è verificato un errore durante il caricamento.</p>
             <button 
-              className="px-4 py-2 bg-primary text-white rounded-md"
+              className="px-4 py-2 bg-green-500 text-white rounded-md"
               onClick={() => window.location.reload()}
             >
               Ricarica pagina
@@ -72,6 +70,32 @@ const RestaurantLayout: React.FC<RestaurantLayoutProps> = ({ children }) => {
       </div>
     );
   }
+
+  // Renderizza un fallback se il layout non è ancora inizializzato
+  if (!isInitialized) {
+    return (
+      <div className="fixed inset-0 flex flex-col items-center justify-center bg-white">
+        <Loader className="w-10 h-10 text-green-500 animate-spin" />
+        <p className="mt-4 text-gray-600">Inizializzazione dashboard...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col min-h-screen w-full bg-white overflow-hidden">
+      {!isVisible ? (
+        <div className="fixed inset-0 flex items-center justify-center bg-white">
+          <Loader className="w-10 h-10 text-green-500 animate-spin" />
+          <p className="ml-2 text-gray-600">Caricamento dashboard...</p>
+        </div>
+      ) : (
+        <div className="flex-1 overflow-y-auto pb-16 w-full">
+          {children}
+        </div>
+      )}
+      <RestaurantNavBar />
+    </div>
+  );
 };
 
 export default RestaurantLayout;

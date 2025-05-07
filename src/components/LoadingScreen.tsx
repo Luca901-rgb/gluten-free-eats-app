@@ -11,22 +11,26 @@ interface LoadingScreenProps {
 
 const LoadingScreen: React.FC<LoadingScreenProps> = ({ 
   message = 'Caricamento...', 
-  timeout = 5000,
+  timeout = 3000,
   onRetry
 }) => {
   const [showTimeout, setShowTimeout] = useState(false);
   const [showError, setShowError] = useState(false);
   
   useEffect(() => {
-    // Show timeout message faster (after 1.5 seconds)
-    const timeoutTimer = setTimeout(() => {
-      setShowTimeout(true);
-    }, 1500);
+    console.log("LoadingScreen mounted");
     
-    // Show error message after 3 seconds
+    // Show timeout message after 1 second
+    const timeoutTimer = setTimeout(() => {
+      console.log("LoadingScreen: showing timeout message");
+      setShowTimeout(true);
+    }, 1000);
+    
+    // Show error/retry after 2 seconds
     const errorTimer = setTimeout(() => {
+      console.log("LoadingScreen: showing error/retry option");
       setShowError(true);
-    }, 3000);
+    }, 2000);
     
     return () => {
       clearTimeout(timeoutTimer);
@@ -35,6 +39,7 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
   }, []);
 
   const handleRetry = () => {
+    console.log("LoadingScreen: retry clicked");
     if (onRetry) {
       onRetry();
       setShowTimeout(false);
@@ -48,7 +53,7 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] bg-white p-4">
       <div className="w-16 h-16 flex items-center justify-center">
-        <Loader className="w-12 h-12 text-primary animate-spin" />
+        <Loader className="w-12 h-12 text-green-500 animate-spin" />
       </div>
       <p className="mt-4 text-lg text-gray-600">{message}</p>
       

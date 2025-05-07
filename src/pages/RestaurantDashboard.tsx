@@ -19,26 +19,42 @@ import LoadingScreen from '@/components/LoadingScreen';
 const RestaurantDashboard = () => {
   const [user] = useAuthState(auth);
   const [searchParams] = useSearchParams();
-  // Impostiamo direttamente i dati predefiniti all'inizio
-  const [restaurantData] = useState({
+  
+  // Dati del ristorante predefiniti
+  const restaurantData = {
     id: '1',
     name: 'Keccakè',
     address: 'Via Toledo 42, Napoli, 80132',
     rating: 4.7,
     totalReviews: 128,
     coverImage: '/placeholder.svg'
-  });
+  };
   
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
   
-  // Impostiamo un timeout molto breve per completare il caricamento
+  // Timeouts più brevi per evitare schermo vuoto
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 500);
+    console.log("RestaurantDashboard component mounted");
     
-    return () => clearTimeout(timer);
+    // Mostriamo immediatamente il contenuto
+    const timer = setTimeout(() => {
+      console.log("Setting isLoading to false");
+      setIsLoading(false);
+    }, 200);
+    
+    // Fallback se qualcosa va storto
+    const fallbackTimer = setTimeout(() => {
+      if (isLoading) {
+        console.log("Force loading complete via fallback");
+        setIsLoading(false);
+      }
+    }, 1000);
+    
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(fallbackTimer);
+    };
   }, []);
   
   const handleLogout = () => {
@@ -66,17 +82,20 @@ const RestaurantDashboard = () => {
   // Ottieni la tab iniziale dall'URL o usa 'home' come default
   const initialTab = searchParams.get('tab') || 'home';
 
+  // Rendiamo la UI immediatamente disponibile con un approccio progressivo
   return (
     <RestaurantLayout>
       <div className="bg-amber-50/50 p-4 text-center font-medium text-amber-800 border-b border-amber-200">
         Questa è l'interfaccia dedicata al ristoratore per gestire la propria attività
       </div>
+      
       <div className="flex justify-end p-2 bg-white border-b">
         <Button variant="outline" size="sm" onClick={handleLogout} className="flex items-center gap-1.5">
           <LogOut size={16} />
           <span>Esci</span>
         </Button>
       </div>
+      
       <TableProvider>
         <BookingProvider>
           <TabProvider defaultTab={initialTab}>
