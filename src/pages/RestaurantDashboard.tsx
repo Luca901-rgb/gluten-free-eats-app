@@ -19,6 +19,21 @@ import DashboardContent from '@/components/Restaurant/DashboardContent';
 import { Skeleton } from '@/components/ui/skeleton';
 import LoadingScreen from '@/components/LoadingScreen';
 
+// Define the OpeningHours type to match the expected structure
+interface OpeningHoursShift {
+  from: string;
+  to: string;
+}
+
+interface OpeningHoursDay {
+  open: boolean;
+  shifts: OpeningHoursShift[];
+}
+
+interface OpeningHours {
+  [key: string]: OpeningHoursDay;
+}
+
 const RestaurantDashboard = () => {
   const [user] = useAuthState(auth);
   const [searchParams] = useSearchParams();
@@ -74,10 +89,14 @@ const RestaurantDashboard = () => {
             // Utilizziamo i dati di orari di apertura se disponibili
             openingHours: Object.entries(parsed.operations?.openingHours || {}).map(([day, data]) => {
               const dayName = day.charAt(0).toUpperCase() + day.slice(1);
-              if (!data.open) return { days: dayName, hours: 'Chiuso' };
               
-              const shifts = data.shifts
-                .map((shift: {from: string, to: string}) => `${shift.from}-${shift.to}`)
+              // Use type assertion to safely handle the data
+              const dayData = data as OpeningHoursDay;
+              
+              if (!dayData.open) return { days: dayName, hours: 'Chiuso' };
+              
+              const shifts = dayData.shifts
+                .map((shift: OpeningHoursShift) => `${shift.from}-${shift.to}`)
                 .join(', ');
                 
               return { days: dayName, hours: shifts };
