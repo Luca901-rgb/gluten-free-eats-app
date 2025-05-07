@@ -14,7 +14,7 @@ import RestaurantLayout from '@/components/Restaurant/RestaurantLayout';
 import DashboardHeader from '@/components/Restaurant/DashboardHeader';
 import DashboardNavigation from '@/components/Restaurant/DashboardNavigation';
 import DashboardContent from '@/components/Restaurant/DashboardContent';
-import LoadingScreen from '@/components/LoadingScreen';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const RestaurantDashboard = () => {
   const [user] = useAuthState(auth);
@@ -30,32 +30,11 @@ const RestaurantDashboard = () => {
     coverImage: '/placeholder.svg'
   };
   
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false); // Iniziamo senza stato di loading
   const navigate = useNavigate();
   
-  // Timeouts più brevi per evitare schermo vuoto
-  useEffect(() => {
-    console.log("RestaurantDashboard component mounted");
-    
-    // Mostriamo immediatamente il contenuto
-    const timer = setTimeout(() => {
-      console.log("Setting isLoading to false");
-      setIsLoading(false);
-    }, 200);
-    
-    // Fallback se qualcosa va storto
-    const fallbackTimer = setTimeout(() => {
-      if (isLoading) {
-        console.log("Force loading complete via fallback");
-        setIsLoading(false);
-      }
-    }, 1000);
-    
-    return () => {
-      clearTimeout(timer);
-      clearTimeout(fallbackTimer);
-    };
-  }, []);
+  // Ottieni la tab iniziale dall'URL o usa 'home' come default
+  const initialTab = searchParams.get('tab') || 'home';
   
   const handleLogout = () => {
     try {
@@ -70,19 +49,14 @@ const RestaurantDashboard = () => {
           navigate('/');
         })
         .catch(() => {
-          // Force navigation even on error
           navigate('/');
         });
     } catch {
-      // Ensure navigation happens even if there's an error
       navigate('/');
     }
   };
 
-  // Ottieni la tab iniziale dall'URL o usa 'home' come default
-  const initialTab = searchParams.get('tab') || 'home';
-
-  // Rendiamo la UI immediatamente disponibile con un approccio progressivo
+  // Rendiamo la UI immediatamente disponibile
   return (
     <RestaurantLayout>
       <div className="bg-amber-50/50 p-4 text-center font-medium text-amber-800 border-b border-amber-200">
@@ -100,22 +74,12 @@ const RestaurantDashboard = () => {
         <BookingProvider>
           <TabProvider defaultTab={initialTab}>
             <div className="relative">
-              {isLoading ? (
-                <LoadingScreen 
-                  message="Caricamento dashboard..." 
-                  timeout={1000}
-                  onRetry={() => window.location.reload()}
-                />
-              ) : (
-                <>
-                  <DashboardHeader restaurantData={restaurantData} />
-                  <DashboardNavigation isRestaurantOwner={true} />
-                  <DashboardContent 
-                    restaurantData={restaurantData} 
-                    isRestaurantOwner={true} 
-                  />
-                </>
-              )}
+              <DashboardHeader restaurantData={restaurantData} />
+              <DashboardNavigation isRestaurantOwner={true} />
+              <DashboardContent 
+                restaurantData={restaurantData} 
+                isRestaurantOwner={true} 
+              />
             </div>
           </TabProvider>
         </BookingProvider>

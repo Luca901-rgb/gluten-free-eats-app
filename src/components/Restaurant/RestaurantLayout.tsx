@@ -3,39 +3,30 @@ import React, { ReactNode, useState, useEffect } from 'react';
 import RestaurantNavBar from './RestaurantNavBar';
 import { Loader } from 'lucide-react';
 import { toast } from 'sonner';
+import LoadingScreen from '../LoadingScreen';
 
 interface RestaurantLayoutProps {
   children: ReactNode;
 }
 
 const RestaurantLayout: React.FC<RestaurantLayoutProps> = ({ children }) => {
-  const [isVisible, setIsVisible] = useState(false);
+  const [isVisible, setIsVisible] = useState(true); // Impostiamo subito come visibile
   const [hasError, setHasError] = useState(false);
-  const [isInitialized, setIsInitialized] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(true); // Già inizializzato
 
   // Log per debug
   useEffect(() => {
     console.log("RestaurantLayout mounted");
     
-    // Garantiamo che il layout sia sempre visibile dopo un breve timeout
+    // Garantiamo che il layout sia sempre visibile
     const timer = setTimeout(() => {
       console.log("Setting visibility to true");
       setIsVisible(true);
       setIsInitialized(true);
-    }, 300);
+    }, 100); // Tempo ridotto drasticamente
     
-    // Fallback per garantire che l'UI sia sempre visibile
-    const fallbackTimer = setTimeout(() => {
-      if (!isVisible) {
-        console.log("Force visibility via fallback");
-        setIsVisible(true);
-        setIsInitialized(true);
-      }
-    }, 1500);
-
     return () => {
       clearTimeout(timer);
-      clearTimeout(fallbackTimer);
     };
   }, []);
 
@@ -71,28 +62,11 @@ const RestaurantLayout: React.FC<RestaurantLayoutProps> = ({ children }) => {
     );
   }
 
-  // Renderizza un fallback se il layout non è ancora inizializzato
-  if (!isInitialized) {
-    return (
-      <div className="fixed inset-0 flex flex-col items-center justify-center bg-white">
-        <Loader className="w-10 h-10 text-green-500 animate-spin" />
-        <p className="mt-4 text-gray-600">Inizializzazione dashboard...</p>
-      </div>
-    );
-  }
-
   return (
     <div className="flex flex-col min-h-screen w-full bg-white overflow-hidden">
-      {!isVisible ? (
-        <div className="fixed inset-0 flex items-center justify-center bg-white">
-          <Loader className="w-10 h-10 text-green-500 animate-spin" />
-          <p className="ml-2 text-gray-600">Caricamento dashboard...</p>
-        </div>
-      ) : (
-        <div className="flex-1 overflow-y-auto pb-16 w-full">
-          {children}
-        </div>
-      )}
+      <div className="flex-1 overflow-y-auto pb-16 w-full">
+        {children}
+      </div>
       <RestaurantNavBar />
     </div>
   );
