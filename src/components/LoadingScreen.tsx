@@ -11,28 +11,28 @@ interface LoadingScreenProps {
 
 const LoadingScreen: React.FC<LoadingScreenProps> = ({ 
   message = 'Caricamento...', 
-  timeout = 15000,
+  timeout = 5000,
   onRetry
 }) => {
   const [showTimeout, setShowTimeout] = useState(false);
   const [showError, setShowError] = useState(false);
   
   useEffect(() => {
-    // Show timeout message after specified time
+    // Show timeout message faster (after 1.5 seconds)
     const timeoutTimer = setTimeout(() => {
       setShowTimeout(true);
-    }, Math.min(timeout, 2000)); // Riduciamo il timeout per evitare attese troppo lunghe
+    }, 1500);
     
-    // Show error message after double the timeout
+    // Show error message after 3 seconds
     const errorTimer = setTimeout(() => {
       setShowError(true);
-    }, Math.min(timeout * 1.5, 3000)); // Riduciamo ulteriormente
+    }, 3000);
     
     return () => {
       clearTimeout(timeoutTimer);
       clearTimeout(errorTimer);
     };
-  }, [timeout]);
+  }, []);
 
   const handleRetry = () => {
     if (onRetry) {
@@ -46,7 +46,7 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] bg-white">
+    <div className="flex flex-col items-center justify-center min-h-[60vh] bg-white p-4">
       <div className="w-16 h-16 flex items-center justify-center">
         <Loader className="w-12 h-12 text-primary animate-spin" />
       </div>
@@ -56,7 +56,7 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
         <div className="mt-6 max-w-xs text-center">
           <p className="text-sm text-amber-600">
             Il caricamento sta richiedendo più tempo del previsto. 
-            {showError && "Potrebbe esserci un problema di connessione."}
+            {showError && " Potrebbe esserci un problema di connessione."}
           </p>
           
           {showError && (
