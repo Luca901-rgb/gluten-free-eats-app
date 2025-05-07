@@ -21,12 +21,12 @@ const LoadingScreen: React.FC<LoadingScreenProps> = ({
     // Show timeout message after specified time
     const timeoutTimer = setTimeout(() => {
       setShowTimeout(true);
-    }, timeout);
+    }, Math.min(timeout, 2000)); // Riduciamo il timeout per evitare attese troppo lunghe
     
     // Show error message after double the timeout
     const errorTimer = setTimeout(() => {
       setShowError(true);
-    }, timeout * 2);
+    }, Math.min(timeout * 1.5, 3000)); // Riduciamo ulteriormente
     
     return () => {
       clearTimeout(timeoutTimer);

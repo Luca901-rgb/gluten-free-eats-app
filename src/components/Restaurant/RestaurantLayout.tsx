@@ -8,7 +8,7 @@ interface RestaurantLayoutProps {
 
 const RestaurantLayout: React.FC<RestaurantLayoutProps> = ({ children }) => {
   return (
-    <div className="flex flex-col min-h-screen w-full bg-[#f0f9f1] overflow-hidden">
+    <div className="flex flex-col min-h-screen w-full bg-white overflow-hidden">
       <div className="flex-1 overflow-y-auto pb-16 w-full">
         {children}
       </div>
