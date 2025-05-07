@@ -40,7 +40,7 @@ const RestaurantDashboard = () => {
         console.log("Timeout di caricamento raggiunto, mostrando i dati predefiniti");
         setIsLoading(false);
       }
-    }, 6000); // Ridotto da 8000 a 6000ms
+    }, 3000); // Ridotto da 6000 a 3000ms per risolvere la pagina verde vuota
     
     return () => clearTimeout(timer);
   }, [isLoading]);
@@ -65,7 +65,7 @@ const RestaurantDashboard = () => {
         console.log("Nessun utente autenticato trovato, utilizzo dati predefiniti");
         setTimeout(() => {
           setIsLoading(false);
-        }, 800);
+        }, 500); // Ridotto a 500ms
         return;
       }
 
@@ -111,7 +111,10 @@ const RestaurantDashboard = () => {
     // Carica i dati solo quando lo stato di autenticazione è determinato
     if (!loading) {
       setAuthInitialized(true);
-      loadRestaurantData();
+      // Aggiungiamo un piccolo ritardo per evitare problemi di timing
+      setTimeout(() => {
+        loadRestaurantData();
+      }, 300);
     }
   }, [user, loading]);
 
@@ -120,10 +123,10 @@ const RestaurantDashboard = () => {
     const timer = setTimeout(() => {
       if (!authInitialized) {
         console.log("Timeout di autenticazione raggiunto, mostrando area predefinita");
-        setIsLoading(false);
         setAuthInitialized(true);
+        setIsLoading(false);
       }
-    }, 3000); // Ridotto da 5000 a 3000ms
+    }, 2000); // Ridotto da 3000 a 2000ms
     
     return () => clearTimeout(timer);
   }, [authInitialized]);
@@ -138,7 +141,7 @@ const RestaurantDashboard = () => {
       setTimeout(() => {
         toast.error("Accesso riservato ai ristoratori");
         navigate('/restaurant-login');
-      }, 500);
+      }, 300);
     }
   }, [user, loading, navigate, authInitialized]);
 
@@ -169,7 +172,7 @@ const RestaurantDashboard = () => {
       <RestaurantLayout>
         <LoadingScreen 
           message="Verifica credenziali..." 
-          timeout={4000} 
+          timeout={3000} 
           onRetry={handleRetry}
         />
       </RestaurantLayout>
@@ -193,23 +196,6 @@ const RestaurantDashboard = () => {
             </Button>
           </div>
         </div>
-      </RestaurantLayout>
-    );
-  }
-
-  // Anche se ancora in caricamento, dopo un certo timeout mostriamo comunque l'interfaccia
-  // con i dati predefiniti per evitare pagina verde vuota
-  if (isLoading) {
-    return (
-      <RestaurantLayout>
-        <div className="bg-amber-50/50 p-4 text-center font-medium text-amber-800 border-b border-amber-200">
-          Questa è l'interfaccia dedicata al ristoratore per gestire la propria attività
-        </div>
-        <LoadingScreen 
-          message="Caricamento della dashboard..."
-          timeout={3000}
-          onRetry={handleRetry}
-        />
       </RestaurantLayout>
     );
   }
