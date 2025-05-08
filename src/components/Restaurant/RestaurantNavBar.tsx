@@ -2,7 +2,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTab } from '@/context/TabContext';
-import { Home, Book, Calendar, Settings, Users, Menu, Database } from 'lucide-react';
+import { Home, Book, Calendar, Settings, Users, Menu, Database, Star, FileText, PieChart } from 'lucide-react';
 import safeStorage from '@/lib/safeStorage';
 
 const RestaurantNavBar = () => {
@@ -35,6 +35,9 @@ const RestaurantNavBar = () => {
     { id: 'bookings', label: 'Prenotazioni', icon: Book },
     { id: 'tables', label: 'Tavoli', icon: Calendar },
     { id: 'clients', label: 'Clienti', icon: Users },
+    { id: 'reviews', label: 'Recensioni', icon: Star },
+    { id: 'offers', label: 'Offerte', icon: FileText },
+    { id: 'profile', label: 'Profilo', icon: PieChart },
     { id: 'settings', label: 'Impostazioni', icon: Settings }
   ];
 

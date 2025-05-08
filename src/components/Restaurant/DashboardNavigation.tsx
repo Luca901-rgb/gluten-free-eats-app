@@ -2,7 +2,8 @@
 import React, { useRef } from 'react';
 import { 
   Home, Menu, Video, Image as ImageIcon, 
-  CalendarRange, Star, Table, Wheat, UtensilsCrossed, Settings, Users
+  CalendarRange, Star, Table, Settings, Users,
+  FileText, PieChart
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { 
@@ -54,6 +55,9 @@ const DashboardNavigation = ({ isRestaurantOwner = false }: DashboardNavigationP
     { id: 'tables', label: 'Tavoli', icon: <Table className="w-4 h-4" /> },
     { id: 'bookings', label: 'Prenotazioni', icon: <CalendarRange className="w-4 h-4" /> },
     { id: 'clients', label: 'Clienti', icon: <Users className="w-4 h-4" /> },
+    { id: 'reviews', label: 'Recensioni', icon: <Star className="w-4 h-4" /> },
+    { id: 'offers', label: 'Offerte', icon: <FileText className="w-4 h-4" /> },
+    { id: 'profile', label: 'Profilo', icon: <PieChart className="w-4 h-4" /> },
     { id: 'settings', label: 'Impostazioni', icon: <Settings className="w-4 h-4" /> },
   ];
 

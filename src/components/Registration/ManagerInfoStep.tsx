@@ -1,179 +1,162 @@
 
 import React from 'react';
 import { useFormContext } from 'react-hook-form';
-import { Eye, EyeOff, User, Mail, Phone, Lock } from 'lucide-react';
-
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
-import { getErrorMessage, getNestedError } from '@/utils/formErrorUtils';
+import {
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { RestaurantRegistrationForm } from '@/types/restaurantRegistration';
+import { Eye, EyeOff } from 'lucide-react';
 
 const ManagerInfoStep = () => {
-  const { register, formState: { errors }, setValue, watch } = useFormContext();
+  const { control, register, watch, formState: { errors } } = useFormContext<RestaurantRegistrationForm>();
   const [showPassword, setShowPassword] = React.useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
   
-  const acceptTerms = watch('manager.acceptTerms');
-
-  // Handle checkbox change properly
-  const handleCheckboxChange = (checked: boolean) => {
-    setValue('manager.acceptTerms', checked, { shouldValidate: true });
-  };
+  // Controlla se le password corrispondono
+  const password = watch('manager.password');
+  const confirmPassword = watch('manager.confirmPassword');
+  const passwordsMatch = !confirmPassword || password === confirmPassword;
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-medium">Informazioni Account Gestore</h3>
-        <p className="text-sm text-gray-500">
-          Inserisci le informazioni personali del titolare o gestore del ristorante.
+    <div className="space-y-4">
+      <div className="bg-blue-50 p-4 rounded-md mb-6">
+        <h3 className="text-blue-700 font-medium mb-2">Informazioni personali</h3>
+        <p className="text-blue-600 text-sm">
+          Inserisci i tuoi dati personali per la registrazione come gestore del ristorante.
+          Questi dati saranno utilizzati solo per la gestione del tuo account.
         </p>
       </div>
-
-      <div className="grid grid-cols-1 gap-6">
-        <div className="space-y-2">
-          <Label htmlFor="manager.name">Nome e Cognome *</Label>
-          <div className="relative">
-            <Input
-              id="manager.name"
-              placeholder="Nome e Cognome"
-              className="pl-10"
-              {...register('manager.name', { required: "Campo obbligatorio" })}
-            />
-            <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={18} />
-          </div>
-          {getNestedError(errors, 'manager.name') && (
-            <p className="text-sm text-red-500 mt-1">
-              {getErrorMessage(getNestedError(errors, 'manager.name'))}
-            </p>
-          )}
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="manager.email">Email *</Label>
-          <div className="relative">
-            <Input
-              id="manager.email"
-              type="email"
-              placeholder="indirizzo@email.com"
-              className="pl-10"
-              {...register('manager.email', {
-                required: "Campo obbligatorio",
-                pattern: {
-                  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                  message: "Indirizzo email non valido"
-                }
-              })}
-            />
-            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={18} />
-          </div>
-          {getNestedError(errors, 'manager.email') && (
-            <p className="text-sm text-red-500 mt-1">
-              {getErrorMessage(getNestedError(errors, 'manager.email'))}
-            </p>
-          )}
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="manager.phone">Telefono *</Label>
-          <div className="relative">
-            <Input
-              id="manager.phone"
-              placeholder="+39 123 456 7890"
-              className="pl-10"
-              {...register('manager.phone', { required: "Campo obbligatorio" })}
-            />
-            <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={18} />
-          </div>
-          {getNestedError(errors, 'manager.phone') && (
-            <p className="text-sm text-red-500 mt-1">
-              {getErrorMessage(getNestedError(errors, 'manager.phone'))}
-            </p>
-          )}
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="manager.password">Password *</Label>
-          <div className="relative">
-            <Input
-              id="manager.password"
-              type={showPassword ? "text" : "password"}
-              placeholder="••••••••"
-              className="pl-10"
-              {...register('manager.password', {
-                required: "Campo obbligatorio",
-                minLength: {
-                  value: 8,
-                  message: "La password deve essere di almeno 8 caratteri"
-                }
-              })}
-            />
-            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={18} />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
-            >
-              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-            </button>
-          </div>
-          {getNestedError(errors, 'manager.password') && (
-            <p className="text-sm text-red-500 mt-1">
-              {getErrorMessage(getNestedError(errors, 'manager.password'))}
-            </p>
-          )}
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="manager.confirmPassword">Conferma Password *</Label>
-          <div className="relative">
-            <Input
-              id="manager.confirmPassword"
-              type={showConfirmPassword ? "text" : "password"}
-              placeholder="••••••••"
-              className="pl-10"
-              {...register('manager.confirmPassword', {
-                required: "Campo obbligatorio",
-                validate: (value, formValues) => 
-                  value === formValues.manager.password || "Le password non corrispondono"
-              })}
-            />
-            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={18} />
-            <button
-              type="button"
-              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
-            >
-              {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-            </button>
-          </div>
-          {getNestedError(errors, 'manager.confirmPassword') && (
-            <p className="text-sm text-red-500 mt-1">
-              {getErrorMessage(getNestedError(errors, 'manager.confirmPassword'))}
-            </p>
-          )}
-        </div>
-
-        <div className="flex items-center space-x-2">
-          <Checkbox 
-            id="manager.acceptTerms"
-            checked={!!acceptTerms}
-            onCheckedChange={handleCheckboxChange}
-          />
-          <Label
-            htmlFor="manager.acceptTerms"
-            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-            onClick={() => handleCheckboxChange(!acceptTerms)}
-          >
-            Accetto i termini e le condizioni e l'informativa sulla privacy
-          </Label>
-        </div>
-        {getNestedError(errors, 'manager.acceptTerms') && (
-          <p className="text-sm text-red-500">
-            {getErrorMessage(getNestedError(errors, 'manager.acceptTerms'))}
-          </p>
+      
+      <FormField
+        control={control}
+        name="manager.name"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Nome completo</FormLabel>
+            <FormControl>
+              <Input placeholder="Mario Rossi" {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
         )}
-      </div>
+      />
+
+      <FormField
+        control={control}
+        name="manager.email"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Email</FormLabel>
+            <FormControl>
+              <Input type="email" placeholder="esempio@email.com" {...field} />
+            </FormControl>
+            <FormDescription>Utilizzeremo questa email per il tuo account</FormDescription>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={control}
+        name="manager.phone"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Telefono</FormLabel>
+            <FormControl>
+              <Input placeholder="+39 123 456 7890" {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={control}
+        name="manager.password"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Password</FormLabel>
+            <FormControl>
+              <div className="relative">
+                <Input 
+                  type={showPassword ? "text" : "password"} 
+                  placeholder="••••••••" 
+                  {...field} 
+                />
+                <button 
+                  type="button"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={control}
+        name="manager.confirmPassword"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Conferma Password</FormLabel>
+            <FormControl>
+              <div className="relative">
+                <Input 
+                  type={showConfirmPassword ? "text" : "password"} 
+                  placeholder="••••••••" 
+                  {...field}
+                  className={!passwordsMatch ? "border-red-500" : ""}
+                />
+                <button 
+                  type="button"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                >
+                  {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </FormControl>
+            {!passwordsMatch && (
+              <p className="text-sm text-red-500 mt-1">Le password non corrispondono</p>
+            )}
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={control}
+        name="manager.acceptTerms"
+        render={({ field }) => (
+          <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+            <FormControl>
+              <Checkbox
+                checked={field.value}
+                onCheckedChange={field.onChange}
+              />
+            </FormControl>
+            <div className="space-y-1 leading-none">
+              <FormLabel>
+                Accetto i termini e le condizioni
+              </FormLabel>
+              <FormDescription>
+                Acconsento al trattamento dei dati personali secondo la Privacy Policy
+              </FormDescription>
+            </div>
+          </FormItem>
+        )}
+      />
     </div>
   );
 };

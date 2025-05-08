@@ -66,6 +66,28 @@ const UserTypeRedirect = () => {
   return <LoadingScreen message="Reindirizzamento in corso..." timeout={2000} />;
 };
 
+// Auth guard component to redirect to login if not authenticated
+const AuthGuard = ({ children }: { children: React.ReactNode }) => {
+  const navigate = useNavigate();
+  const [isChecking, setIsChecking] = useState(true);
+  
+  useEffect(() => {
+    const isAuthenticated = safeStorage.getItem('isAuthenticated') === 'true';
+    
+    if (!isAuthenticated) {
+      navigate('/login');
+    } else {
+      setIsChecking(false);
+    }
+  }, [navigate]);
+  
+  if (isChecking) {
+    return <LoadingScreen message="Verifica accesso..." timeout={1000} />;
+  }
+  
+  return <>{children}</>;
+};
+
 // Configurazione migliorata del query client con gestione offline
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -89,6 +111,9 @@ function App() {
   const isAuthenticated = safeStorage.getItem('isAuthenticated') === 'true';
   const userType = safeStorage.getItem('userType') || 'customer';
   const [initComplete, setInitComplete] = useState(false);
+
+  // Redirect to login page on app start if not authenticated
+  const initialRoute = isAuthenticated ? (userType === 'restaurant' ? '/restaurant-dashboard' : '/home') : '/login';
 
   // Aggiungiamo un breve delay iniziale per garantire che localStorage sia caricato
   useEffect(() => {
@@ -138,8 +163,10 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Routes>
+          {/* Root redirects to initial route based on auth status */}
+          <Route path="/" element={<Navigate to={initialRoute} />} />
+          
           {/* Rotte pubbliche */}
-          <Route path="/" element={<Index />} />
           <Route path="/home" element={<Index />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/register" element={<Register />} />
@@ -147,18 +174,18 @@ function App() {
           <Route path="/restaurants/:id" element={<RestaurantPage />} />
           <Route path="/restaurant/:id" element={<RestaurantPage />} />
           
-          {/* Rotte per utenti normali */}
-          <Route path="/bookings" element={<BookingsPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/favorites" element={<FavoritesPage />} />
+          {/* Rotte per utenti normali - protette da AuthGuard */}
+          <Route path="/bookings" element={<AuthGuard><BookingsPage /></AuthGuard>} />
+          <Route path="/profile" element={<AuthGuard><ProfilePage /></AuthGuard>} />
+          <Route path="/favorites" element={<AuthGuard><FavoritesPage /></AuthGuard>} />
           
           {/* Rotte per ristoratori */}
           <Route path="/restaurant-register" element={<RestaurantRegister />} />
           <Route path="/restaurant-login" element={<RestaurantLogin />} />
           <Route path="/restaurant-registration" element={<RestaurantRegistrationPage />} />
           <Route path="/restaurant-home" element={<RestaurantHomePage />} />
-          <Route path="/restaurant-dashboard" element={<RestaurantDashboard />} />
-          <Route path="/restaurant-dashboard/*" element={<RestaurantDashboard />} />
+          <Route path="/restaurant-dashboard" element={<AuthGuard><RestaurantDashboard /></AuthGuard>} />
+          <Route path="/restaurant-dashboard/*" element={<AuthGuard><RestaurantDashboard /></AuthGuard>} />
           <Route path="/restaurants/dashboard" element={<RestaurantRedirect />} />
           <Route path="/restaurant/dashboard" element={<RestaurantRedirect />} />
           
