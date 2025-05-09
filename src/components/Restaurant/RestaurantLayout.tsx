@@ -40,7 +40,7 @@ const RestaurantLayout: React.FC<RestaurantLayoutProps> = ({ children }) => {
 
   if (hasError) {
     return (
-      <div className="flex flex-col min-h-screen w-full bg-white p-4">
+      <div className="flex flex-col min-h-screen w-full bg-[#a3e0a8] p-4">
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center p-6 max-w-md">
             <h2 className="text-xl font-semibold text-red-600 mb-2">Impossibile caricare la dashboard</h2>
@@ -59,7 +59,7 @@ const RestaurantLayout: React.FC<RestaurantLayoutProps> = ({ children }) => {
   }
 
   return (
-    <div className="flex flex-col min-h-screen w-full bg-white overflow-hidden">
+    <div className="flex flex-col min-h-screen w-full bg-[#a3e0a8] overflow-hidden">
       <div className="flex-1 overflow-y-auto pb-16 w-full">
         {children}
       </div>
