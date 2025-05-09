@@ -7,6 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { sampleRestaurant } from '@/data/sampleRestaurant';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface RestaurantListProps {
   restaurants: Restaurant[];
@@ -21,6 +22,13 @@ const RestaurantList: React.FC<RestaurantListProps> = ({
   regionStatus,
   onRetry
 }) => {
+  const navigate = useNavigate();
+
+  const handleRestaurantClick = (restaurantId: string) => {
+    console.log("Navigating to restaurant:", restaurantId);
+    navigate(`/restaurant/${restaurantId}`);
+  };
+
   // We always show the sample restaurant, even during loading
   if (isLoading) {
     return (
@@ -29,7 +37,7 @@ const RestaurantList: React.FC<RestaurantListProps> = ({
         <div className="animate-fade-in">
           <RestaurantCard
             restaurant={sampleRestaurant}
-            onClick={() => window.location.href = `/restaurant/${sampleRestaurant.id}`}
+            onClick={() => handleRestaurantClick(sampleRestaurant.id)}
             isHighlighted={true}
           />
         </div>
@@ -59,7 +67,7 @@ const RestaurantList: React.FC<RestaurantListProps> = ({
         <div className="animate-fade-in">
           <RestaurantCard
             restaurant={sampleRestaurant}
-            onClick={() => window.location.href = `/restaurant/${sampleRestaurant.id}`}
+            onClick={() => handleRestaurantClick(sampleRestaurant.id)}
             isHighlighted={true}
           />
         </div>
@@ -96,7 +104,7 @@ const RestaurantList: React.FC<RestaurantListProps> = ({
         <RestaurantCard
           key={sampleRestaurant.id}
           restaurant={sampleRestaurant}
-          onClick={() => window.location.href = `/restaurant/${sampleRestaurant.id}`}
+          onClick={() => handleRestaurantClick(sampleRestaurant.id)}
           isHighlighted={true}
         />
       </div>
@@ -110,7 +118,7 @@ const RestaurantList: React.FC<RestaurantListProps> = ({
               <RestaurantCard
                 key={restaurant.id}
                 restaurant={restaurant}
-                onClick={() => window.location.href = `/restaurant/${restaurant.id}`}
+                onClick={() => handleRestaurantClick(restaurant.id)}
               />
             ))}
           </div>

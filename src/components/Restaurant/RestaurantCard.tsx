@@ -6,6 +6,7 @@ import StarRating from '@/components/common/StarRating';
 import { toast } from 'sonner';
 import { Restaurant } from '@/types/restaurant';
 import { Badge } from '@/components/ui/badge';
+import { useNavigate } from 'react-router-dom';
 
 // Define card props interface that uses the imported Restaurant type
 interface RestaurantCardProps {
@@ -19,14 +20,16 @@ const RestaurantCard: React.FC<RestaurantCardProps> = ({
   onClick,
   isHighlighted = false
 }) => {
+  const navigate = useNavigate();
   const { id, name, image, rating, reviews, cuisine, distance, location, hasGlutenFreeOptions } = restaurant;
 
   const handleCardClick = () => {
+    console.log("Restaurant card clicked for ID:", id);
     if (onClick) {
       onClick();
     } else {
-      // Fallback to traditional navigation
-      window.location.href = `/restaurant/${id}`;
+      // Navigate using react-router
+      navigate(`/restaurant/${id}`);
     }
   };
   

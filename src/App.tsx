@@ -12,6 +12,10 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { auth } from './lib/firebase';
+import SearchPage from './pages/SearchPage';
+import BookingsPage from './pages/BookingsPage';
+import ProfilePage from './pages/UserSettingsPage';
+import RestaurantPage from './pages/RestaurantPage';
 
 function AppContent() {
   const { isLoading, isAuthenticated, userType } = useAuth();
@@ -39,6 +43,9 @@ function AppContent() {
         {/* Rotta per registrazione ristorante */}
         <Route path="/restaurant-registration" element={<RestaurantRegistrationPage />} />
         
+        {/* Rotta per visualizzare un ristorante specifico */}
+        <Route path="/restaurant/:id" element={<RestaurantPage />} />
+        
         {/* Rotta protetta per la dashboard ristorante */}
         <Route 
           path="/restaurant-dashboard/*" 
@@ -49,12 +56,36 @@ function AppContent() {
           } 
         />
         
-        {/* Rotta protetta per la home del cliente */}
+        {/* Rotte protette per i clienti */}
         <Route 
           path="/home" 
           element={
             isAuthenticated && userType === 'customer' ? 
               <ClientHome /> : 
+              <Navigate to="/login" replace />
+          } 
+        />
+        <Route 
+          path="/search" 
+          element={
+            isAuthenticated && userType === 'customer' ? 
+              <SearchPage /> : 
+              <Navigate to="/login" replace />
+          } 
+        />
+        <Route 
+          path="/bookings" 
+          element={
+            isAuthenticated && userType === 'customer' ? 
+              <BookingsPage /> : 
+              <Navigate to="/login" replace />
+          } 
+        />
+        <Route 
+          path="/profile" 
+          element={
+            isAuthenticated && userType === 'customer' ? 
+              <ProfilePage /> : 
               <Navigate to="/login" replace />
           } 
         />
