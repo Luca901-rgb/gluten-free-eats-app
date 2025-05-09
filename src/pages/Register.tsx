@@ -1,9 +1,16 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import Layout from '@/components/Layout';
-import RegisterForm from '@/components/Authentication/RegisterForm';
+import { Button } from '@/components/ui/button';
 
 const Register = () => {
+  const navigate = useNavigate();
+  
+  const handleRedirectToRestaurantRegistration = () => {
+    navigate('/restaurant-registration');
+  };
+
   return (
     <Layout hideNavigation>
       <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12 bg-gradient-to-b from-white to-gray-50">
@@ -14,7 +21,23 @@ const Register = () => {
             Approfitta di tutte le funzionalità senza costi durante questo periodo iniziale.
           </p>
         </div>
-        <RegisterForm />
+        
+        <div className="w-full max-w-md">
+          <Button
+            onClick={handleRedirectToRestaurantRegistration}
+            className="w-full bg-primary hover:bg-primary/90 mb-4"
+          >
+            Registra il tuo ristorante
+          </Button>
+          
+          <Button
+            onClick={() => navigate('/login')}
+            variant="outline"
+            className="w-full"
+          >
+            Accedi
+          </Button>
+        </div>
         
         <div className="mt-8 max-w-2xl w-full">
           <div className="bg-sky-50 border border-sky-100 rounded-lg p-4">
