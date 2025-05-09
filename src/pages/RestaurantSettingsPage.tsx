@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, ArrowLeft, Save, Building, Phone, MapPin, Clock, Mail, User, Globe } from 'lucide-react';
+import { Loader2, ArrowLeft, Save, Building, Phone, MapPin, Clock, Mail, User, Globe, Info } from 'lucide-react';
 import Layout from '@/components/Layout';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
