@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Home from './pages/Home';
@@ -8,11 +9,11 @@ import UserRedirect from './pages/UserRedirect';
 import RestaurantRegistrationPage from './pages/RestaurantRegistrationPage';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { useAuth } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from './lib/firebase';
 
-function App() {
+function AppContent() {
   const { setUser } = useAuth();
   const [loading, setLoading] = useState(true);
 
@@ -42,6 +43,14 @@ function App() {
       </Routes>
       <ToastContainer position="bottom-right" autoClose={5000} hideProgressBar={false} newestOnTop closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
     </BrowserRouter>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }
 
