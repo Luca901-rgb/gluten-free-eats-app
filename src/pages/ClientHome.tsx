@@ -1,15 +1,29 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Search, Wheat } from 'lucide-react';
 import NavigationButtons from '@/components/Home/NavigationButtons';
+import RestaurantList from '@/components/Home/RestaurantList';
+import { useRestaurantList } from '@/hooks/useRestaurantList';
 
 const ClientHome = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const {
+    restaurants,
+    isLoading,
+    regionStatus,
+    refreshRestaurants,
+    retryRegionCheck
+  } = useRestaurantList();
+  
+  // Force loading restaurants when the page opens
+  useEffect(() => {
+    refreshRestaurants();
+  }, [refreshRestaurants]);
   
   const handleSearchClick = () => {
     navigate('/search');
@@ -66,12 +80,12 @@ const ClientHome = () => {
           <div className="space-y-4">
             <h2 className="text-2xl font-bold text-[#38414a]">Ristoranti in evidenza</h2>
             
-            {/* Placeholder for restaurant list */}
-            <div className="bg-white rounded-lg shadow p-4">
-              <p className="text-center text-gray-500">
-                Caricamento ristoranti...
-              </p>
-            </div>
+            <RestaurantList 
+              restaurants={restaurants} 
+              isLoading={isLoading} 
+              regionStatus={regionStatus}
+              onRetry={retryRegionCheck}
+            />
           </div>
         </div>
       </div>

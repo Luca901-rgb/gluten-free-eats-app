@@ -20,7 +20,7 @@ const Layout: React.FC<LayoutProps> = ({ children, hideNavigation = false }) => 
       {!hideNavigation && (
         <nav className="fixed bottom-0 w-full bg-green-500 h-14 flex justify-around items-center z-10 shadow-lg">
           <Link
-            to="/"
+            to="/home"
             className={`flex flex-col items-center text-white px-3 ${location.pathname === '/' || location.pathname === '/home' ? 'opacity-100' : 'opacity-80'}`}
           >
             <Home className="w-5 h-5" />
