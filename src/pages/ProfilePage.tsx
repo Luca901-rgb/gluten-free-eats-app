@@ -6,14 +6,16 @@ import { Button } from '@/components/ui/button';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { logoutUser } from '@/lib/firebase';
 import { toast } from 'sonner';
+import { useAuth } from '@/context/AuthContext';
 
 const ProfilePage = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { userType, logout } = useAuth();
   
   const handleLogout = async () => {
     try {
-      await logoutUser();
+      await logout();
       toast.success("Disconnessione effettuata con successo");
       navigate('/login');
     } catch (error) {
@@ -24,7 +26,8 @@ const ProfilePage = () => {
   // Determina se nascondere il badge basandosi sui parametri URL
   useEffect(() => {
     console.log("ProfilePage montato, location:", location.pathname);
-  }, [location]);
+    console.log("User type:", userType);
+  }, [location, userType]);
   
   return (
     <Layout>
@@ -52,28 +55,63 @@ const ProfilePage = () => {
               </svg>
             </div>
             <div>
-              <h2 className="text-2xl font-bold">Utente</h2>
-              <p className="text-gray-600">luca.cammarota@live.it</p>
+              <h2 className="text-2xl font-bold">{userType === 'restaurant' ? 'Ristoratore' : 'Utente'}</h2>
+              <p className="text-gray-600">{localStorage.getItem('userEmail') || ''}</p>
             </div>
           </div>
         </div>
         
-        {/* Menu items */}
+        {/* Menu items - show different options based on user type */}
         <div className="space-y-4 mx-4">
-          <div className="bg-white rounded-lg p-4 flex items-center shadow-sm">
-            <Settings className="w-6 h-6 mr-4 text-gray-700" />
-            <span className="text-lg">Anagrafica Utente</span>
-          </div>
-          
-          <div className="bg-white rounded-lg p-4 flex items-center shadow-sm">
-            <Shield className="w-6 h-6 mr-4 text-gray-700" />
-            <span className="text-lg">Area amministratore</span>
-          </div>
-          
-          <div className="bg-white rounded-lg p-4 flex items-center shadow-sm" onClick={() => navigate('/favorites')}>
-            <Heart className="w-6 h-6 mr-4 text-gray-700" />
-            <span className="text-lg">I miei preferiti</span>
-          </div>
+          {userType === 'restaurant' ? (
+            // Restaurant owner options
+            <>
+              <div 
+                className="bg-white rounded-lg p-4 flex items-center shadow-sm" 
+                onClick={() => navigate('/restaurant-settings')}
+              >
+                <Settings className="w-6 h-6 mr-4 text-gray-700" />
+                <span className="text-lg">Dati Ristorante</span>
+              </div>
+              
+              <div className="bg-white rounded-lg p-4 flex items-center shadow-sm">
+                <Shield className="w-6 h-6 mr-4 text-gray-700" />
+                <span className="text-lg">Gestione Menu</span>
+              </div>
+              
+              <div 
+                className="bg-white rounded-lg p-4 flex items-center shadow-sm"
+                onClick={() => navigate('/restaurant-dashboard')}
+              >
+                <Settings className="w-6 h-6 mr-4 text-gray-700" />
+                <span className="text-lg">Dashboard Ristorante</span>
+              </div>
+            </>
+          ) : (
+            // Customer options
+            <>
+              <div 
+                className="bg-white rounded-lg p-4 flex items-center shadow-sm"
+                onClick={() => navigate('/user-settings')}
+              >
+                <Settings className="w-6 h-6 mr-4 text-gray-700" />
+                <span className="text-lg">Anagrafica Utente</span>
+              </div>
+              
+              <div className="bg-white rounded-lg p-4 flex items-center shadow-sm">
+                <Shield className="w-6 h-6 mr-4 text-gray-700" />
+                <span className="text-lg">Certificazione Celiachia</span>
+              </div>
+              
+              <div 
+                className="bg-white rounded-lg p-4 flex items-center shadow-sm" 
+                onClick={() => navigate('/favorites')}
+              >
+                <Heart className="w-6 h-6 mr-4 text-gray-700" />
+                <span className="text-lg">I miei preferiti</span>
+              </div>
+            </>
+          )}
         </div>
         
         {/* Logout button */}

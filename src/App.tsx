@@ -14,8 +14,10 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { auth } from './lib/firebase';
 import SearchPage from './pages/SearchPage';
 import BookingsPage from './pages/BookingsPage';
-import ProfilePage from './pages/UserSettingsPage';
+import ProfilePage from './pages/ProfilePage';
 import RestaurantPage from './pages/RestaurantPage';
+import UserSettingsPage from './pages/UserSettingsPage';
+import RestaurantSettingsPage from './pages/RestaurantSettingsPage';
 
 function AppContent() {
   const { isLoading, isAuthenticated, userType } = useAuth();
@@ -45,6 +47,29 @@ function AppContent() {
         
         {/* Rotta per visualizzare un ristorante specifico */}
         <Route path="/restaurant/:id" element={<RestaurantPage />} />
+        
+        {/* Rotte protette condivise */}
+        <Route 
+          path="/profile" 
+          element={
+            isAuthenticated ? <ProfilePage /> : <Navigate to="/login" replace />
+          } 
+        />
+        
+        {/* Rotte specifiche per impostazioni */}
+        <Route 
+          path="/user-settings" 
+          element={
+            isAuthenticated && userType === 'customer' ? <UserSettingsPage /> : <Navigate to="/login" replace />
+          } 
+        />
+        
+        <Route 
+          path="/restaurant-settings" 
+          element={
+            isAuthenticated && userType === 'restaurant' ? <RestaurantSettingsPage /> : <Navigate to="/login" replace />
+          } 
+        />
         
         {/* Rotta protetta per la dashboard ristorante */}
         <Route 
@@ -78,14 +103,6 @@ function AppContent() {
           element={
             isAuthenticated && userType === 'customer' ? 
               <BookingsPage /> : 
-              <Navigate to="/login" replace />
-          } 
-        />
-        <Route 
-          path="/profile" 
-          element={
-            isAuthenticated && userType === 'customer' ? 
-              <ProfilePage /> : 
               <Navigate to="/login" replace />
           } 
         />
