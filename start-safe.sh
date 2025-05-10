@@ -5,6 +5,9 @@
 # Set environment variables to disable Rollup native support
 export ROLLUP_NATIVE_BUILD=false
 export ROLLUP_NATIVE=false
+export npm_config_rollup_native_build=false
+
+echo "Starting application with native Rollup modules disabled..."
 
 # Run the application
 npm run dev
