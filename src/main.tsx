@@ -32,7 +32,11 @@ try {
     // Avvolgiamo il rendering in un try-catch aggiuntivo
     try {
       root.render(
-        <App />
+        <>
+          <App />
+          <Toaster />
+          <SonnerToaster />
+        </>
       );
       console.log("App renderizzata con successo");
     } catch (renderError) {
