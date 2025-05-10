@@ -26,7 +26,7 @@ export default defineConfig(({ mode }) => ({
     outDir: 'dist',
     assetsDir: 'assets',
     sourcemap: mode === 'development',
-    minify: 'terser',
+    minify: mode === 'production' ? 'terser' : false, // Only use terser in production
     terserOptions: {
       compress: {
         drop_console: mode === 'production',
@@ -42,4 +42,10 @@ export default defineConfig(({ mode }) => ({
       }
     }
   },
+  // Force using the CommonJS build of Vite/Rollup
+  optimizeDeps: {
+    esbuildOptions: {
+      target: 'es2020'
+    }
+  }
 }));
