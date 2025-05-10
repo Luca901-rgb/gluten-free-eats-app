@@ -39,6 +39,11 @@ export default defineConfig(({ mode }) => ({
           firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore'],
           ui: ['@radix-ui/react-navigation-menu', '@radix-ui/react-dialog']
         }
+      },
+      // Force Rollup to use the JavaScript implementation
+      context: 'globalThis',
+      treeshake: {
+        moduleSideEffects: true,
       }
     }
   },
@@ -52,5 +57,6 @@ export default defineConfig(({ mode }) => ({
   define: {
     'process.env.ROLLUP_NATIVE': 'false',
     '__ROLLUP_NATIVE_SUPPORT__': 'false',
+    'process.env.ROLLUP_NATIVE_BUILD': 'false'
   }
 }));
