@@ -32,6 +32,16 @@ export default defineConfig(({ mode }) => {
           }
           return null;
         },
+        resolveId(id: string) {
+          // Block resolution of native modules
+          if (id.includes('@rollup/rollup-linux-') || 
+              id.includes('@rollup/rollup-darwin-') || 
+              id.includes('@rollup/rollup-win32-')) {
+            console.log(`🛡️ Blocking resolution of native module: ${id}`);
+            return path.resolve(__dirname, 'empty-module.js');
+          }
+          return null;
+        }
       },
     ].filter(Boolean),
     resolve: {
