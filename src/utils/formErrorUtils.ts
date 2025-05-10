@@ -1,37 +1,32 @@
 
-import { FieldError, FieldErrors, FieldErrorsImpl, Merge } from 'react-hook-form';
+import { FieldError } from 'react-hook-form';
 
 /**
- * Safely extracts error message from react-hook-form error objects
+ * Ottiene il messaggio di errore da un oggetto FieldError
  */
-export function getErrorMessage(error?: FieldError | Merge<FieldError, FieldErrorsImpl<any>> | null): string {
+export const getErrorMessage = (error: FieldError | undefined): string => {
   if (!error) return '';
-  
-  // Handle string error message
-  if (typeof error === 'string') return error;
-  
-  // Access message property if it exists
-  if (error && typeof error === 'object' && 'message' in error && error.message) {
-    return error.message as string;
-  }
-  
-  // Fallback for other error formats
-  return String(error);
-}
+  return error.message || 'Campo non valido';
+};
 
 /**
- * Safely extracts nested error from react-hook-form errors object
+ * Ottiene l'errore da un path nidificato in un oggetto errors
  */
-export function getNestedError(errors: FieldErrors, path: string): any {
-  const keys = path.split('.');
-  let currentErrors = errors;
+export const getNestedError = (errors: Record<string, any>, path: string): FieldError | undefined => {
+  const parts = path.split('.');
+  let current = errors;
   
-  for (const key of keys) {
-    if (!currentErrors || typeof currentErrors !== 'object') return null;
-    //@ts-ignore - We're checking existence dynamically
-    currentErrors = currentErrors[key];
-    if (!currentErrors) return null;
+  for (const part of parts) {
+    if (!current[part]) return undefined;
+    current = current[part];
   }
   
-  return currentErrors;
-}
+  return current as FieldError;
+};
+
+/**
+ * Verifica se un'intera sezione del form contiene errori
+ */
+export const hasStepErrors = (errors: Record<string, any>, stepName: string): boolean => {
+  return !!errors[stepName] && Object.keys(errors[stepName]).length > 0;
+};

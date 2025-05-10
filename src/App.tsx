@@ -18,9 +18,20 @@ import ProfilePage from './pages/ProfilePage';
 import RestaurantPage from './pages/RestaurantPage';
 import UserSettingsPage from './pages/UserSettingsPage';
 import RestaurantSettingsPage from './pages/RestaurantSettingsPage';
+import { syncPendingRestaurants } from './services/restaurantService';
 
 function AppContent() {
   const { isLoading, isAuthenticated, userType } = useAuth();
+
+  // Tentativo di sincronizzazione dei ristoranti pendenti
+  useEffect(() => {
+    if (isAuthenticated && userType === 'restaurant') {
+      // Verifica se ci sono ristoranti in attesa di sincronizzazione
+      syncPendingRestaurants().catch(error => {
+        console.error("Errore durante la sincronizzazione dei ristoranti pendenti:", error);
+      });
+    }
+  }, [isAuthenticated, userType]);
 
   // Mostra un loader mentre verifichiamo lo stato di autenticazione
   if (isLoading) {

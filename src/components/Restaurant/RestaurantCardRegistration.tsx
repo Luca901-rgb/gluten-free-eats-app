@@ -11,13 +11,22 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { Store, MapPin, Phone, Mail, Globe, Info, Check } from 'lucide-react';
+import { auth } from '@/lib/firebase';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import safeStorage from '@/lib/safeStorage';
 
+// STEP 1: Solo raccogliamo le informazioni principali del manager
 const RestaurantCardRegistration = ({ onComplete }: { onComplete: () => void }) => {
   const navigate = useNavigate();
   const [step, setStep] = useState<'info' | 'type' | 'review'>('info');
+  const [isLoading, setIsLoading] = useState(false);
   
   const [formData, setFormData] = useState({
-    name: '',
+    managerName: '',
+    managerEmail: '',
+    managerPhone: '',
+    managerPassword: '',
+    confirmPassword: '',
     address: '',
     city: '',
     phone: '',
@@ -59,127 +68,219 @@ const RestaurantCardRegistration = ({ onComplete }: { onComplete: () => void }) 
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const validateForm = () => {
+    // Valida i campi obbligatori nel primo step
+    if (step === 'info') {
+      if (!formData.managerName) {
+        toast.error("Inserisci il nome del gestore");
+        return false;
+      }
+      if (!formData.managerEmail) {
+        toast.error("Inserisci l'email del gestore");
+        return false;
+      }
+      if (!formData.managerPassword) {
+        toast.error("Inserisci la password");
+        return false;
+      }
+      if (formData.managerPassword !== formData.confirmPassword) {
+        toast.error("Le password non corrispondono");
+        return false;
+      }
+    }
+
+    if (step === 'type') {
+      if (!formData.type) {
+        toast.error("Seleziona la tipologia di attività");
+        return false;
+      }
+      if (formData.type === 'altro' && !formData.otherType) {
+        toast.error("Specifica la tipologia dell'attività");
+        return false;
+      }
+      if (!formData.acceptTerms) {
+        toast.error("Accetta i termini e condizioni per continuare");
+        return false;
+      }
+    }
+    
+    return true;
+  };
+
+  const handleNextStep = () => {
+    if (!validateForm()) return;
+    
+    if (step === 'info') {
+      setStep('type');
+    } else if (step === 'type') {
+      setStep('review');
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!validateForm()) return;
     if (!formData.acceptTerms) {
       toast.error("Per favore, accetta i termini e condizioni");
       return;
     }
     
-    // Salva i dati del ristorante in localStorage per la demo
-    localStorage.setItem('restaurantInfo', JSON.stringify({
-      name: formData.name,
-      address: formData.address,
-      city: formData.city,
-      phone: formData.phone,
-      email: formData.email,
-      website: formData.website,
-      type: formData.type === 'altro' ? formData.otherType : formData.type,
-      hasGlutenFreeOptions: formData.hasGlutenFreeOptions
-    }));
+    setIsLoading(true);
     
-    toast.success("Informazioni ristorante salvate con successo");
-    onComplete();
+    try {
+      // Registrazione dell'utente con Firebase Auth
+      const userCredential = await createUserWithEmailAndPassword(
+        auth, 
+        formData.managerEmail, 
+        formData.managerPassword
+      );
+      
+      const user = userCredential.user;
+      
+      // Salva i dati principali in localStorage
+      safeStorage.setItem('userType', 'restaurant');
+      safeStorage.setItem('isAuthenticated', 'true');
+      safeStorage.setItem('userId', user.uid);
+      safeStorage.setItem('userEmail', formData.managerEmail);
+      safeStorage.setItem('userName', formData.managerName);
+      safeStorage.setItem('isRestaurantOwner', 'true');
+      
+      // Salva i dati del primo step per il form di registrazione completo
+      const initialRestaurantData = {
+        manager: {
+          name: formData.managerName,
+          email: formData.managerEmail,
+          phone: formData.managerPhone,
+          password: formData.managerPassword,
+          confirmPassword: formData.confirmPassword,
+          acceptTerms: formData.acceptTerms
+        },
+        features: {
+          type: formData.type === 'altro' ? formData.otherType : formData.type,
+          services: [],
+          hasGlutenFreeOptions: formData.hasGlutenFreeOptions
+        }
+      };
+      
+      // Salva lo stato iniziale del form di registrazione completa
+      safeStorage.setItem('initialRestaurantData', JSON.stringify(initialRestaurantData));
+      
+      toast.success("Registrazione preliminare completata con successo");
+      
+      // Passa la chiamata al parent component
+      onComplete();
+      
+      // Reindirizza alla pagina di registrazione completa
+      navigate('/restaurant-registration');
+    } catch (error: any) {
+      console.error("Errore durante la registrazione:", error);
+      
+      if (error.code === 'auth/email-already-in-use') {
+        toast.error("L'indirizzo email è già in uso");
+      } else {
+        toast.error(`Errore durante la registrazione: ${error.message}`);
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
   
-  const renderInfoForm = () => (
-    <div className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="name">Nome ristorante *</Label>
-        <div className="relative">
-          <Input
-            id="name"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            placeholder="Es. La Trattoria di Mario"
-            required
-            className="pl-10"
-          />
-          <Store className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={18} />
+  const renderManagerInfoForm = () => (
+    <div className="space-y-5">
+      <div className="bg-blue-50 p-4 rounded-md mb-4">
+        <h3 className="text-blue-700 font-medium mb-2">Dati gestore</h3>
+        <p className="text-blue-600 text-sm">
+          Inserisci i tuoi dati personali per creare l'account di gestione del ristorante.
+          Nella prossima fase inserirai le informazioni complete sul tuo locale.
+        </p>
+      </div>
+      
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="managerName">Nome completo *</Label>
+          <div className="relative">
+            <Input
+              id="managerName"
+              name="managerName"
+              value={formData.managerName}
+              onChange={handleChange}
+              placeholder="Es. Mario Rossi"
+              required
+              className="pl-10"
+            />
+            <Store className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={18} />
+          </div>
         </div>
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="address">Indirizzo *</Label>
-        <div className="relative">
-          <Input
-            id="address"
-            name="address"
-            value={formData.address}
-            onChange={handleChange}
-            placeholder="Es. Via Roma 123"
-            required
-            className="pl-10"
-          />
-          <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={18} />
+        
+        <div className="space-y-2">
+          <Label htmlFor="managerEmail">Email *</Label>
+          <div className="relative">
+            <Input
+              id="managerEmail"
+              name="managerEmail"
+              type="email"
+              value={formData.managerEmail}
+              onChange={handleChange}
+              placeholder="Es. mario.rossi@email.com"
+              required
+              className="pl-10"
+            />
+            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={18} />
+          </div>
         </div>
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="city">Città *</Label>
-        <Input
-          id="city"
-          name="city"
-          value={formData.city}
-          onChange={handleChange}
-          placeholder="Es. Milano"
-          required
-        />
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="phone">Telefono *</Label>
-        <div className="relative">
-          <Input
-            id="phone"
-            name="phone"
-            value={formData.phone}
-            onChange={handleChange}
-            placeholder="Es. 02 1234567"
-            required
-            className="pl-10"
-          />
-          <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={18} />
+        
+        <div className="space-y-2">
+          <Label htmlFor="managerPhone">Telefono *</Label>
+          <div className="relative">
+            <Input
+              id="managerPhone"
+              name="managerPhone"
+              value={formData.managerPhone}
+              onChange={handleChange}
+              placeholder="Es. +39 123 456 7890"
+              required
+              className="pl-10"
+            />
+            <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={18} />
+          </div>
         </div>
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="email">Email *</Label>
-        <div className="relative">
+        
+        <div className="space-y-2">
+          <Label htmlFor="managerPassword">Password *</Label>
           <Input
-            id="email"
-            name="email"
-            type="email"
-            value={formData.email}
+            id="managerPassword"
+            name="managerPassword"
+            type="password"
+            value={formData.managerPassword}
             onChange={handleChange}
-            placeholder="Es. info@ristorantedimarilo.it"
+            placeholder="Inserisci password"
             required
-            className="pl-10"
           />
-          <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={18} />
         </div>
-      </div>
-      
-      <div className="space-y-2">
-        <Label htmlFor="website">Sito web (opzionale)</Label>
-        <div className="relative">
+        
+        <div className="space-y-2">
+          <Label htmlFor="confirmPassword">Conferma Password *</Label>
           <Input
-            id="website"
-            name="website"
-            value={formData.website}
+            id="confirmPassword"
+            name="confirmPassword"
+            type="password"
+            value={formData.confirmPassword}
             onChange={handleChange}
-            placeholder="Es. www.ristorantedimario.it"
-            className="pl-10"
+            placeholder="Conferma password"
+            required
           />
-          <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={18} />
+          {formData.managerPassword && formData.confirmPassword && 
+           formData.managerPassword !== formData.confirmPassword && (
+            <p className="text-red-500 text-sm mt-1">Le password non corrispondono</p>
+          )}
         </div>
       </div>
       
       <Button 
-        onClick={() => setStep('type')} 
+        onClick={handleNextStep}
         className="w-full mt-4"
+        disabled={isLoading}
       >
         Continua
       </Button>
@@ -200,6 +301,13 @@ const RestaurantCardRegistration = ({ onComplete }: { onComplete: () => void }) 
   
   const renderTypeForm = () => (
     <div className="space-y-6">
+      <div className="bg-blue-50 p-4 rounded-md mb-4">
+        <h3 className="text-blue-700 font-medium mb-2">Tipologia attività</h3>
+        <p className="text-blue-600 text-sm">
+          Seleziona la tipologia del tuo locale. Queste informazioni saranno visibili ai clienti e saranno usate per migliorare la ricerca.
+        </p>
+      </div>
+
       <div className="space-y-3">
         <Label>Tipologia Attività *</Label>
         <RadioGroup
@@ -261,12 +369,14 @@ const RestaurantCardRegistration = ({ onComplete }: { onComplete: () => void }) 
           variant="outline" 
           onClick={() => setStep('info')} 
           className="flex-1"
+          disabled={isLoading}
         >
           Indietro
         </Button>
         <Button 
-          onClick={() => setStep('review')} 
+          onClick={handleNextStep}
           className="flex-1"
+          disabled={isLoading}
         >
           Continua
         </Button>
@@ -276,24 +386,26 @@ const RestaurantCardRegistration = ({ onComplete }: { onComplete: () => void }) 
   
   const renderReviewForm = () => (
     <div className="space-y-6">
+      <div className="bg-blue-50 p-4 rounded-md mb-4">
+        <h3 className="text-blue-700 font-medium mb-2">Conferma dati</h3>
+        <p className="text-blue-600 text-sm">
+          Verifica che i dati inseriti siano corretti. Nella prossima fase completerai la registrazione del tuo ristorante.
+        </p>
+      </div>
+      
       <div className="space-y-4">
         <h3 className="font-medium text-lg">Riepilogo informazioni</h3>
         
         <div className="bg-gray-50 rounded-md p-4 space-y-3">
           <div>
-            <span className="font-medium">Nome:</span> {formData.name}
+            <span className="font-medium">Nome gestore:</span> {formData.managerName}
           </div>
           <div>
-            <span className="font-medium">Indirizzo:</span> {formData.address}, {formData.city}
+            <span className="font-medium">Email:</span> {formData.managerEmail}
           </div>
           <div>
-            <span className="font-medium">Contatti:</span> {formData.phone}, {formData.email}
+            <span className="font-medium">Telefono:</span> {formData.managerPhone}
           </div>
-          {formData.website && (
-            <div>
-              <span className="font-medium">Sito web:</span> {formData.website}
-            </div>
-          )}
           <div>
             <span className="font-medium">Tipologia:</span> {formData.type === 'altro' ? formData.otherType : restaurantTypes.find(t => t.value === formData.type)?.label}
           </div>
@@ -305,7 +417,7 @@ const RestaurantCardRegistration = ({ onComplete }: { onComplete: () => void }) 
         <div className="bg-blue-50 border border-blue-200 rounded-md p-4 flex items-start space-x-3">
           <Info className="h-5 w-5 text-blue-600 mt-0.5" />
           <p className="text-sm text-blue-700">
-            Verificare che tutti i dati inseriti siano corretti. Puoi sempre modificarli in seguito dalla dashboard del tuo ristorante.
+            Cliccando su "Completa registrazione" passerai alla fase successiva dove potrai inserire tutti i dettagli del tuo ristorante.
           </p>
         </div>
       </div>
@@ -315,14 +427,16 @@ const RestaurantCardRegistration = ({ onComplete }: { onComplete: () => void }) 
           variant="outline" 
           onClick={() => setStep('type')} 
           className="flex-1"
+          disabled={isLoading}
         >
           Indietro
         </Button>
         <Button 
           onClick={handleSubmit} 
           className="flex-1"
+          disabled={isLoading}
         >
-          Completa registrazione
+          {isLoading ? 'Elaborazione...' : 'Completa registrazione'}
         </Button>
       </div>
     </div>
@@ -331,13 +445,13 @@ const RestaurantCardRegistration = ({ onComplete }: { onComplete: () => void }) 
   const renderStepContent = () => {
     switch (step) {
       case 'info':
-        return renderInfoForm();
+        return renderManagerInfoForm();
       case 'type':
         return renderTypeForm();
       case 'review':
         return renderReviewForm();
       default:
-        return renderInfoForm();
+        return renderManagerInfoForm();
     }
   };
   
@@ -346,7 +460,7 @@ const RestaurantCardRegistration = ({ onComplete }: { onComplete: () => void }) 
       <CardHeader>
         <CardTitle>Registrazione Ristorante</CardTitle>
         <CardDescription>
-          Inserisci i dati del tuo ristorante per iniziare
+          Inserisci i dati del gestore per iniziare
         </CardDescription>
       </CardHeader>
       <CardContent>

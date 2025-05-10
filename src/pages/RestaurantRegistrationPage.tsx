@@ -33,6 +33,7 @@ import BookingsStep from '@/components/Registration/BookingsStep';
 import PromotionsStep from '@/components/Registration/PromotionsStep';
 import CompletionStep from '@/components/Registration/CompletionStep';
 import safeStorage from '@/lib/safeStorage';
+import { createRestaurant } from '@/services/restaurantService';
 
 // Default values for the form
 const defaultValues: RestaurantRegistrationForm = {
@@ -101,11 +102,17 @@ const RestaurantRegistrationPage = () => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState<RegistrationStep>('manager');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [restaurantId, setRestaurantId] = useState<string | null>(null);
   
   // Check if registration was already completed
   useEffect(() => {
-    const registrationData = localStorage.getItem('restaurantRegistrationData');
-    if (registrationData) {
+    const registrationData = safeStorage.getItem('restaurantRegistrationData');
+    const existingRestaurantId = safeStorage.getItem('restaurantId');
+    
+    if (existingRestaurantId) {
+      setRestaurantId(existingRestaurantId);
+      setCurrentStep('complete');
+    } else if (registrationData) {
       console.log("Registration data found, auto-advancing to complete step");
       setCurrentStep('complete');
     }
@@ -193,19 +200,34 @@ const RestaurantRegistrationPage = () => {
     try {
       console.log("Registration data:", data);
       
-      // Save to localStorage for access in the dashboard
-      localStorage.setItem('restaurantRegistrationData', JSON.stringify(data));
+      // Salva i dati nel database
+      const newRestaurantId = await createRestaurant(data);
+      setRestaurantId(newRestaurantId);
       
-      // Also set flags to identify the user as a restaurant owner
+      // Salva anche in localStorage per accesso offline
+      safeStorage.setItem('restaurantRegistrationData', JSON.stringify(data));
+      
+      // Imposta i flag per identificare l'utente come proprietario di un ristorante
+      safeStorage.setItem('isRestaurantOwner', 'true');
+      safeStorage.setItem('userType', 'restaurant');
+      safeStorage.setItem('restaurantId', newRestaurantId);
+      
+      // Avanza al passaggio di completamento
+      setCurrentStep('complete');
+      toast.success("Registrazione completata con successo!");
+    } catch (error: any) {
+      console.error("Registration error:", error);
+      
+      // Salviamo comunque i dati in localStorage per non perdere il lavoro dell'utente
+      safeStorage.setItem('restaurantRegistrationData', JSON.stringify(data));
+      safeStorage.setItem('restaurantPendingCreation', 'true');
       safeStorage.setItem('isRestaurantOwner', 'true');
       safeStorage.setItem('userType', 'restaurant');
       
-      // Move to completion step
+      toast.error(`Errore durante la registrazione: ${error.message || 'Si è verificato un errore'}. I tuoi dati sono stati salvati localmente.`);
+      
+      // Avanza comunque al passaggio di completamento
       setCurrentStep('complete');
-      toast.success("Registrazione completata con successo!");
-    } catch (error) {
-      console.error("Registration error:", error);
-      toast.error("Errore durante la registrazione");
     } finally {
       setIsSubmitting(false);
     }
@@ -380,6 +402,82 @@ const RestaurantRegistrationPage = () => {
       </div>
     </Layout>
   );
+  
+  // Helper functions
+  function getStepComponent() {
+    switch (currentStep) {
+      case 'manager':
+        return <ManagerInfoStep />;
+      case 'restaurant':
+        return <RestaurantInfoStep />;
+      case 'operations':
+        return <OperationsStep />;
+      case 'features':
+        return <FeaturesStep />;
+      case 'media':
+        return <MediaStep />;
+      case 'content':
+        return <ContentStep />;
+      case 'bookings':
+        return <BookingsStep />;
+      case 'promotions':
+        return <PromotionsStep />;
+      case 'complete':
+        return <CompletionStep restaurantId={restaurantId} />;
+      default:
+        return null;
+    }
+  }
+
+  function getStepIcon(step: RegistrationStep) {
+    switch (step) {
+      case 'manager':
+        return <User className="h-5 w-5" />;
+      case 'restaurant':
+        return <Store className="h-5 w-5" />;
+      case 'operations':
+        return <Clock className="h-5 w-5" />;
+      case 'features':
+        return <Settings className="h-5 w-5" />;
+      case 'media':
+        return <Image className="h-5 w-5" />;
+      case 'content':
+        return <FileText className="h-5 w-5" />;
+      case 'bookings':
+        return <Calendar className="h-5 w-5" />;
+      case 'promotions':
+        return <BellPlus className="h-5 w-5" />;
+      case 'complete':
+        return <CheckCircle className="h-5 w-5" />;
+      default:
+        return null;
+    }
+  }
+
+  function getStepTitle(step: RegistrationStep) {
+    switch (step) {
+      case 'manager':
+        return "Dati Gestore";
+      case 'restaurant':
+        return "Dati Ristorante";
+      case 'operations':
+        return "Orari e Operatività";
+      case 'features':
+        return "Caratteristiche";
+      case 'media':
+        return "Foto e Video";
+      case 'content':
+        return "Descrizione e Menù";
+      case 'bookings':
+        return "Prenotazioni";
+      case 'promotions':
+        return "Offerte";
+      case 'complete':
+        return "Completato";
+      default:
+        return "";
+    }
+  }
 };
 
 export default RestaurantRegistrationPage;
