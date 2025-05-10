@@ -42,10 +42,15 @@ export default defineConfig(({ mode }) => ({
       }
     }
   },
-  // Force using the CommonJS build of Vite/Rollup
+  // Force disable native modules and use JavaScript implementation
   optimizeDeps: {
     esbuildOptions: {
       target: 'es2020'
     }
+  },
+  // This is the key addition - explicitly tell Rollup to not use native code
+  define: {
+    'process.env.ROLLUP_NATIVE': 'false',
+    '__ROLLUP_NATIVE_SUPPORT__': 'false',
   }
 }));
