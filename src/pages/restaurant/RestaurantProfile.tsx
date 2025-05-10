@@ -1,260 +1,180 @@
 
-import React, { useState } from 'react';
-import { 
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { 
-  Mail, 
-  Phone, 
-  MapPin, 
-  Globe, 
-  Edit, 
-  Save, 
-  X,
-  UserRound,
-  Store
-} from 'lucide-react';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { toast } from "sonner";
+import React from 'react';
+import { useAuth } from '@/context/AuthContext';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { toast } from 'sonner';
 
-const RestaurantProfile = () => {
-  const [isEditing, setIsEditing] = useState(false);
-  
-  // Restaurant information - in a real app, this would come from an API
-  const [restaurantInfo, setRestaurantInfo] = useState({
-    name: 'La Trattoria Senza Glutine',
-    description: 'Ristorante 100% gluten free specializzato in cucina italiana tradizionale. Il nostro locale è certificato dall\'Associazione Italiana Celiachia e tutto il nostro menù è privo di glutine.',
-    address: 'Via Roma 123, Milano, 20100',
-    phone: '+39 02 1234567',
-    email: 'info@trattoriasenzaglutine.it',
-    website: 'www.trattoriasenzaglutine.it',
-    ownerName: 'Mario Rossi',
-    taxId: 'IT12345678901', // P.IVA
-    businessType: 'Ristorante', // Tipologia attività
-    foundationYear: '2010', // Anno fondazione
-  });
+interface StatItem {
+  label: string;
+  value: string;
+  icon: React.ReactNode;
+}
 
-  const handleEditToggle = () => {
-    setIsEditing(!isEditing);
-  };
+interface RestaurantProfileProps {
+  stats: StatItem[];
+  isRestaurantOwner: boolean;
+}
 
-  const handleSave = () => {
-    // In a real app, we would save to an API
-    setIsEditing(false);
-    toast.success('Informazioni del ristorante aggiornate con successo');
-  };
+const RestaurantProfile: React.FC<RestaurantProfileProps> = ({ stats, isRestaurantOwner }) => {
+  const { user } = useAuth();
 
-  const handleCancel = () => {
-    // Reset to original values - in a real app, we would fetch from API again
-    setIsEditing(false);
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setRestaurantInfo(prev => ({ ...prev, [name]: value }));
+  const handleExportData = () => {
+    toast.success("Esportazione dati avviata", {
+      description: "Riceverai un'email con i tuoi dati."
+    });
   };
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-poppins font-bold text-primary">Profilo Ristorante</h1>
+    <div>
+      <h2 className="text-2xl font-semibold mb-4">Profilo Ristorante</h2>
       
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-center space-x-4">
-            <div className="bg-primary h-16 w-16 rounded-full flex items-center justify-center text-white">
-              <Store size={32} />
-            </div>
-            <div>
-              <CardTitle>{restaurantInfo.name}</CardTitle>
-              <CardDescription>{restaurantInfo.email}</CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-      </Card>
-
-      {/* Dati Ristorante */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <div>
-            <CardTitle className="text-lg">Dati Ristorante</CardTitle>
-            <CardDescription>Informazioni generali del ristorante</CardDescription>
-          </div>
-          {!isEditing ? (
-            <Button variant="ghost" size="sm" onClick={handleEditToggle}>
-              <Edit size={16} className="mr-2" />
-              Modifica
-            </Button>
-          ) : null}
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {isEditing ? (
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Nome Ristorante</Label>
-                  <Input 
-                    id="name" 
-                    name="name"
-                    value={restaurantInfo.name}
-                    onChange={handleChange}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input 
-                    id="email" 
-                    name="email"
-                    value={restaurantInfo.email}
-                    onChange={handleChange}
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="description">Descrizione</Label>
-                <Textarea 
-                  id="description" 
-                  name="description"
-                  value={restaurantInfo.description}
-                  onChange={handleChange}
-                  rows={3}
-                />
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Telefono</Label>
-                  <Input 
-                    id="phone" 
-                    name="phone"
-                    value={restaurantInfo.phone}
-                    onChange={handleChange}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="website">Sito Web</Label>
-                  <Input 
-                    id="website" 
-                    name="website"
-                    value={restaurantInfo.website}
-                    onChange={handleChange}
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="address">Indirizzo</Label>
-                <Input 
-                  id="address" 
-                  name="address"
-                  value={restaurantInfo.address}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="taxId">Partita IVA</Label>
-                  <Input 
-                    id="taxId" 
-                    name="taxId"
-                    value={restaurantInfo.taxId}
-                    onChange={handleChange}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="businessType">Tipologia Attività</Label>
-                  <Input 
-                    id="businessType" 
-                    name="businessType"
-                    value={restaurantInfo.businessType}
-                    onChange={handleChange}
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="ownerName">Nome Titolare</Label>
-                  <Input 
-                    id="ownerName" 
-                    name="ownerName"
-                    value={restaurantInfo.ownerName}
-                    onChange={handleChange}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="foundationYear">Anno Fondazione</Label>
-                  <Input 
-                    id="foundationYear" 
-                    name="foundationYear"
-                    value={restaurantInfo.foundationYear}
-                    onChange={handleChange}
-                  />
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <p className="text-sm text-gray-500">Descrizione</p>
-                <p>{restaurantInfo.description}</p>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Mail className="h-4 w-4 text-muted-foreground" />
-                <span>{restaurantInfo.email}</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Phone className="h-4 w-4 text-muted-foreground" />
-                <span>{restaurantInfo.phone}</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <MapPin className="h-4 w-4 text-muted-foreground" />
-                <span>{restaurantInfo.address}</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Globe className="h-4 w-4 text-muted-foreground" />
-                <span>{restaurantInfo.website}</span>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-6">
+          <Card>
+            <CardContent className="p-6">
+              <h3 className="text-lg font-medium mb-4">Informazioni Account</h3>
+              
+              <div className="space-y-3">
                 <div>
-                  <p className="text-sm text-gray-500">Partita IVA</p>
-                  <p>{restaurantInfo.taxId}</p>
+                  <p className="text-sm text-gray-500">Email</p>
+                  <p className="font-medium">{user?.email || "email@example.com"}</p>
                 </div>
+                
                 <div>
-                  <p className="text-sm text-gray-500">Tipologia Attività</p>
-                  <p>{restaurantInfo.businessType}</p>
+                  <p className="text-sm text-gray-500">Tipo account</p>
+                  <p className="font-medium">Gestore Ristorante</p>
+                </div>
+                
+                <div>
+                  <p className="text-sm text-gray-500">Membro dal</p>
+                  <p className="font-medium">Maggio 2025</p>
                 </div>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-gray-500">Nome Titolare</p>
-                  <p>{restaurantInfo.ownerName}</p>
+              
+              {isRestaurantOwner && (
+                <div className="mt-6 pt-4 border-t border-gray-200">
+                  <Button variant="outline" className="w-full" onClick={handleExportData}>
+                    Esporta dati account
+                  </Button>
                 </div>
-                <div>
-                  <p className="text-sm text-gray-500">Anno Fondazione</p>
-                  <p>{restaurantInfo.foundationYear}</p>
+              )}
+            </CardContent>
+          </Card>
+          
+          {isRestaurantOwner && (
+            <Card>
+              <CardContent className="p-6">
+                <h3 className="text-lg font-medium mb-4">Certificazioni</h3>
+                
+                <div className="flex items-center p-3 bg-green-50 border border-green-200 rounded-md mb-4">
+                  <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center mr-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-600">
+                      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                      <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-green-700">AIC Certificato</h4>
+                    <p className="text-sm text-green-600">Associazione Italiana Celiachia</p>
+                  </div>
                 </div>
-              </div>
-            </div>
+                
+                <div className="flex items-center p-3 bg-blue-50 border border-blue-200 rounded-md">
+                  <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-600">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <path d="M12 16v-4"></path>
+                      <path d="M12 8h.01"></path>
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-blue-700">Formazione AFC</h4>
+                    <p className="text-sm text-blue-600">Corso Alimentazione Fuori Casa</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           )}
-        </CardContent>
-        {isEditing && (
-          <CardFooter className="flex justify-end space-x-2">
-            <Button variant="outline" size="sm" onClick={handleCancel}>
-              <X size={16} className="mr-2" />
-              Annulla
-            </Button>
-            <Button size="sm" onClick={handleSave}>
-              <Save size={16} className="mr-2" />
-              Salva
-            </Button>
-          </CardFooter>
-        )}
-      </Card>
+        </div>
+        
+        <div className="space-y-6">
+          <Card>
+            <CardContent className="p-6">
+              <h3 className="text-lg font-medium mb-4">Statistiche</h3>
+              
+              <div className="grid grid-cols-2 gap-4">
+                {stats.map((stat, index) => (
+                  <div key={index} className="bg-gray-50 p-4 rounded-lg">
+                    <div className="flex items-center mb-2">
+                      {stat.icon}
+                      <span className="text-sm text-gray-500 ml-2">{stat.label}</span>
+                    </div>
+                    <p className="text-2xl font-bold">{stat.value}</p>
+                  </div>
+                ))}
+              </div>
+              
+              {isRestaurantOwner && (
+                <div className="mt-6 pt-4 border-t border-gray-200">
+                  <Button variant="outline" className="w-full">
+                    Vedi rapporto completo
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+          
+          {isRestaurantOwner && (
+            <Card>
+              <CardContent className="p-6">
+                <h3 className="text-lg font-medium mb-4">Attività Recenti</h3>
+                
+                <ul className="space-y-3">
+                  <li className="flex items-start">
+                    <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center mr-3 mt-0.5">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-600">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-sm">Nuova prenotazione per 4 persone.</p>
+                      <p className="text-xs text-gray-500">2 ore fa</p>
+                    </div>
+                  </li>
+                  
+                  <li className="flex items-start">
+                    <div className="h-8 w-8 rounded-full bg-yellow-100 flex items-center justify-center mr-3 mt-0.5">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-yellow-600">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-sm">Nuova recensione a 5 stelle ricevuta.</p>
+                      <p className="text-xs text-gray-500">Ieri</p>
+                    </div>
+                  </li>
+                  
+                  <li className="flex items-start">
+                    <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center mr-3 mt-0.5">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-600">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-sm">Creata nuova offerta speciale.</p>
+                      <p className="text-xs text-gray-500">2 giorni fa</p>
+                    </div>
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </div>
     </div>
   );
 };

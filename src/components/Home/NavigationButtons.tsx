@@ -1,44 +1,73 @@
 
 import React from 'react';
-import { MapPin, UtensilsCrossed, Wheat, Star } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { 
+  Map, 
+  Star, 
+  Video, 
+  Tag, 
+  Store, 
+  Info, 
+  MapPin, 
+  Video as VideoIcon, 
+  ArrowUpDown, 
+  Percent 
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface NavigationButtonsProps {
-  isRegionAvailable: boolean;
+  isRegionAvailable?: boolean;
 }
 
-const NavigationButtons = ({ isRegionAvailable }: NavigationButtonsProps) => {
+const NavigationButtons: React.FC<NavigationButtonsProps> = ({ isRegionAvailable = false }) => {
+  const navigate = useNavigate();
+
+  const navigationItems = [
+    {
+      icon: <MapPin className="w-6 h-6 mb-1" />,
+      label: 'Vicino a me',
+      action: () => {
+        if (isRegionAvailable) {
+          navigate('/search?location=nearby');
+        } else {
+          navigate('/search');
+        }
+      },
+      disabled: !isRegionAvailable
+    },
+    {
+      icon: <Star className="w-6 h-6 mb-1" />,
+      label: 'Più votati',
+      action: () => navigate('/search?sort=rating')
+    },
+    {
+      icon: <Video className="w-6 h-6 mb-1" />,
+      label: 'Video ricette',
+      action: () => navigate('/videos')
+    },
+    {
+      icon: <Percent className="w-6 h-6 mb-1" />,
+      label: 'Offerte',
+      action: () => navigate('/offers')
+    }
+  ];
+  
   return (
-    <div className="grid grid-cols-2 gap-4">
-      {isRegionAvailable && (
-        <Link to="/search">
-          <button className="w-full py-4 px-3 bg-white shadow-md rounded-lg flex flex-col items-center justify-center hover:bg-gray-50 transition-colors">
-            <MapPin className="h-5 w-5 mb-1 text-green-600" />
-            <span className="text-xs font-medium text-gray-700">Vicino a te</span>
-          </button>
-        </Link>
-      )}
-      
-      <Link to="/restaurants/1">
-        <button className="w-full py-4 px-3 bg-white shadow-md rounded-lg flex flex-col items-center justify-center hover:bg-gray-50 transition-colors">
-          <Wheat className="h-5 w-5 mb-1 text-green-600" />
-          <span className="text-xs font-medium text-gray-700">Keccabio</span>
-        </button>
-      </Link>
-      
-      <Link to="/search">
-        <button className="w-full py-4 px-3 bg-white shadow-md rounded-lg flex flex-col items-center justify-center hover:bg-gray-50 transition-colors">
-          <UtensilsCrossed className="h-5 w-5 mb-1 text-green-600" />
-          <span className="text-xs font-medium text-gray-700">Tutte le categorie</span>
-        </button>
-      </Link>
-      
-      <Link to="/search">
-        <button className="w-full py-4 px-3 bg-white shadow-md rounded-lg flex flex-col items-center justify-center hover:bg-gray-50 transition-colors">
-          <Star className="h-5 w-5 mb-1 text-green-600" />
-          <span className="text-xs font-medium text-gray-700">Più votati</span>
-        </button>
-      </Link>
+    <div className="grid grid-cols-4 gap-4">
+      {navigationItems.map((item, index) => (
+        <Button
+          key={index}
+          variant="outline"
+          className={`flex flex-col items-center justify-center h-24 bg-white ${
+            item.disabled ? 'opacity-50' : ''
+          }`}
+          onClick={item.action}
+          disabled={item.disabled}
+        >
+          {item.icon}
+          <span className="text-xs mt-1">{item.label}</span>
+        </Button>
+      ))}
     </div>
   );
 };
