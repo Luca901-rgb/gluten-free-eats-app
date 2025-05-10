@@ -14,3 +14,4 @@ echo Running patched development server...
 node start-app.js
 
 pause
+

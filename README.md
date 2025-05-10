@@ -50,3 +50,4 @@ If you still encounter errors with Rollup native modules:
 4. Use the run-dev script to start the application
 
 The patched startup scripts work by intercepting and blocking the problematic native module loading.
+

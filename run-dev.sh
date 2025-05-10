@@ -12,3 +12,4 @@ export NODE_OPTIONS="--no-native-modules"
 
 echo "Running patched development server..."
 node start-app.js
+

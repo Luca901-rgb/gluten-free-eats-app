@@ -6,3 +6,4 @@ chmod +x build.sh
 chmod +x start-app.js
 
 echo "All shell scripts are now executable."
+
