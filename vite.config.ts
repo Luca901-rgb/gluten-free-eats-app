@@ -25,7 +25,7 @@ export default defineConfig(({ mode }) => {
       {
         // Custom plugin to prevent rollup native modules
         name: 'prevent-rollup-native',
-        load(id) {
+        load(id: string) {
           if (id.includes('rollup/dist/native')) {
             console.log('🛡️ Blocking native.js module load attempt');
             return 'export default {}; export const isNativeEsmSupported = false;';
