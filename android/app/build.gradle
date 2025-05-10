@@ -1,5 +1,4 @@
 
-
 apply plugin: 'com.android.application'
 
 // Add new property to force new compilation on each build
