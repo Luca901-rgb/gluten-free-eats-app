@@ -6,7 +6,7 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
-  // Force environment variables to disable native modules
+  // Forza le variabili d'ambiente per disabilitare i moduli nativi
   process.env.ROLLUP_NATIVE = 'false';
   process.env.ROLLUP_NATIVE_BUILD = 'false';
   process.env.npm_config_rollup_native_build = 'false';
@@ -23,22 +23,25 @@ export default defineConfig(({ mode }) => {
       mode === 'development' &&
       componentTagger(),
       {
-        // Custom plugin to prevent rollup native modules
+        // Plugin personalizzato per prevenire moduli nativi di rollup
         name: 'prevent-rollup-native',
-        load(id: string) {
-          if (id.includes('rollup/dist/native')) {
-            console.log('🛡️ Blocking native.js module load attempt');
-            return 'export default {}; export const isNativeEsmSupported = false;';
+        enforce: 'pre',
+        resolveId(id) {
+          // Blocca la risoluzione dei moduli nativi
+          if (id.includes('@rollup/rollup-linux-') || 
+              id.includes('@rollup/rollup-darwin-') || 
+              id.includes('@rollup/rollup-win32-') ||
+              id.includes('rollup/dist/native')) {
+            console.log(`🛡️ Blocco risoluzione modulo nativo: ${id}`);
+            return path.resolve(__dirname, 'empty-module.js');
           }
           return null;
         },
-        resolveId(id: string) {
-          // Block resolution of native modules
-          if (id.includes('@rollup/rollup-linux-') || 
-              id.includes('@rollup/rollup-darwin-') || 
-              id.includes('@rollup/rollup-win32-')) {
-            console.log(`🛡️ Blocking resolution of native module: ${id}`);
-            return path.resolve(__dirname, 'empty-module.js');
+        load(id) {
+          // Sostituisci il contenuto dei moduli nativi
+          if (id.includes('rollup/dist/native')) {
+            console.log('🛡️ Blocco caricamento modulo native.js');
+            return 'export default {}; export const isNativeEsmSupported = false; export const getDefaultRollup = () => null; export const getLogicPath = () => null;';
           }
           return null;
         }
@@ -76,7 +79,7 @@ export default defineConfig(({ mode }) => {
         target: 'es2020'
       }
     },
-    // Explicitly disable Rollup native modules
+    // Disabilita esplicitamente i moduli nativi di Rollup
     define: {
       'process.env.ROLLUP_NATIVE': JSON.stringify('false'),
       '__ROLLUP_NATIVE_SUPPORT__': 'false',

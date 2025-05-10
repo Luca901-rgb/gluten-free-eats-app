@@ -1,9 +1,9 @@
 
 # Gluten Free Eats
 
-## Development Instructions
+## Istruzioni di sviluppo
 
-Due to issues with Rollup native modules in some environments, please use the following scripts to run the application:
+A causa di problemi con i moduli nativi di Rollup in alcuni ambienti, utilizza i seguenti script per avviare l'applicazione:
 
 ### Windows:
 ```
@@ -16,17 +16,17 @@ chmod +x run-dev.sh
 ./run-dev.sh
 ```
 
-These scripts include necessary patches to prevent errors with Rollup native modules.
+Questi script includono le patch necessarie per prevenire errori con i moduli nativi di Rollup.
 
-## First Time Setup
+## Prima configurazione
 
-If this is your first time running the application, or if you encounter module loading errors:
+Se è la prima volta che avvii l'applicazione, o se riscontri errori nel caricamento dei moduli:
 
 ### Windows:
 ```
 clean-reinstall.bat
 ```
-And then run:
+E poi esegui:
 ```
 run-dev.bat
 ```
@@ -40,14 +40,13 @@ chmod +x clean-reinstall.sh
 ./run-dev.sh
 ```
 
-## Troubleshooting
+## Risoluzione problemi
 
-If you still encounter errors with Rollup native modules:
+Se riscontri ancora errori con i moduli nativi di Rollup:
 
-1. Make sure Node.js is updated to a recent version
-2. Clear the node_modules folder and package-lock.json
-3. Run the clean-reinstall script for your platform
-4. Use the run-dev script to start the application
+1. Assicurati che Node.js sia aggiornato a una versione recente
+2. Cancella la cartella node_modules e package-lock.json
+3. Esegui lo script clean-reinstall per la tua piattaforma
+4. Usa lo script run-dev per avviare l'applicazione
 
-The patched startup scripts work by intercepting and blocking the problematic native module loading.
-
+Gli script di avvio patchati funzionano intercettando e bloccando il caricamento di moduli nativi problematici.
