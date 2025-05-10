@@ -26,12 +26,8 @@ export default defineConfig(({ mode }) => ({
     outDir: 'dist',
     assetsDir: 'assets',
     sourcemap: mode === 'development',
-    minify: mode === 'production' ? 'terser' : false,
-    terserOptions: {
-      compress: {
-        drop_console: mode === 'production',
-      },
-    },
+    minify: mode === 'production' ? 'esbuild' : false,
+    target: 'es2020',
     rollupOptions: {
       output: {
         manualChunks: {
@@ -39,26 +35,19 @@ export default defineConfig(({ mode }) => ({
           firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore'],
           ui: ['@radix-ui/react-navigation-menu', '@radix-ui/react-dialog']
         }
-      },
-      // Forza Rollup a usare l'implementazione JavaScript
-      context: 'globalThis',
-      treeshake: {
-        moduleSideEffects: true,
       }
     }
   },
-  // Forza la disabilitazione dei moduli nativi e usa l'implementazione JavaScript
   optimizeDeps: {
     esbuildOptions: {
       target: 'es2020'
     }
   },
-  // Definizioni esplicite per disabilitare il codice nativo di Rollup
+  // Definizioni per disabilitare esplicitamente i moduli nativi di Rollup
   define: {
     'process.env.ROLLUP_NATIVE': 'false',
     '__ROLLUP_NATIVE_SUPPORT__': 'false',
     'process.env.ROLLUP_NATIVE_BUILD': 'false',
-    // Aggiunta ulteriori variabili di ambiente per assicurarci che Rollup non utilizzi moduli nativi
     'process.env.npm_config_rollup_native_build': 'false'
   }
 }));
