@@ -6,7 +6,7 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
-  // Forza le variabili d'ambiente per disabilitare moduli nativi
+  // Force environment variables to disable native modules
   process.env.ROLLUP_NATIVE = 'false';
   process.env.ROLLUP_NATIVE_BUILD = 'false';
   process.env.npm_config_rollup_native_build = 'false';
@@ -49,7 +49,7 @@ export default defineConfig(({ mode }) => {
         target: 'es2020'
       }
     },
-    // Definizioni per disabilitare esplicitamente i moduli nativi di Rollup
+    // Explicitly disable Rollup native modules
     define: {
       'process.env.ROLLUP_NATIVE': 'false',
       '__ROLLUP_NATIVE_SUPPORT__': 'false',
