@@ -22,6 +22,17 @@ export default defineConfig(({ mode }) => {
       react(),
       mode === 'development' &&
       componentTagger(),
+      {
+        // Custom plugin to prevent rollup native modules
+        name: 'prevent-rollup-native',
+        load(id) {
+          if (id.includes('rollup/dist/native')) {
+            console.log('🛡️ Blocking native.js module load attempt');
+            return 'export default {}; export const isNativeEsmSupported = false;';
+          }
+          return null;
+        },
+      },
     ].filter(Boolean),
     resolve: {
       alias: {
@@ -35,7 +46,12 @@ export default defineConfig(({ mode }) => {
       minify: mode === 'production' ? 'esbuild' : false,
       target: 'es2020',
       rollupOptions: {
-        external: ['@rollup/rollup-linux-x64-gnu', '@rollup/rollup-linux-x64-musl', '@rollup/rollup-darwin-x64'],
+        external: [
+          '@rollup/rollup-linux-x64-gnu', 
+          '@rollup/rollup-linux-x64-musl', 
+          '@rollup/rollup-darwin-x64',
+          '@rollup/rollup-win32-x64-msvc'
+        ],
         output: {
           manualChunks: {
             vendor: ['react', 'react-dom', 'react-router-dom'],
@@ -52,10 +68,10 @@ export default defineConfig(({ mode }) => {
     },
     // Explicitly disable Rollup native modules
     define: {
-      'process.env.ROLLUP_NATIVE': 'false',
+      'process.env.ROLLUP_NATIVE': JSON.stringify('false'),
       '__ROLLUP_NATIVE_SUPPORT__': 'false',
-      'process.env.ROLLUP_NATIVE_BUILD': 'false',
-      'process.env.npm_config_rollup_native_build': 'false'
+      'process.env.ROLLUP_NATIVE_BUILD': JSON.stringify('false'),
+      'process.env.npm_config_rollup_native_build': JSON.stringify('false')
     }
   };
 });

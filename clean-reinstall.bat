@@ -2,6 +2,11 @@
 @echo off
 echo Pulizia dell'ambiente di sviluppo...
 
+REM Impostazione variabili d'ambiente per evitare moduli nativi
+set ROLLUP_NATIVE=false
+set ROLLUP_NATIVE_BUILD=false
+set npm_config_rollup_native_build=false
+
 REM Rimozione di node_modules
 if exist "node_modules" (
     echo Rimozione della cartella node_modules...
@@ -22,9 +27,9 @@ if exist "package-lock.json" (
 
 REM Reinstallazione delle dipendenze
 echo Reinstallazione delle dipendenze...
-call npm install
+call npm install --no-optional --ignore-scripts
 
 echo.
 echo Pulizia e reinstallazione completate!
-echo Ora puoi avviare l'applicazione con 'npm run dev'
+echo Ora puoi avviare l'applicazione usando run-dev.bat
 pause

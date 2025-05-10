@@ -1,73 +1,34 @@
-# Welcome to your Lovable project
 
-## Project info
+# Gluten Free Eats
 
-**URL**: https://lovable.dev/projects/0406988d-f72c-4fb8-9c66-f80fcfc8a946
+## Development Instructions
 
-## How can I edit this code?
+Due to issues with Rollup native modules, please use the following scripts to run the application:
 
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/0406988d-f72c-4fb8-9c66-f80fcfc8a946) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+### Windows:
+```
+run-dev.bat
 ```
 
-**Edit a file directly in GitHub**
+### Linux/MacOS:
+```
+chmod +x run-dev.sh
+./run-dev.sh
+```
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+These scripts include necessary patches to prevent errors with Rollup native modules.
 
-**Use GitHub Codespaces**
+## Troubleshooting
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+If you encounter module loading errors, try cleaning and reinstalling dependencies:
 
-## What technologies are used for this project?
+### Windows:
+```
+clean-reinstall.bat
+```
 
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/0406988d-f72c-4fb8-9c66-f80fcfc8a946) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes it is!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+### Linux/MacOS:
+```
+chmod +x clean-reinstall.sh
+./clean-reinstall.sh
+```

@@ -1,0 +1,15 @@
+
+@echo off
+echo ===================================
+echo Starting Gluten Free Eats Development
+echo ===================================
+
+set ROLLUP_NATIVE=false
+set ROLLUP_NATIVE_BUILD=false
+set npm_config_rollup_native_build=false
+set NODE_OPTIONS=--no-native-modules
+
+echo Running patched development server...
+node start-app.js
+
+pause
