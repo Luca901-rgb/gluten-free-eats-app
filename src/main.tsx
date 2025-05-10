@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
 import { Toaster } from './components/ui/toaster';
-import { Toaster as SonnerToaster } from 'sonner';
+import { SonnerToaster } from 'sonner';
 
 console.log("App inizializzazione alle", new Date().toISOString());
 
