@@ -2,6 +2,11 @@
 @echo off
 echo Pulizia dell'ambiente di sviluppo per la Web App...
 
+REM Impostazione variabili d'ambiente per evitare moduli nativi
+set ROLLUP_NATIVE=false
+set ROLLUP_NATIVE_BUILD=false
+set npm_config_rollup_native_build=false
+
 REM Rimozione di node_modules
 if exist "node_modules" (
     echo Rimozione della cartella node_modules...
@@ -18,17 +23,13 @@ if exist "package-lock.json" (
     echo File package-lock.json rimosso con successo.
 )
 
-REM Impostazione variabili d'ambiente per evitare moduli nativi
-set ROLLUP_NATIVE=false
-set ROLLUP_NATIVE_BUILD=false
-set npm_config_rollup_native_build=false
-
 REM Reinstallazione delle dipendenze
 echo Reinstallazione delle dipendenze...
 echo Installazione con disabilitazione esplicita dei moduli nativi di Rollup...
-call npm install --no-optional
+call npm install --no-optional --ignore-scripts
 
 echo.
 echo Pulizia e reinstallazione completate!
-echo Ora puoi avviare l'app web con 'npm run dev'
+echo Ora puoi avviare l'app web con il comando 'npm run dev'
+echo oppure usando lo script start-web.bat
 pause

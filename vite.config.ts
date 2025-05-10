@@ -35,6 +35,7 @@ export default defineConfig(({ mode }) => {
       minify: mode === 'production' ? 'esbuild' : false,
       target: 'es2020',
       rollupOptions: {
+        external: ['@rollup/rollup-linux-x64-gnu', '@rollup/rollup-linux-x64-musl', '@rollup/rollup-darwin-x64'],
         output: {
           manualChunks: {
             vendor: ['react', 'react-dom', 'react-router-dom'],
