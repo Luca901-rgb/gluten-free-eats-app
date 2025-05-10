@@ -1,154 +1,241 @@
 
-import React, { useState, useEffect } from 'react';
-import { useBookings } from '@/context/BookingContext';
+import React, { useState } from 'react';
+import { useRestaurantBookings } from '@/hooks/useRestaurantBookings';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calendar, ChevronLeft, ChevronRight, Users } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Calendar, Clock, User, CheckCircle, XCircle, Users } from 'lucide-react';
 import BookingConfirmationSystem from '@/components/Restaurant/BookingConfirmationSystem';
+import ReviewCodeDialog from '@/components/Bookings/ReviewCodeDialog';
+import { formatBookingDate, isBookingPast } from '@/components/Bookings/BookingUtils';
+import { useNavigate } from 'react-router-dom';
 
 const RestaurantBookings = () => {
-  const { bookings } = useBookings();
+  const restaurantId = '1'; // In un'app reale, questo verrebbe dal contesto o da un parametro
+  const navigate = useNavigate();
+  const {
+    bookings,
+    isLoading,
+    showReviewCodeDialog,
+    setShowReviewCodeDialog,
+    generatedReviewCode,
+    handleCopyCode
+  } = useRestaurantBookings(restaurantId);
+  
   const [activeTab, setActiveTab] = useState('upcoming');
-  const [restaurantId, setRestaurantId] = useState('1'); // In una vera app, questo verrebbe recuperato dai dati utente
 
-  // Group bookings by date
-  const groupBookingsByDate = (bookingsToGroup: any[]) => {
-    const grouped = bookingsToGroup.reduce((acc, booking) => {
-      const date = new Date(booking.date).toLocaleDateString();
-      if (!acc[date]) acc[date] = [];
-      acc[date].push(booking);
-      return acc;
-    }, {});
-    
-    return Object.entries(grouped)
-      .sort(([dateA], [dateB]) => new Date(dateA).getTime() - new Date(dateB).getTime())
-      .map(([date, bookings]) => ({ date, bookings }));
+  // Filtra le prenotazioni per le tab
+  const upcomingBookings = bookings.filter(booking => 
+    (booking.status === 'confirmed' || booking.status === 'pending') && 
+    !isBookingPast(booking.date)
+  );
+  
+  const completedBookings = bookings.filter(booking => 
+    booking.status === 'confirmed' && 
+    booking.attendance === 'confirmed' && 
+    isBookingPast(booking.date)
+  );
+  
+  const cancelledBookings = bookings.filter(booking => 
+    booking.status === 'cancelled' || 
+    booking.attendance === 'no-show'
+  );
+  
+  const handleViewReviews = () => {
+    navigate('/restaurant-dashboard?tab=reviews');
+    setShowReviewCodeDialog(false);
   };
-
-  // Filter bookings based on tab
-  const filteredBookings = bookings.filter((booking) => {
-    const bookingDate = new Date(booking.date);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    switch (activeTab) {
-      case 'upcoming':
-        return bookingDate >= today && booking.status !== 'cancelled';
-      case 'past':
-        return bookingDate < today || booking.status === 'completed';
-      case 'cancelled':
-        return booking.status === 'cancelled';
-      default:
-        return true;
-    }
-  });
-
-  const groupedBookings = groupBookingsByDate(filteredBookings);
-
+  
   return (
-    <div className="container mx-auto px-4 py-6">
-      <h1 className="text-2xl font-semibold mb-6">Gestione Prenotazioni</h1>
+    <div className="space-y-6">
+      <h2 className="text-2xl font-semibold">Gestione prenotazioni</h2>
       
-      <div className="mb-6">
-        <BookingConfirmationSystem restaurantId={restaurantId} />
-      </div>
+      {/* Sistema di conferma presenze */}
+      <BookingConfirmationSystem restaurantId={restaurantId} />
       
-      <Tabs defaultValue="upcoming" value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="upcoming">Prossime</TabsTrigger>
-          <TabsTrigger value="past">Passate</TabsTrigger>
-          <TabsTrigger value="cancelled">Cancellate</TabsTrigger>
+      {/* Tabs per filtrare le prenotazioni */}
+      <Tabs defaultValue={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid grid-cols-3 mb-4">
+          <TabsTrigger value="upcoming">
+            In arrivo ({upcomingBookings.length})
+          </TabsTrigger>
+          <TabsTrigger value="completed">
+            Completate ({completedBookings.length})
+          </TabsTrigger>
+          <TabsTrigger value="cancelled">
+            Cancellate ({cancelledBookings.length})
+          </TabsTrigger>
         </TabsList>
         
-        <TabsContent value={activeTab} className="mt-6">
-          {groupedBookings.length > 0 ? (
-            <div className="space-y-6">
-              {groupedBookings.map(({ date, bookings }: any) => (
-                <div key={date} className="bg-white rounded-lg shadow overflow-hidden">
-                  <div className="bg-gray-50 px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-                    <h2 className="font-medium flex items-center">
-                      <Calendar className="mr-2 h-4 w-4 text-gray-500" />
-                      {new Date(date).toLocaleDateString('it-IT', { 
-                        weekday: 'long', 
-                        day: 'numeric', 
-                        month: 'long',
-                        year: 'numeric'
-                      })}
-                    </h2>
-                    <span className="text-sm text-gray-500 flex items-center">
-                      <Users className="mr-1 h-4 w-4" />
-                      {bookings.reduce((sum: number, b: any) => sum + b.people, 0)} persone
-                    </span>
-                  </div>
-                  
-                  <div className="divide-y divide-gray-100">
-                    {(bookings as any[]).map((booking) => (
-                      <div key={booking.id} className="p-4 flex items-center justify-between">
-                        <div>
-                          <div className="flex items-center">
-                            <h3 className="font-medium">{booking.customerName}</h3>
-                            <span className={`ml-2 text-xs px-2 py-0.5 rounded-full ${
-                              booking.status === 'confirmed' ? 'bg-green-100 text-green-800' :
-                              booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                              booking.status === 'completed' ? 'bg-blue-100 text-blue-800' :
-                              'bg-red-100 text-red-800'
-                            }`}>
-                              {booking.status === 'confirmed' ? 'Confermata' :
-                               booking.status === 'pending' ? 'In attesa' :
-                               booking.status === 'completed' ? 'Completata' :
-                               'Cancellata'}
-                            </span>
-                          </div>
-                          <p className="text-sm text-gray-500">
-                            {new Date(booking.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {booking.people} {booking.people === 1 ? 'persona' : 'persone'}
-                          </p>
-                          {booking.notes && (
-                            <p className="text-sm text-gray-500 italic mt-1">"{booking.notes}"</p>
-                          )}
-                        </div>
-                        
-                        {/* Status indicators for attendance */}
-                        <div className="flex items-center">
-                          {booking.attendance === 'confirmed' && (
-                            <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full flex items-center">
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                              </svg>
-                              Presente
-                            </span>
-                          )}
-                          
-                          {booking.attendance === 'no-show' && (
-                            <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full flex items-center">
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                              </svg>
-                              Non presentato
-                            </span>
-                          )}
-                          
-                          {booking.restaurantReviewCode && (
-                            <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-                              Codice: {booking.restaurantReviewCode}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
+        <TabsContent value="upcoming">
+          {isLoading ? (
+            <div className="flex justify-center py-8">
+              <div className="w-10 h-10 border-4 border-t-primary border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin"></div>
+            </div>
+          ) : upcomingBookings.length === 0 ? (
+            <div className="text-center py-8 bg-gray-50 rounded-md">
+              <p className="text-gray-500">Nessuna prenotazione in arrivo</p>
             </div>
           ) : (
-            <div className="text-center py-10">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
-                <Calendar className="h-8 w-8 text-gray-500" />
-              </div>
-              <h2 className="text-xl font-medium text-gray-900">Nessuna prenotazione</h2>
-              <p className="mt-1 text-gray-500">Non ci sono prenotazioni {activeTab === 'upcoming' ? 'future' : activeTab === 'past' ? 'passate' : 'cancellate'}</p>
+            <div className="space-y-4">
+              {upcomingBookings.map((booking) => (
+                <Card key={booking.id} className={`overflow-hidden ${
+                  booking.status === 'pending' ? 'border-amber-300' : 'border-green-300'
+                }`}>
+                  <CardContent className="p-0">
+                    <div className={`px-4 py-2 ${
+                      booking.status === 'pending' ? 'bg-amber-50' : 'bg-green-50'
+                    }`}>
+                      <div className="flex justify-between items-center">
+                        <span className={`text-sm font-medium ${
+                          booking.status === 'pending' ? 'text-amber-600' : 'text-green-600'
+                        }`}>
+                          {booking.status === 'pending' ? 'In attesa di conferma' : 'Confermata'}
+                        </span>
+                        <span className="text-sm text-gray-500">
+                          Codice: {booking.bookingCode}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className="p-4">
+                      <h3 className="font-medium text-lg">{booking.customerName}</h3>
+                      
+                      <div className="flex flex-wrap gap-4 mt-2">
+                        <div className="flex items-center text-gray-600">
+                          <Calendar className="h-4 w-4 mr-1" />
+                          <span>{formatBookingDate(booking.date)}</span>
+                        </div>
+                        
+                        <div className="flex items-center text-gray-600">
+                          <Users className="h-4 w-4 mr-1" />
+                          <span>{booking.people} persone</span>
+                        </div>
+                      </div>
+                      
+                      {booking.notes && (
+                        <div className="mt-2 text-sm text-gray-600 border-l-2 border-gray-200 pl-2">
+                          {booking.notes}
+                        </div>
+                      )}
+                      
+                      <div className="mt-4 flex justify-end space-x-2">
+                        {booking.status === 'pending' ? (
+                          <>
+                            <Button variant="outline" size="sm">
+                              <XCircle className="h-4 w-4 mr-1" />
+                              <span>Rifiuta</span>
+                            </Button>
+                            <Button size="sm">
+                              <CheckCircle className="h-4 w-4 mr-1" />
+                              <span>Conferma</span>
+                            </Button>
+                          </>
+                        ) : (
+                          <Button variant="outline" size="sm">
+                            Contatta cliente
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+        
+        <TabsContent value="completed">
+          {isLoading ? (
+            <div className="flex justify-center py-8">
+              <div className="w-10 h-10 border-4 border-t-primary border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin"></div>
+            </div>
+          ) : completedBookings.length === 0 ? (
+            <div className="text-center py-8 bg-gray-50 rounded-md">
+              <p className="text-gray-500">Nessuna prenotazione completata</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {completedBookings.map((booking) => (
+                <Card key={booking.id}>
+                  <CardContent className="p-4">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="font-medium">{booking.customerName}</h3>
+                        <div className="flex items-center text-gray-600 text-sm mt-1">
+                          <Calendar className="h-4 w-4 mr-1" />
+                          <span>{formatBookingDate(booking.date)}</span>
+                        </div>
+                        <div className="flex items-center text-gray-600 text-sm mt-1">
+                          <Users className="h-4 w-4 mr-1" />
+                          <span>{booking.people} persone</span>
+                        </div>
+                      </div>
+                      
+                      <div className="text-right">
+                        <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                          Completata
+                        </span>
+                        {booking.hasReview && (
+                          <div className="text-xs mt-1 text-blue-600">
+                            Recensione ricevuta
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+        
+        <TabsContent value="cancelled">
+          {isLoading ? (
+            <div className="flex justify-center py-8">
+              <div className="w-10 h-10 border-4 border-t-primary border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin"></div>
+            </div>
+          ) : cancelledBookings.length === 0 ? (
+            <div className="text-center py-8 bg-gray-50 rounded-md">
+              <p className="text-gray-500">Nessuna prenotazione cancellata</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {cancelledBookings.map((booking) => (
+                <Card key={booking.id}>
+                  <CardContent className="p-4">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="font-medium">{booking.customerName}</h3>
+                        <div className="flex items-center text-gray-600 text-sm mt-1">
+                          <Calendar className="h-4 w-4 mr-1" />
+                          <span>{formatBookingDate(booking.date)}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="text-right">
+                        <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded">
+                          {booking.attendance === 'no-show' ? 'No show' : 'Cancellata'}
+                        </span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           )}
         </TabsContent>
       </Tabs>
+      
+      {/* Dialog per il codice recensione */}
+      <ReviewCodeDialog
+        open={showReviewCodeDialog}
+        onOpenChange={setShowReviewCodeDialog}
+        reviewCode={generatedReviewCode}
+        onCopyCode={handleCopyCode}
+        onViewReviews={handleViewReviews}
+      />
     </div>
   );
 };

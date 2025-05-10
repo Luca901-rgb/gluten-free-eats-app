@@ -1,29 +1,37 @@
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import Layout from '@/components/Layout';
+import { useNavigate, Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Store, Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
+import { useAuth } from '@/context/AuthContext';
+import { auth } from '@/lib/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth, db } from '@/lib/firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import { toast } from 'sonner';
 import safeStorage from '@/lib/safeStorage';
 
 const RestaurantLogin = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { setUser } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+  });
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validazione base
-    if (!email || !password) {
+    if (!formData.email || !formData.password) {
       toast.error('Inserisci email e password');
       return;
     }
@@ -31,131 +39,114 @@ const RestaurantLogin = () => {
     setIsLoading(true);
     
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        formData.email,
+        formData.password
+      );
+      
       const user = userCredential.user;
       
-      // Verifica che l'utente sia un ristoratore
-      const userDoc = await getDoc(doc(db, "users", user.uid));
+      // Imposta il tipo di utente a "restaurant"
+      safeStorage.setItem('userType', 'restaurant');
+      safeStorage.setItem('isAuthenticated', 'true');
+      safeStorage.setItem('isRestaurantOwner', 'true');
+      safeStorage.setItem('userId', user.uid);
+      safeStorage.setItem('userEmail', formData.email);
       
-      if (userDoc.exists() && userDoc.data().type === 'restaurant') {
-        // Utilizziamo safeStorage invece di localStorage per maggiore sicurezza
-        safeStorage.setItem('isAuthenticated', 'true');
-        safeStorage.setItem('userType', 'restaurant');
-        safeStorage.setItem('userEmail', email);
-        safeStorage.setItem('userId', user.uid);
-        
-        // Salviamo specificamente il flag che identifica l'utente come ristoratore
-        safeStorage.setItem('isRestaurantOwner', 'true');
-        
-        toast.success('Login effettuato con successo!');
-        
-        // Controlla se il ristorante è stato completamente registrato
-        const restaurantDoc = await getDoc(doc(db, "restaurants", user.uid));
-        
-        if (restaurantDoc.exists() && restaurantDoc.data().registrationComplete) {
-          // Se la registrazione è completa, vai alla dashboard
-          navigate('/restaurant-dashboard?tab=home');
-        } else {
-          // Altrimenti, vai alla pagina di registrazione
-          navigate('/restaurant-registration');
-        }
-      } else {
-        // Se l'utente non è un ristoratore, logout e mostra errore
-        await auth.signOut();
-        toast.error('Questo account non è registrato come ristorante');
+      setUser(user);
+      
+      toast.success('Login effettuato con successo');
+      navigate('/restaurant-dashboard');
+    } catch (error: any) {
+      console.error('Errore durante il login:', error);
+      
+      let errorMessage = 'Si è verificato un errore durante il login';
+      
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+        errorMessage = 'Email o password non corretti';
+      } else if (error.code === 'auth/invalid-email') {
+        errorMessage = 'Formato email non valido';
+      } else if (error.code === 'auth/too-many-requests') {
+        errorMessage = 'Troppi tentativi di login. Riprova più tardi';
       }
-    } catch (error) {
-      console.error('Login error:', error);
-      toast.error('Errore di login. Verifica email e password.');
+      
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <Layout hideNavigation>
-      <div className="container mx-auto px-4 py-8 max-w-md">
-        <div className="flex justify-center mb-6">
-          <div className="bg-green-100 rounded-full p-4">
-            <Store className="h-10 w-10 text-green-600" />
-          </div>
-        </div>
+    <div className="min-h-screen flex items-center justify-center bg-[#a3e0a8]">
+      <div className="w-full max-w-md px-4">
+        <h1 className="text-3xl font-bold text-center text-white mb-8">
+          GlutenFree Eats
+        </h1>
         
-        <Card>
+        <Card className="w-full">
           <CardHeader>
-            <CardTitle className="text-xl">Accesso Ristoratore</CardTitle>
+            <CardTitle className="text-xl">Login Ristorante</CardTitle>
             <CardDescription>
-              Accedi per gestire il tuo ristorante, le prenotazioni e il menu
+              Accedi per gestire il tuo ristorante
             </CardDescription>
           </CardHeader>
-          <form onSubmit={handleLogin}>
+          <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input 
+                <Input
                   id="email"
-                  type="email" 
-                  placeholder="ristorante@esempio.com" 
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  disabled={isLoading}
+                  name="email"
+                  type="email"
+                  placeholder="esempio@email.com"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
                 />
               </div>
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Password</Label>
-                  <a 
-                    href="#" 
-                    className="text-xs text-green-600 hover:underline"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      navigate('/forgot-password');
-                    }}
-                  >
-                    Dimenticata?
-                  </a>
-                </div>
-                <Input 
+                <Label htmlFor="password">Password</Label>
+                <Input
                   id="password"
-                  type="password" 
-                  placeholder="••••••••" 
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={isLoading}
+                  name="password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={formData.password}
+                  onChange={handleChange}
+                  required
                 />
               </div>
+              <div className="text-sm text-right">
+                <a href="#" className="text-blue-600 hover:underline">
+                  Password dimenticata?
+                </a>
+              </div>
             </CardContent>
-            <CardFooter className="flex-col space-y-4">
+            <CardFooter className="flex flex-col gap-4">
               <Button 
                 type="submit" 
-                className="w-full" 
+                className="w-full bg-green-600 hover:bg-green-700"
                 disabled={isLoading}
               >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Accesso in corso...
-                  </>
-                ) : "Accedi"}
+                {isLoading ? 'Caricamento...' : 'Accedi'}
               </Button>
-              <p className="text-center text-sm">
-                Non hai ancora un ristorante?{' '}
-                <a 
-                  href="#" 
-                  className="text-green-600 hover:underline"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    navigate('/restaurant-register');
-                  }}
-                >
+              <div className="text-sm text-center">
+                Non hai ancora un ristorante?{" "}
+                <Link to="/restaurant-registration" className="text-blue-600 hover:underline">
                   Registrati
-                </a>
-              </p>
+                </Link>
+              </div>
+              <div className="text-sm text-center">
+                <Link to="/login" className="text-blue-600 hover:underline">
+                  Login cliente
+                </Link>
+              </div>
             </CardFooter>
           </form>
         </Card>
       </div>
-    </Layout>
+    </div>
   );
 };
 
