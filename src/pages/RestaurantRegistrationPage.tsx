@@ -233,7 +233,7 @@ const RestaurantRegistrationPage = () => {
     }
   };
 
-  const getStepComponent = () => {
+  const renderStepComponent = () => {
     switch (currentStep) {
       case 'manager':
         return <ManagerInfoStep />;
@@ -252,13 +252,13 @@ const RestaurantRegistrationPage = () => {
       case 'promotions':
         return <PromotionsStep />;
       case 'complete':
-        return <CompletionStep />;
+        return <CompletionStep restaurantId={restaurantId} />;
       default:
         return null;
     }
   };
 
-  const getStepIcon = (step: RegistrationStep) => {
+  const renderStepIcon = (step: RegistrationStep) => {
     switch (step) {
       case 'manager':
         return <User className="h-5 w-5" />;
@@ -283,7 +283,7 @@ const RestaurantRegistrationPage = () => {
     }
   };
 
-  const getStepTitle = (step: RegistrationStep) => {
+  const renderStepTitle = (step: RegistrationStep) => {
     switch (step) {
       case 'manager':
         return "Dati Gestore";
@@ -335,9 +335,9 @@ const RestaurantRegistrationPage = () => {
                             isPassed ? 'bg-green-500 text-white' : 'bg-gray-200'
                           }`}
                         >
-                          {getStepIcon(step as RegistrationStep)}
+                          {renderStepIcon(step as RegistrationStep)}
                         </div>
-                        <span className="text-xs mt-1 hidden md:block">{getStepTitle(step as RegistrationStep)}</span>
+                        <span className="text-xs mt-1 hidden md:block">{renderStepTitle(step as RegistrationStep)}</span>
                       </div>
                     );
                   })}
@@ -350,11 +350,11 @@ const RestaurantRegistrationPage = () => {
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               <div className="bg-white rounded-lg shadow-sm border p-6">
                 <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                  {getStepIcon(currentStep)}
-                  {getStepTitle(currentStep)}
+                  {renderStepIcon(currentStep)}
+                  {renderStepTitle(currentStep)}
                 </h2>
                 
-                {getStepComponent()}
+                {renderStepComponent()}
                 
                 <div className="flex justify-between mt-8">
                   {currentStep !== 'manager' && currentStep !== 'complete' && (
@@ -402,82 +402,6 @@ const RestaurantRegistrationPage = () => {
       </div>
     </Layout>
   );
-  
-  // Helper functions
-  function getStepComponent() {
-    switch (currentStep) {
-      case 'manager':
-        return <ManagerInfoStep />;
-      case 'restaurant':
-        return <RestaurantInfoStep />;
-      case 'operations':
-        return <OperationsStep />;
-      case 'features':
-        return <FeaturesStep />;
-      case 'media':
-        return <MediaStep />;
-      case 'content':
-        return <ContentStep />;
-      case 'bookings':
-        return <BookingsStep />;
-      case 'promotions':
-        return <PromotionsStep />;
-      case 'complete':
-        return <CompletionStep restaurantId={restaurantId} />;
-      default:
-        return null;
-    }
-  }
-
-  function getStepIcon(step: RegistrationStep) {
-    switch (step) {
-      case 'manager':
-        return <User className="h-5 w-5" />;
-      case 'restaurant':
-        return <Store className="h-5 w-5" />;
-      case 'operations':
-        return <Clock className="h-5 w-5" />;
-      case 'features':
-        return <Settings className="h-5 w-5" />;
-      case 'media':
-        return <Image className="h-5 w-5" />;
-      case 'content':
-        return <FileText className="h-5 w-5" />;
-      case 'bookings':
-        return <Calendar className="h-5 w-5" />;
-      case 'promotions':
-        return <BellPlus className="h-5 w-5" />;
-      case 'complete':
-        return <CheckCircle className="h-5 w-5" />;
-      default:
-        return null;
-    }
-  }
-
-  function getStepTitle(step: RegistrationStep) {
-    switch (step) {
-      case 'manager':
-        return "Dati Gestore";
-      case 'restaurant':
-        return "Dati Ristorante";
-      case 'operations':
-        return "Orari e Operatività";
-      case 'features':
-        return "Caratteristiche";
-      case 'media':
-        return "Foto e Video";
-      case 'content':
-        return "Descrizione e Menù";
-      case 'bookings':
-        return "Prenotazioni";
-      case 'promotions':
-        return "Offerte";
-      case 'complete':
-        return "Completato";
-      default:
-        return "";
-    }
-  }
 };
 
 export default RestaurantRegistrationPage;

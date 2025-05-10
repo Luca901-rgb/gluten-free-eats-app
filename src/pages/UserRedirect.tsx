@@ -39,9 +39,10 @@ const UserRedirect = () => {
         
         // Verifica se esiste il flag di registrazione completata
         const registrationCompleted = safeStorage.getItem('restaurantRegistrationData');
+        const restaurantId = safeStorage.getItem('restaurantId');
         
         // Se la registrazione non è completa, reindirizza alla pagina di registrazione
-        if (!registrationCompleted) {
+        if (!registrationCompleted && !restaurantId) {
           console.log("Restaurant registration not completed, redirecting to registration");
           navigate('/restaurant-registration');
           return;
