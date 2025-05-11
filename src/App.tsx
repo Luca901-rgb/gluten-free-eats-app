@@ -11,6 +11,7 @@ import RestaurantRegistrationPage from './pages/RestaurantRegistrationPage';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { BookingProvider } from './context/BookingContext';
 import { auth } from './lib/firebase';
 import SearchPage from './pages/SearchPage';
 import BookingsPage from './pages/BookingsPage';
@@ -19,6 +20,8 @@ import RestaurantPage from './pages/RestaurantPage';
 import UserSettingsPage from './pages/UserSettingsPage';
 import RestaurantSettingsPage from './pages/RestaurantSettingsPage';
 import { syncPendingRestaurants } from './services/restaurantService';
+import OffersPage from './pages/OffersPage';
+import RestaurantLogin from './pages/RestaurantLogin';
 
 function AppContent() {
   const { isLoading, isAuthenticated, userType } = useAuth();
@@ -46,86 +49,97 @@ function AppContent() {
   }
 
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* Rotte pubbliche accessibili a tutti */}
-        <Route path="/" element={isAuthenticated ? <Navigate to="/user-redirect" /> : <Home />} />
-        <Route path="/login" element={isAuthenticated ? <Navigate to="/user-redirect" /> : <Login />} />
-        <Route path="/register" element={isAuthenticated ? <Navigate to="/user-redirect" /> : <Register />} />
-        
-        {/* Rotta per registrazione ristorante */}
-        <Route path="/restaurant-registration" element={<RestaurantRegistrationPage />} />
-        
-        {/* Rotta per visualizzare un ristorante specifico */}
-        <Route path="/restaurant/:id" element={<RestaurantPage />} />
-        
-        {/* Rotte protette condivise */}
-        <Route 
-          path="/profile" 
-          element={
-            isAuthenticated ? <ProfilePage /> : <Navigate to="/login" replace />
-          } 
-        />
-        
-        {/* Rotte specifiche per impostazioni */}
-        <Route 
-          path="/user-settings" 
-          element={
-            isAuthenticated && userType === 'customer' ? <UserSettingsPage /> : <Navigate to="/login" replace />
-          } 
-        />
-        
-        <Route 
-          path="/restaurant-settings" 
-          element={
-            isAuthenticated && userType === 'restaurant' ? <RestaurantSettingsPage /> : <Navigate to="/login" replace />
-          } 
-        />
-        
-        {/* Rotta protetta per la dashboard ristorante */}
-        <Route 
-          path="/restaurant-dashboard/*" 
-          element={
-            isAuthenticated && userType === 'restaurant' ? 
-              <RestaurantDashboard /> : 
-              <Navigate to="/login" replace />
-          } 
-        />
-        
-        {/* Rotte protette per i clienti */}
-        <Route 
-          path="/home" 
-          element={
-            isAuthenticated && userType === 'customer' ? 
-              <ClientHome /> : 
-              <Navigate to="/login" replace />
-          } 
-        />
-        <Route 
-          path="/search" 
-          element={
-            isAuthenticated && userType === 'customer' ? 
-              <SearchPage /> : 
-              <Navigate to="/login" replace />
-          } 
-        />
-        <Route 
-          path="/bookings" 
-          element={
-            isAuthenticated && userType === 'customer' ? 
-              <BookingsPage /> : 
-              <Navigate to="/login" replace />
-          } 
-        />
-        
-        {/* Reindirizzamento utente */}
-        <Route path="/user-redirect" element={<UserRedirect />} />
-        
-        {/* Redirect per rotte non trovate */}
-        <Route path="*" element={<Navigate to="/" />} />
-      </Routes>
-      <ToastContainer position="bottom-right" autoClose={5000} hideProgressBar={false} newestOnTop closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
-    </BrowserRouter>
+    <BookingProvider>
+      <BrowserRouter>
+        <Routes>
+          {/* Rotte pubbliche accessibili a tutti */}
+          <Route path="/" element={isAuthenticated ? <Navigate to="/user-redirect" /> : <Home />} />
+          <Route path="/login" element={isAuthenticated ? <Navigate to="/user-redirect" /> : <Login />} />
+          <Route path="/register" element={isAuthenticated ? <Navigate to="/user-redirect" /> : <Register />} />
+          <Route path="/restaurant-login" element={isAuthenticated ? <Navigate to="/user-redirect" /> : <RestaurantLogin />} />
+          
+          {/* Rotta per registrazione ristorante */}
+          <Route path="/restaurant-registration" element={<RestaurantRegistrationPage />} />
+          
+          {/* Rotta per visualizzare un ristorante specifico */}
+          <Route path="/restaurant/:id" element={<RestaurantPage />} />
+          
+          {/* Rotte protette condivise */}
+          <Route 
+            path="/profile" 
+            element={
+              isAuthenticated ? <ProfilePage /> : <Navigate to="/login" replace />
+            } 
+          />
+          
+          {/* Rotte specifiche per impostazioni */}
+          <Route 
+            path="/user-settings" 
+            element={
+              isAuthenticated && userType === 'customer' ? <UserSettingsPage /> : <Navigate to="/login" replace />
+            } 
+          />
+          
+          <Route 
+            path="/restaurant-settings" 
+            element={
+              isAuthenticated && userType === 'restaurant' ? <RestaurantSettingsPage /> : <Navigate to="/login" replace />
+            } 
+          />
+          
+          {/* Rotta protetta per la dashboard ristorante */}
+          <Route 
+            path="/restaurant-dashboard/*" 
+            element={
+              isAuthenticated && userType === 'restaurant' ? 
+                <RestaurantDashboard /> : 
+                <Navigate to="/login" replace />
+            } 
+          />
+          
+          {/* Rotte protette per i clienti */}
+          <Route 
+            path="/home" 
+            element={
+              isAuthenticated && userType === 'customer' ? 
+                <ClientHome /> : 
+                <Navigate to="/login" replace />
+            } 
+          />
+          <Route 
+            path="/search" 
+            element={
+              isAuthenticated && userType === 'customer' ? 
+                <SearchPage /> : 
+                <Navigate to="/login" replace />
+            } 
+          />
+          <Route 
+            path="/bookings" 
+            element={
+              isAuthenticated && userType === 'customer' ? 
+                <BookingsPage /> : 
+                <Navigate to="/login" replace />
+            } 
+          />
+          <Route 
+            path="/offers" 
+            element={
+              isAuthenticated && userType === 'customer' ? 
+                <OffersPage /> : 
+                <Navigate to="/login" replace />
+            } 
+          />
+          
+          {/* Reindirizzamento utente */}
+          <Route path="/user-redirect" element={<UserRedirect />} />
+          
+          {/* Redirect per rotte non trovate */}
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
+        <ToastContainer position="bottom-right" autoClose={5000} hideProgressBar={false} newestOnTop closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
+      </BrowserRouter>
+    </BookingProvider>
   );
 }
 
