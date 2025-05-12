@@ -1,71 +1,81 @@
 
 import React from 'react';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Home, 
-  Menu, 
-  Book, 
-  Calendar, 
-  Star, 
-  Users, 
-  Settings, 
-  PieChart,
-  FileText,
-  Percent
-} from 'lucide-react';
-import { useMediaQuery } from '@/hooks/use-mobile';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Bell, ChevronDown, LogOut, Menu, Settings, User } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import { useIsMobile } from '@/hooks/use-mobile';
 
-interface DashboardHeaderProps {
-  restaurantName: string;
-  currentTab: string;
-  setCurrentTab: (tab: string) => void;
+export interface DashboardHeaderProps {
+  toggleSidebar?: () => void;
 }
 
-const DashboardHeader: React.FC<DashboardHeaderProps> = ({ restaurantName, currentTab, setCurrentTab }) => {
-  const isMobile = useMediaQuery("(max-width: 768px)");
-  
-  const handleTabChange = (tab: string) => {
-    setCurrentTab(tab);
+const DashboardHeader = ({ toggleSidebar }: DashboardHeaderProps) => {
+  const { logout } = useAuth();
+  const isMobile = useIsMobile();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Error during logout:', error);
+    }
   };
-  
-  const tabs = [
-    { id: 'home', label: 'Info', icon: <Home className="w-4 h-4 mr-2" /> },
-    { id: 'menu', label: 'Menu', icon: <Menu className="w-4 h-4 mr-2" /> },
-    { id: 'bookings', label: 'Prenotazioni', icon: <Book className="w-4 h-4 mr-2" /> },
-    { id: 'tables', label: 'Tavoli', icon: <Calendar className="w-4 h-4 mr-2" /> },
-    { id: 'reviews', label: 'Recensioni', icon: <Star className="w-4 h-4 mr-2" /> },
-    { id: 'clients', label: 'Clienti', icon: <Users className="w-4 h-4 mr-2" /> },
-    { id: 'offers', label: 'Offerte', icon: <Percent className="w-4 h-4 mr-2" /> },
-    { id: 'profile', label: 'Profilo', icon: <PieChart className="w-4 h-4 mr-2" /> },
-    { id: 'settings', label: 'Impostazioni', icon: <Settings className="w-4 h-4 mr-2" /> }
-  ];
-  
-  // Mostra solo i tab più importanti su mobile
-  const visibleTabs = isMobile
-    ? tabs.filter(tab => ['home', 'menu', 'bookings', 'reviews', 'offers'].includes(tab.id))
-    : tabs;
-  
+
   return (
-    <div className="bg-white p-4 shadow-sm">
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 pb-4 border-b">
-        <h1 className="text-xl font-bold">{restaurantName}</h1>
+    <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+      {/* Left side with toggle button */}
+      <div className="flex items-center">
+        {isMobile && toggleSidebar && (
+          <Button variant="ghost" size="icon" onClick={toggleSidebar}>
+            <Menu className="h-5 w-5" />
+          </Button>
+        )}
+        <h1 className="text-lg font-semibold text-green-700 ml-2">Dashboard Ristorante</h1>
       </div>
-      
-      <Tabs defaultValue={currentTab} onValueChange={handleTabChange} value={currentTab}>
-        <TabsList className="w-full overflow-x-auto flex-nowrap justify-start whitespace-nowrap pb-1">
-          {visibleTabs.map((tab) => (
-            <TabsTrigger
-              key={tab.id}
-              value={tab.id}
-              className="flex items-center text-sm px-3"
-            >
-              {tab.icon}
-              <span>{tab.label}</span>
-            </TabsTrigger>
-          ))}
-        </TabsList>
-      </Tabs>
-    </div>
+
+      {/* Right side with notifications and profile */}
+      <div className="flex items-center space-x-2">
+        <Button variant="ghost" size="icon" className="relative">
+          <Bell className="h-5 w-5" />
+          <span className="absolute top-1 right-1 bg-red-500 rounded-full w-2 h-2"></span>
+        </Button>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="flex items-center gap-2">
+              <User className="h-5 w-5" />
+              <span className="hidden sm:inline">Il Mio Profilo</span>
+              <ChevronDown className="h-4 w-4 opacity-50" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuLabel>Il mio account</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>
+              <User className="mr-2 h-4 w-4" />
+              <span>Profilo</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <Settings className="mr-2 h-4 w-4" />
+              <span>Impostazioni</span>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleLogout}>
+              <LogOut className="mr-2 h-4 w-4" />
+              <span>Logout</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </header>
   );
 };
 
