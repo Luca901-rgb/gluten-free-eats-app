@@ -1,137 +1,106 @@
 
-import React from 'react';
-import { useForm } from 'react-hook-form';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Calendar } from 'lucide-react';
-import { toast } from 'sonner';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 
-interface OfferFormValues {
+interface Offer {
+  id: string;
   title: string;
   description: string;
-  discount: string;
-  validFrom: string;
-  validTo: string;
-  sendNotification: boolean;
+  discount: number;
+  active: boolean;
 }
 
 interface OfferFormProps {
-  onSubmitSuccess: () => void;
+  initialData?: Offer;
+  onSubmitSuccess: (offer: Offer) => void;
+  onCancel: () => void;
 }
 
-const OfferForm: React.FC<OfferFormProps> = ({ onSubmitSuccess }) => {
-  const { register, handleSubmit, formState: { errors } } = useForm<OfferFormValues>({
-    defaultValues: {
-      title: '',
-      description: '',
-      discount: '',
-      validFrom: new Date().toISOString().split('T')[0],
-      validTo: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      sendNotification: true
-    }
+const OfferForm: React.FC<OfferFormProps> = ({ initialData, onSubmitSuccess, onCancel }) => {
+  const [formData, setFormData] = useState({
+    title: initialData?.title || '',
+    description: initialData?.description || '',
+    discount: initialData?.discount || 0,
+    active: initialData?.active || true,
   });
 
-  const onSubmit = (data: OfferFormValues) => {
-    console.log('Offer data:', data);
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
     
-    // In una vera app, qui si salverebbero i dati nel database
+    const offer: Offer = {
+      id: initialData?.id || Math.random().toString(36).substr(2, 9),
+      ...formData,
+    };
     
-    // Simuliamo l'invio di una notifica push
-    if (data.sendNotification) {
-      toast.success('Notifica push inviata ai clienti!', {
-        description: `${data.title} - ${data.discount}% di sconto`
-      });
-    }
-    
-    toast.success('Offerta creata con successo!');
-    onSubmitSuccess();
+    onSubmitSuccess(offer);
+  };
+
+  const handleInputChange = (field: string, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-2">
         <Label htmlFor="title">Titolo offerta</Label>
         <Input
           id="title"
-          {...register('title', { required: 'Il titolo è obbligatorio' })}
-          placeholder="Es. Menu degustazione scontato"
+          value={formData.title}
+          onChange={(e) => handleInputChange('title', e.target.value)}
+          placeholder="Es. Pizza senza glutine a metà prezzo"
+          required
         />
-        {errors.title && <span className="text-sm text-red-500">{errors.title.message}</span>}
       </div>
-      
-      <div>
+
+      <div className="space-y-2">
         <Label htmlFor="description">Descrizione</Label>
         <Textarea
           id="description"
-          {...register('description', { required: 'La descrizione è obbligatoria' })}
-          placeholder="Descrivi brevemente l'offerta..."
-          rows={3}
+          value={formData.description}
+          onChange={(e) => handleInputChange('description', e.target.value)}
+          placeholder="Descrivi l'offerta in dettaglio..."
+          required
         />
-        {errors.description && <span className="text-sm text-red-500">{errors.description.message}</span>}
       </div>
-      
-      <div>
-        <Label htmlFor="discount">Percentuale sconto</Label>
+
+      <div className="space-y-2">
+        <Label htmlFor="discount">Sconto (%)</Label>
         <Input
           id="discount"
           type="number"
-          min="1"
-          max="99"
-          {...register('discount', { 
-            required: 'La percentuale è obbligatoria',
-            min: { value: 1, message: 'Il valore minimo è 1%' },
-            max: { value: 99, message: 'Il valore massimo è 99%' }
-          })}
-          placeholder="Es. 20"
+          min="0"
+          max="100"
+          value={formData.discount}
+          onChange={(e) => handleInputChange('discount', parseInt(e.target.value) || 0)}
+          placeholder="0"
+          required
         />
-        {errors.discount && <span className="text-sm text-red-500">{errors.discount.message}</span>}
       </div>
-      
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="validFrom">Valido dal</Label>
-          <div className="relative">
-            <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
-            <Input
-              id="validFrom"
-              type="date"
-              {...register('validFrom', { required: 'La data di inizio è obbligatoria' })}
-              className="pl-10"
-            />
-          </div>
-          {errors.validFrom && <span className="text-sm text-red-500">{errors.validFrom.message}</span>}
-        </div>
-        
-        <div>
-          <Label htmlFor="validTo">Valido fino al</Label>
-          <div className="relative">
-            <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
-            <Input
-              id="validTo"
-              type="date"
-              {...register('validTo', { required: 'La data di fine è obbligatoria' })}
-              className="pl-10"
-            />
-          </div>
-          {errors.validTo && <span className="text-sm text-red-500">{errors.validTo.message}</span>}
-        </div>
-      </div>
-      
+
       <div className="flex items-center space-x-2">
-        <input
-          id="sendNotification"
-          type="checkbox"
-          {...register('sendNotification')}
-          className="rounded border-gray-300 text-primary focus:ring-primary"
+        <Switch
+          id="active"
+          checked={formData.active}
+          onCheckedChange={(checked) => handleInputChange('active', checked)}
         />
-        <label htmlFor="sendNotification" className="text-sm text-gray-700">
-          Invia notifica push ai clienti
-        </label>
+        <Label htmlFor="active">Offerta attiva</Label>
       </div>
-      
-      <Button type="submit" className="w-full">Crea offerta</Button>
+
+      <div className="flex justify-end space-x-2 pt-4">
+        <Button type="button" variant="outline" onClick={onCancel}>
+          Annulla
+        </Button>
+        <Button type="submit">
+          {initialData ? 'Modifica offerta' : 'Crea offerta'}
+        </Button>
+      </div>
     </form>
   );
 };

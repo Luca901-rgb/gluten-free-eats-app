@@ -11,26 +11,7 @@ export default defineConfig({
     strictPort: true,
     cors: true
   },
-  plugins: [
-    react(),
-    // Fix for Rollup issue
-    {
-      name: 'configure-response-headers',
-      enforce: 'pre' as const,
-      resolveId(id: string) {
-        if (id === 'virtual:module') {
-          return id;
-        }
-        return null;
-      },
-      load(id: string) {
-        if (id === 'virtual:module') {
-          return `export default {}; export const isNativeEsmSupported = false; export const getDefaultRollup = () => null; export const getLogicPath = () => null;`;
-        }
-        return null;
-      }
-    }
-  ],
+  plugins: [react()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

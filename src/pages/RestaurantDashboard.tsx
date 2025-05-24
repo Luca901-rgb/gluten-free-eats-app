@@ -148,11 +148,7 @@ const RestaurantDashboard = () => {
   
   return (
     <RestaurantLayout>
-      <DashboardHeader 
-        restaurantName={restaurantData.name}
-        currentTab={currentTab}
-        setCurrentTab={setCurrentTab}
-      />
+      <DashboardHeader />
       
       <DashboardContent 
         restaurantData={restaurantData}
