@@ -13,6 +13,8 @@ import { sortRestaurantsByDistance } from '@/utils/distanceCalculator';
 export type { RegionStatus } from '@/types/restaurant';
 
 export const useRestaurantList = () => {
+  console.log("useRestaurantList: Initializing hook");
+  
   const { 
     restaurants, 
     setRestaurants, 
@@ -43,7 +45,7 @@ export const useRestaurantList = () => {
 
   // Load restaurants on app launch
   useEffect(() => {
-    console.log("Loading restaurants at startup");
+    console.log("useRestaurantList: Loading restaurants at startup");
     
     // Load immediately without waiting for user interaction
     refreshRestaurants();
@@ -51,7 +53,7 @@ export const useRestaurantList = () => {
     // Set up periodic data refresh every 3 minutes if user stays on page
     const refreshInterval = setInterval(() => {
       if (navigator.onLine) {
-        console.log("Periodic data update");
+        console.log("useRestaurantList: Periodic data update");
         refreshRestaurants();
       }
     }, 3 * 60 * 1000);
@@ -61,6 +63,7 @@ export const useRestaurantList = () => {
 
   useEffect(() => {
     const initApp = async () => {
+      console.log("useRestaurantList: Initializing app");
       await verifyRegion();
       
       if (navigator.onLine) {
@@ -78,6 +81,7 @@ export const useRestaurantList = () => {
   // Update distances when user location changes
   useEffect(() => {
     if (userLocation && restaurants.length > 0) {
+      console.log("useRestaurantList: Updating restaurant distances");
       const restaurantsToUpdate = ensureSampleRestaurantPresent([...restaurants]);
       const restaurantsWithDistance = addDistanceToRestaurants(restaurantsToUpdate);
       const sortedRestaurants = sortRestaurantsByDistance(restaurantsWithDistance, userLocation);
@@ -93,6 +97,8 @@ export const useRestaurantList = () => {
   }, [userLocation, addDistanceToRestaurants, ensureSampleRestaurantPresent]);
 
   const refreshRestaurants = useCallback(async () => {
+    console.log("useRestaurantList: Refreshing restaurants");
+    
     if (isOffline) {
       const offlineData = getOfflineRestaurants();
       setRestaurants(ensureSampleRestaurantPresent(offlineData));
@@ -113,7 +119,7 @@ export const useRestaurantList = () => {
       // Save to cache after fetching
       saveRestaurantsToCache(restaurants);
     } catch (error) {
-      console.error("Error refreshing restaurants:", error);
+      console.error("useRestaurantList: Error refreshing restaurants:", error);
       toast.error("Errore nell'aggiornamento dei ristoranti");
     } finally {
       setIsLoading(false);

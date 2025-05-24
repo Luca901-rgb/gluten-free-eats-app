@@ -3,6 +3,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
+import type { Plugin } from 'vite';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -11,6 +12,37 @@ export default defineConfig(({ mode }) => {
   process.env.ROLLUP_NATIVE_BUILD = 'false';
   process.env.npm_config_rollup_native_build = 'false';
 
+  const plugins: Plugin[] = [react()];
+  
+  if (mode === 'development') {
+    plugins.push(componentTagger());
+  }
+
+  // Plugin personalizzato per prevenire moduli nativi di rollup
+  plugins.push({
+    name: 'prevent-rollup-native',
+    enforce: 'pre' as const,
+    resolveId(id: string) {
+      // Blocca la risoluzione dei moduli nativi
+      if (id.includes('@rollup/rollup-linux-') || 
+          id.includes('@rollup/rollup-darwin-') || 
+          id.includes('@rollup/rollup-win32-') ||
+          id.includes('rollup/dist/native')) {
+        console.log(`🛡️ Blocco risoluzione modulo nativo: ${id}`);
+        return path.resolve(__dirname, 'empty-module.js');
+      }
+      return null;
+    },
+    load(id: string) {
+      // Sostituisci il contenuto dei moduli nativi
+      if (id.includes('rollup/dist/native')) {
+        console.log('🛡️ Blocco caricamento modulo native.js');
+        return 'export default {}; export const isNativeEsmSupported = false; export const getDefaultRollup = () => null; export const getLogicPath = () => null;';
+      }
+      return null;
+    }
+  });
+
   return {
     server: {
       host: "0.0.0.0",
@@ -18,35 +50,7 @@ export default defineConfig(({ mode }) => {
       strictPort: true,
       cors: true
     },
-    plugins: [
-      react(),
-      mode === 'development' &&
-      componentTagger(),
-      {
-        // Plugin personalizzato per prevenire moduli nativi di rollup
-        name: 'prevent-rollup-native',
-        enforce: 'pre',
-        resolveId(id) {
-          // Blocca la risoluzione dei moduli nativi
-          if (id.includes('@rollup/rollup-linux-') || 
-              id.includes('@rollup/rollup-darwin-') || 
-              id.includes('@rollup/rollup-win32-') ||
-              id.includes('rollup/dist/native')) {
-            console.log(`🛡️ Blocco risoluzione modulo nativo: ${id}`);
-            return path.resolve(__dirname, 'empty-module.js');
-          }
-          return null;
-        },
-        load(id) {
-          // Sostituisci il contenuto dei moduli nativi
-          if (id.includes('rollup/dist/native')) {
-            console.log('🛡️ Blocco caricamento modulo native.js');
-            return 'export default {}; export const isNativeEsmSupported = false; export const getDefaultRollup = () => null; export const getLogicPath = () => null;';
-          }
-          return null;
-        }
-      },
-    ].filter(Boolean),
+    plugins,
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "./src"),
