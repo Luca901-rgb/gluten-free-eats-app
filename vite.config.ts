@@ -70,7 +70,7 @@ export default defineConfig(({ mode }) => {
             return;
           }
           // Ignora anche gli avvisi sui moduli esterni
-          if (warning.code === 'UNRESOLVED_IMPORT' && warning.source?.includes('@rollup/rollup-')) {
+          if (warning.code === 'UNRESOLVED_IMPORT' && warning.id?.includes('@rollup/rollup-')) {
             return;
           }
           warn(warning);
