@@ -24,6 +24,12 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "./src"),
+        // Reindirizza i moduli nativi di Rollup al modulo vuoto
+        '@rollup/rollup-linux-x64-gnu': path.resolve(__dirname, './empty-module.js'),
+        '@rollup/rollup-linux-x64-musl': path.resolve(__dirname, './empty-module.js'),
+        '@rollup/rollup-darwin-x64': path.resolve(__dirname, './empty-module.js'),
+        '@rollup/rollup-darwin-arm64': path.resolve(__dirname, './empty-module.js'),
+        '@rollup/rollup-win32-x64-msvc': path.resolve(__dirname, './empty-module.js'),
       },
     },
     build: {
@@ -46,6 +52,9 @@ export default defineConfig(({ mode }) => {
       esbuildOptions: {
         target: 'es2020'
       }
+    },
+    define: {
+      'process.env.ROLLUP_NATIVE_BUILD': JSON.stringify('false'),
     }
   };
 });
