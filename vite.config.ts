@@ -18,29 +18,45 @@ export default defineConfig(({ mode }) => {
     plugins.push(componentTagger());
   }
 
-  // Plugin per intercettare e bloccare completamente i moduli nativi
+  // Plugin migliorato per bloccare completamente i moduli nativi
   plugins.push({
     name: 'rollup-native-blocker',
     enforce: 'pre',
-    resolveId(id: string) {
-      if (id.includes('@rollup/rollup-') || id.includes('rollup/dist/native')) {
-        console.log(`🛡️ Bloccato modulo nativo: ${id}`);
-        return id; // Restituisce l'ID per poi gestirlo in load
+    configResolved() {
+      // Override delle funzioni native di Rollup a livello globale
+      if (typeof globalThis !== 'undefined') {
+        globalThis.__ROLLUP_NATIVE_SUPPORT__ = false;
       }
     },
+    resolveId(id: string) {
+      // Blocca qualsiasi tentativo di caricare moduli nativi
+      if (id.includes('@rollup/rollup-') || 
+          id.includes('rollup/dist/native') ||
+          id.endsWith('/native.js') ||
+          id.includes('rollup-linux') ||
+          id.includes('rollup-darwin') ||
+          id.includes('rollup-win32')) {
+        console.log(`🛡️ Bloccato modulo nativo: ${id}`);
+        return '\0virtual:rollup-native-replacement';
+      }
+      return null;
+    },
     load(id: string) {
-      if (id.includes('@rollup/rollup-') || id.includes('rollup/dist/native')) {
-        console.log(`🛡️ Sostituito modulo nativo: ${id}`);
+      if (id === '\0virtual:rollup-native-replacement') {
+        console.log(`🛡️ Sostituito con modulo virtuale`);
         return `
-          // Sostituzione per moduli nativi Rollup
-          const isNativeEsmSupported = false;
-          const getDefaultRollup = () => null;
-          const getLogicPath = () => null;
-          
-          export { isNativeEsmSupported, getDefaultRollup, getLogicPath };
-          export default {};
+          // Sostituzione virtuale per moduli nativi Rollup
+          export const isNativeEsmSupported = false;
+          export const getDefaultRollup = () => null;
+          export const getLogicPath = () => null;
+          export default {
+            isNativeEsmSupported: false,
+            getDefaultRollup: () => null,
+            getLogicPath: () => null
+          };
         `;
       }
+      return null;
     }
   });
 
@@ -55,6 +71,13 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "./src"),
+        // Alias per reindirizzare i moduli nativi
+        '@rollup/rollup-linux-x64-gnu': path.resolve(__dirname, './empty-module.js'),
+        '@rollup/rollup-linux-x64-musl': path.resolve(__dirname, './empty-module.js'),
+        '@rollup/rollup-darwin-x64': path.resolve(__dirname, './empty-module.js'),
+        '@rollup/rollup-darwin-arm64': path.resolve(__dirname, './empty-module.js'),
+        '@rollup/rollup-win32-x64-msvc': path.resolve(__dirname, './empty-module.js'),
+        'rollup/dist/native': path.resolve(__dirname, './empty-module.js'),
       },
     },
     build: {
@@ -100,7 +123,8 @@ export default defineConfig(({ mode }) => {
       '__ROLLUP_NATIVE_SUPPORT__': 'false',
       'process.env.ROLLUP_NATIVE_BUILD': JSON.stringify('false'),
       'process.env.npm_config_rollup_native_build': JSON.stringify('false'),
-      'global.__ROLLUP_NATIVE_MODULE__': 'undefined'
+      'global.__ROLLUP_NATIVE_MODULE__': 'undefined',
+      'globalThis.__ROLLUP_NATIVE_SUPPORT__': 'false'
     }
   };
 });
