@@ -18,44 +18,6 @@ export default defineConfig(({ mode }) => {
     plugins.push(componentTagger());
   }
 
-  // Plugin migliorato per prevenire moduli nativi di rollup
-  plugins.push({
-    name: 'prevent-rollup-native',
-    enforce: 'pre',
-    resolveId(id: string, importer?: string) {
-      // Blocca qualsiasi tentativo di risolvere moduli nativi
-      if (id.includes('@rollup/rollup-') || 
-          id.includes('rollup/dist/native') ||
-          id === 'rollup/dist/native.js' ||
-          id.endsWith('/native.js')) {
-        console.log(`🛡️ Blocco risoluzione modulo nativo: ${id}`);
-        // Ritorna un modulo vuoto invece di null
-        return this.resolve(path.resolve(__dirname, 'empty-module.js'), importer, { skipSelf: true });
-      }
-      return null;
-    },
-    load(id: string) {
-      // Intercetta anche il caricamento diretto
-      if (id.includes('rollup/dist/native') || 
-          id.includes('@rollup/rollup-') ||
-          id.endsWith('empty-module.js')) {
-        console.log(`🛡️ Blocco caricamento modulo: ${id}`);
-        return `
-          // Modulo vuoto per sostituire i moduli nativi di rollup
-          export default {};
-          export const isNativeEsmSupported = false;
-          export const getDefaultRollup = () => null;
-          export const getLogicPath = () => null;
-        `;
-      }
-      return null;
-    },
-    buildStart() {
-      // Disabilita esplicitamente i moduli nativi all'inizio del build
-      console.log('🛡️ Disabilitazione moduli nativi Rollup attiva');
-    }
-  });
-
   return {
     server: {
       host: "0.0.0.0",
@@ -67,9 +29,6 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "./src"),
-        // Aliasing per evitare il caricamento di moduli nativi
-        "rollup/dist/native": path.resolve(__dirname, "empty-module.js"),
-        "rollup/dist/native.js": path.resolve(__dirname, "empty-module.js")
       },
     },
     build: {
