@@ -3,7 +3,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
-import type { Plugin } from 'vite';
+import type { PluginOption } from 'vite';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -12,7 +12,7 @@ export default defineConfig(({ mode }) => {
   process.env.ROLLUP_NATIVE_BUILD = 'false';
   process.env.npm_config_rollup_native_build = 'false';
 
-  const plugins: Plugin[] = [react()];
+  const plugins: PluginOption[] = [react()];
   
   if (mode === 'development') {
     plugins.push(componentTagger());
@@ -21,7 +21,7 @@ export default defineConfig(({ mode }) => {
   // Plugin personalizzato per prevenire moduli nativi di rollup
   plugins.push({
     name: 'prevent-rollup-native',
-    enforce: 'pre' as const,
+    enforce: 'pre',
     resolveId(id: string) {
       // Blocca la risoluzione dei moduli nativi
       if (id.includes('@rollup/rollup-linux-') || 
