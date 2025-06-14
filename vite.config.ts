@@ -77,9 +77,9 @@ export default defineConfig(({ mode }) => {
         },
         // Miglioramento: ignora warnings sui moduli nativi
         onwarn(warning, warn) {
-          // Ignora warnings sui moduli nativi Rollup
+          // Ignora warnings sui moduli nativi Rollup (fix TypeScript)
           if (warning.code === 'UNRESOLVED_IMPORT' && 
-              warning.source?.includes('@rollup/rollup-')) {
+              warning.id?.includes('@rollup/rollup-')) {
             return;
           }
           warn(warning);
