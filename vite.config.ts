@@ -18,28 +18,41 @@ export default defineConfig(({ mode }) => {
     plugins.push(componentTagger());
   }
 
-  // Plugin personalizzato per prevenire moduli nativi di rollup
+  // Plugin migliorato per prevenire moduli nativi di rollup
   plugins.push({
     name: 'prevent-rollup-native',
     enforce: 'pre',
-    resolveId(id: string) {
-      // Blocca la risoluzione dei moduli nativi
-      if (id.includes('@rollup/rollup-linux-') || 
-          id.includes('@rollup/rollup-darwin-') || 
-          id.includes('@rollup/rollup-win32-') ||
-          id.includes('rollup/dist/native')) {
+    resolveId(id: string, importer?: string) {
+      // Blocca qualsiasi tentativo di risolvere moduli nativi
+      if (id.includes('@rollup/rollup-') || 
+          id.includes('rollup/dist/native') ||
+          id === 'rollup/dist/native.js' ||
+          id.endsWith('/native.js')) {
         console.log(`🛡️ Blocco risoluzione modulo nativo: ${id}`);
-        return path.resolve(__dirname, 'empty-module.js');
+        // Ritorna un modulo vuoto invece di null
+        return this.resolve(path.resolve(__dirname, 'empty-module.js'), importer, { skipSelf: true });
       }
       return null;
     },
     load(id: string) {
-      // Sostituisci il contenuto dei moduli nativi
-      if (id.includes('rollup/dist/native')) {
-        console.log('🛡️ Blocco caricamento modulo native.js');
-        return 'export default {}; export const isNativeEsmSupported = false; export const getDefaultRollup = () => null; export const getLogicPath = () => null;';
+      // Intercetta anche il caricamento diretto
+      if (id.includes('rollup/dist/native') || 
+          id.includes('@rollup/rollup-') ||
+          id.endsWith('empty-module.js')) {
+        console.log(`🛡️ Blocco caricamento modulo: ${id}`);
+        return `
+          // Modulo vuoto per sostituire i moduli nativi di rollup
+          export default {};
+          export const isNativeEsmSupported = false;
+          export const getDefaultRollup = () => null;
+          export const getLogicPath = () => null;
+        `;
       }
       return null;
+    },
+    buildStart() {
+      // Disabilita esplicitamente i moduli nativi all'inizio del build
+      console.log('🛡️ Disabilitazione moduli nativi Rollup attiva');
     }
   });
 
@@ -54,6 +67,9 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "./src"),
+        // Aliasing per evitare il caricamento di moduli nativi
+        "rollup/dist/native": path.resolve(__dirname, "empty-module.js"),
+        "rollup/dist/native.js": path.resolve(__dirname, "empty-module.js")
       },
     },
     build: {
@@ -67,7 +83,9 @@ export default defineConfig(({ mode }) => {
           '@rollup/rollup-linux-x64-gnu', 
           '@rollup/rollup-linux-x64-musl', 
           '@rollup/rollup-darwin-x64',
-          '@rollup/rollup-win32-x64-msvc'
+          '@rollup/rollup-darwin-arm64',
+          '@rollup/rollup-win32-x64-msvc',
+          'rollup/dist/native'
         ],
         output: {
           manualChunks: {
@@ -81,7 +99,14 @@ export default defineConfig(({ mode }) => {
     optimizeDeps: {
       esbuildOptions: {
         target: 'es2020'
-      }
+      },
+      exclude: [
+        '@rollup/rollup-linux-x64-gnu',
+        '@rollup/rollup-linux-x64-musl',
+        '@rollup/rollup-darwin-x64',
+        '@rollup/rollup-darwin-arm64',
+        '@rollup/rollup-win32-x64-msvc'
+      ]
     },
     // Disabilita esplicitamente i moduli nativi di Rollup
     define: {
