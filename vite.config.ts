@@ -24,7 +24,7 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "./src"),
-        // Blocca completamente i moduli nativi di Rollup
+        // Blocco completo dei moduli nativi Rollup
         "@rollup/rollup-linux-x64-gnu": path.resolve(__dirname, "./empty-module.js"),
         "@rollup/rollup-linux-x64-musl": path.resolve(__dirname, "./empty-module.js"),
         "@rollup/rollup-linux-arm64-gnu": path.resolve(__dirname, "./empty-module.js"),
@@ -45,6 +45,17 @@ export default defineConfig(({ mode }) => {
       minify: mode === 'production' ? 'esbuild' : false,
       target: 'es2020',
       rollupOptions: {
+        external: [
+          '@rollup/rollup-linux-x64-gnu',
+          '@rollup/rollup-linux-x64-musl',
+          '@rollup/rollup-linux-arm64-gnu', 
+          '@rollup/rollup-linux-arm64-musl',
+          '@rollup/rollup-darwin-x64',
+          '@rollup/rollup-darwin-arm64',
+          '@rollup/rollup-win32-x64-msvc',
+          '@rollup/rollup-win32-ia32-msvc',
+          '@rollup/rollup-win32-arm64-msvc'
+        ],
         output: {
           manualChunks: {
             vendor: ['react', 'react-dom', 'react-router-dom'],
@@ -58,13 +69,17 @@ export default defineConfig(({ mode }) => {
               (warning.id?.includes('@rollup/rollup-') || warning.id?.includes('rollup/dist/native'))) {
             return;
           }
+          // Ignora anche gli avvisi sui moduli esterni
+          if (warning.code === 'UNRESOLVED_IMPORT' && warning.source?.includes('@rollup/rollup-')) {
+            return;
+          }
           warn(warning);
         }
       }
     },
     optimizeDeps: {
       esbuildOptions: { target: 'es2020' },
-      // Esclude completamente i moduli nativi dalla pre-bundling
+      // Esclusione completa dei moduli nativi
       exclude: [
         '@rollup/rollup-linux-x64-gnu', '@rollup/rollup-linux-x64-musl',
         '@rollup/rollup-linux-arm64-gnu', '@rollup/rollup-linux-arm64-musl',
