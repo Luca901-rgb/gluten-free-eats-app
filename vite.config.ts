@@ -25,7 +25,7 @@ export default defineConfig(({ mode }) => {
     configResolved() {
       // Override delle funzioni native di Rollup a livello globale
       if (typeof globalThis !== 'undefined') {
-        globalThis.__ROLLUP_NATIVE_SUPPORT__ = false;
+        (globalThis as any).__ROLLUP_NATIVE_SUPPORT__ = false;
       }
     },
     resolveId(id: string) {
