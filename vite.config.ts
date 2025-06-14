@@ -5,26 +5,6 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 import type { PluginOption } from 'vite';
 
-// Helper per creare alias che puntano al modulo vuoto
-const createRollupNativeAliases = () => {
-  const emptyModulePath = path.resolve(__dirname, './empty-module.js');
-  const platforms = [
-    'linux-x64-gnu', 'linux-x64-musl', 'linux-arm64-gnu', 'linux-arm64-musl',
-    'darwin-x64', 'darwin-arm64', 'win32-x64-msvc', 'win32-ia32-msvc', 'win32-arm64-msvc'
-  ];
-  
-  const aliases: Record<string, string> = {};
-  
-  platforms.forEach(platform => {
-    aliases[`@rollup/rollup-${platform}`] = emptyModulePath;
-  });
-  
-  aliases['rollup/dist/native'] = emptyModulePath;
-  aliases['rollup/dist/native.js'] = emptyModulePath;
-  
-  return aliases;
-};
-
 export default defineConfig(({ mode }) => {
   const plugins: PluginOption[] = [react()];
   
@@ -44,7 +24,18 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "./src"),
-        ...createRollupNativeAliases(),
+        // Blocca completamente i moduli nativi di Rollup
+        "@rollup/rollup-linux-x64-gnu": path.resolve(__dirname, "./empty-module.js"),
+        "@rollup/rollup-linux-x64-musl": path.resolve(__dirname, "./empty-module.js"),
+        "@rollup/rollup-linux-arm64-gnu": path.resolve(__dirname, "./empty-module.js"),
+        "@rollup/rollup-linux-arm64-musl": path.resolve(__dirname, "./empty-module.js"),
+        "@rollup/rollup-darwin-x64": path.resolve(__dirname, "./empty-module.js"),
+        "@rollup/rollup-darwin-arm64": path.resolve(__dirname, "./empty-module.js"),
+        "@rollup/rollup-win32-x64-msvc": path.resolve(__dirname, "./empty-module.js"),
+        "@rollup/rollup-win32-ia32-msvc": path.resolve(__dirname, "./empty-module.js"),
+        "@rollup/rollup-win32-arm64-msvc": path.resolve(__dirname, "./empty-module.js"),
+        "rollup/dist/native": path.resolve(__dirname, "./empty-module.js"),
+        "rollup/dist/native.js": path.resolve(__dirname, "./empty-module.js"),
       },
     },
     build: {
@@ -62,8 +53,9 @@ export default defineConfig(({ mode }) => {
           }
         },
         onwarn(warning, warn) {
+          // Ignora tutti gli avvisi sui moduli nativi di Rollup
           if (warning.code === 'UNRESOLVED_IMPORT' && 
-              warning.id?.includes('@rollup/rollup-')) {
+              (warning.id?.includes('@rollup/rollup-') || warning.id?.includes('rollup/dist/native'))) {
             return;
           }
           warn(warning);
@@ -72,11 +64,13 @@ export default defineConfig(({ mode }) => {
     },
     optimizeDeps: {
       esbuildOptions: { target: 'es2020' },
+      // Esclude completamente i moduli nativi dalla pre-bundling
       exclude: [
         '@rollup/rollup-linux-x64-gnu', '@rollup/rollup-linux-x64-musl',
         '@rollup/rollup-linux-arm64-gnu', '@rollup/rollup-linux-arm64-musl',
         '@rollup/rollup-darwin-x64', '@rollup/rollup-darwin-arm64',
-        '@rollup/rollup-win32-x64-msvc', '@rollup/rollup-win32-ia32-msvc', '@rollup/rollup-win32-arm64-msvc'
+        '@rollup/rollup-win32-x64-msvc', '@rollup/rollup-win32-ia32-msvc', '@rollup/rollup-win32-arm64-msvc',
+        'rollup/dist/native', 'rollup/dist/native.js'
       ]
     },
     define: {
