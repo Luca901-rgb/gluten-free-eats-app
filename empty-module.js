@@ -2,14 +2,16 @@
 // Modulo vuoto migliorato per sostituire i moduli nativi di rollup
 console.log("🛡️ Modulo nativo Rollup bypassato con successo");
 
-// Esporta tutte le interfacce che Rollup potrebbe aspettarsi
+// Funzioni di base
 const emptyFunction = () => null;
+const emptyPromise = () => Promise.resolve(null);
 const emptyObject = {};
 
-module.exports = {
+// Esportazioni principali
+const rollupExports = {
   // Funzioni principali di Rollup native
   parseAst: emptyFunction,
-  parseAstAsync: emptyFunction,
+  parseAstAsync: emptyPromise, // Ritorna Promise per consistenza
   xxhashBase64Url: emptyFunction,
   xxhashBase36: emptyFunction,
   xxhashBase16: emptyFunction,
@@ -26,20 +28,22 @@ module.exports = {
   getLogicPath: emptyFunction,
   getNativeCode: emptyFunction,
   
-  // Fallback per qualsiasi altro metodo
+  // Fallback proxy per metodi non definiti
   ...new Proxy({}, {
-    get: () => emptyFunction
+    get: (target, prop) => {
+      // Log solo per debug se necessario
+      // console.log(`🔧 Accessing undefined native method: ${prop}`);
+      return typeof prop === 'string' && prop.includes('Async') 
+        ? emptyPromise 
+        : emptyFunction;
+    }
   })
 };
 
-// Supporto per import ES6
-module.exports.parseAst = emptyFunction;
-module.exports.parseAstAsync = emptyFunction;
-module.exports.xxhashBase64Url = emptyFunction;
-module.exports.xxhashBase36 = emptyFunction;
-module.exports.xxhashBase16 = emptyFunction;
-module.exports.isNativeEsmSupported = false;
-module.exports.getDefaultRollup = emptyFunction;
-module.exports.getLogicPath = emptyFunction;
-module.exports.getNativeCode = emptyFunction;
-module.exports.default = emptyObject;
+// Assegna tutte le esportazioni
+Object.assign(module.exports, rollupExports);
+
+// Assicura compatibilità ESM
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports.__esModule = true;
+}
