@@ -24,12 +24,19 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "./src"),
-        // Reindirizza i moduli nativi di Rollup al modulo vuoto
+        // Reindirizza TUTTI i possibili moduli nativi di Rollup al modulo vuoto
         '@rollup/rollup-linux-x64-gnu': path.resolve(__dirname, './empty-module.js'),
         '@rollup/rollup-linux-x64-musl': path.resolve(__dirname, './empty-module.js'),
+        '@rollup/rollup-linux-arm64-gnu': path.resolve(__dirname, './empty-module.js'),
+        '@rollup/rollup-linux-arm64-musl': path.resolve(__dirname, './empty-module.js'),
         '@rollup/rollup-darwin-x64': path.resolve(__dirname, './empty-module.js'),
         '@rollup/rollup-darwin-arm64': path.resolve(__dirname, './empty-module.js'),
         '@rollup/rollup-win32-x64-msvc': path.resolve(__dirname, './empty-module.js'),
+        '@rollup/rollup-win32-ia32-msvc': path.resolve(__dirname, './empty-module.js'),
+        '@rollup/rollup-win32-arm64-msvc': path.resolve(__dirname, './empty-module.js'),
+        // Aggiungiamo anche il percorso diretto al modulo nativo
+        'rollup/dist/native': path.resolve(__dirname, './empty-module.js'),
+        'rollup/dist/native.js': path.resolve(__dirname, './empty-module.js'),
       },
     },
     build: {
@@ -55,6 +62,8 @@ export default defineConfig(({ mode }) => {
     },
     define: {
       'process.env.ROLLUP_NATIVE_BUILD': JSON.stringify('false'),
+      'process.env.ROLLUP_NATIVE': JSON.stringify('false'),
+      'global': 'globalThis',
     }
   };
 });
